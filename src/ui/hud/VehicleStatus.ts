@@ -65,7 +65,7 @@ export class VehicleStatus {
     c.clearRect(0, 0, STATUS_SIZE, STATUS_SIZE);
 
     // 比例:车长 + 伸出车头的炮管都要装得下(炮管转到别的方向时伸出画面也没关系);整体下移,让车头前的炮管留在画面里
-    const overhang = Math.max(0, turret.barrelLength + turret.length / 2 - hull.length / 2);
+    const overhang = Math.max(0, turret.barrelLength + turret.length / 2 - (turret.offset ?? 0) - hull.length / 2);
     const k = (STATUS_SIZE - 16) / Math.max(hull.length + overhang, hull.width * 1.6);
     const cx = STATUS_SIZE / 2;
     const cy = STATUS_SIZE / 2 + (overhang * k) / 2;
@@ -110,7 +110,7 @@ export class VehicleStatus {
     // 炮塔:绕座圈中心按炮塔角旋转;固定战斗室不转,只有火炮绕炮耳轴在射界内转
     const casemate = isCasemate(spec);
     c.save();
-    const [tx, ty] = P(0, 0);
+    const [tx, ty] = P(0, turret.offset ?? 0);
     c.translate(tx, ty);
     if (!casemate) c.rotate(-s.turretYaw);
     const T = (x: number, z: number): [number, number] => [x * k, z * k];

@@ -257,7 +257,7 @@ export const TIGER_II: VehicleSpec = {
 
 /**
  * 突击炮:StuG III Ausf. G。固定战斗室,火炮左右各 10°(出处见 docs/physics-validation.md 第 9 节)。
- * 「炮塔」盒子是战斗室,位置按项目约定居中;装甲倾角没核实,按竖直填。
+ * 「炮塔」盒子是战斗室,中心在车体中部偏前 0.8 m;装甲倾角没核实,按竖直填。
  */
 export const STUG_III_G: VehicleSpec = {
   id: 'stug_iii_g',
@@ -286,8 +286,9 @@ export const STUG_III_G: VehicleSpec = {
   // 含炮全长 6.85 / 宽 2.95 / 全高 2.16;车体长按「含炮全长 − 炮口伸出约 1.35 m」估算,车体盒高 = 全高 − 战斗室 0.66
   // 转向速度估算(同底盘量级取 20°/s);加速度按功重比 12.3 hp/t 比照 T-34-85 估算
   hull: { length: 5.5, width: 2.95, height: 1.5, turnRate: 20, acceleration: 4.3 },
-  // 战斗室尺寸估算;炮口伸出 1.35 m → barrelLength = 1.35 + 5.5/2 − 2.5/2 = 2.85;俯仰 −6° / +17°、高低机 3.5°/s 为 War Thunder 值
-  turret: { length: 2.5, width: 2.3, height: 0.66, barrelLength: 2.85, elevation: [-6, 17], elevationSpeed: 3.5, traverse: [10, 10] },
+  // 战斗室尺寸、位置估算(从首上后缘到车体中部);炮口伸出 1.35 m → barrelLength = 1.35 − 2.5/2 + (−0.8) + 5.5/2 = 2.05
+  // 俯仰 −6° / +17°、高低机 3.5°/s 为 War Thunder 值
+  turret: { length: 2.5, width: 2.3, height: 0.66, barrelLength: 2.05, elevation: [-6, 17], elevationSpeed: 3.5, traverse: [10, 10], offset: -0.8 },
   // Sfl.Zf.1a 潜望式瞄准镜;倍率用 War Thunder 值 4.7–5×
   sight: { magnifications: [4.7, 5], reticle: 'german' },
   internals: {
@@ -303,7 +304,7 @@ export const STUG_III_G: VehicleSpec = {
       { id: 'traverse', type: 'traverse', part: 'turret', center: [-0.3, -0.1, -0.9], size: [0.3, 0.3, 0.3] },
       { id: 'elevation', type: 'elevation', part: 'turret', center: [-0.3, 0.2, -1.0], size: [0.25, 0.3, 0.25] },
       { id: 'breech', type: 'breech', part: 'gun', center: [0, 0, 0.7], size: [0.3, 0.3, 0.9] },
-      { id: 'barrel', type: 'barrel', part: 'gun', center: [0, 0, -1.425], size: [0.15, 0.15, 2.85] },
+      { id: 'barrel', type: 'barrel', part: 'gun', center: [0, 0, -1.025], size: [0.15, 0.15, 2.05] },
     ],
     crew: [
       // 4 人:驾驶员在车体左前;炮手在火炮左侧,车长在炮手后面,装填手在右侧
@@ -343,9 +344,9 @@ export const SU_100: VehicleSpec = {
   ],
   // 含炮全长 9.45 / 宽 3.00 / 全高 2.25;车体长、高沿用项目里同底盘的 T-34-85;转向、加速度同 T-34-85(估算)
   hull: { length: 6.1, width: 3.0, height: 1.62, turnRate: 20, acceleration: 5.5 },
-  // 战斗室尺寸估算;炮口伸出 9.45 − 6.1 = 3.35 m → barrelLength = 3.35 + 6.1/2 − 2.8/2 = 5.0
-  // 俯仰 −3° / +20°、高低机 2.8°/s 为 War Thunder 值
-  turret: { length: 2.8, width: 2.6, height: 0.63, barrelLength: 5.0, elevation: [-3, 20], elevationSpeed: 2.8, traverse: [8, 8] },
+  // 战斗室尺寸、位置估算(首上一直延伸到战斗室顶,战斗室在车体前半部);
+  // 炮口伸出 9.45 − 6.1 = 3.35 m → barrelLength = 3.35 − 2.8/2 + (−0.7) + 6.1/2 = 4.3;俯仰 −3° / +20°、高低机 2.8°/s 为 War Thunder 值
+  turret: { length: 2.8, width: 2.6, height: 0.63, barrelLength: 4.3, elevation: [-3, 20], elevationSpeed: 2.8, traverse: [8, 8], offset: -0.7 },
   // TSh-19;倍率用 War Thunder 值 3.4–4×
   sight: { magnifications: [3.4, 4], reticle: 'soviet' },
   internals: {
@@ -361,7 +362,7 @@ export const SU_100: VehicleSpec = {
       { id: 'traverse', type: 'traverse', part: 'turret', center: [0.4, -0.1, -1.0], size: [0.3, 0.3, 0.3] },
       { id: 'elevation', type: 'elevation', part: 'turret', center: [-0.4, 0.2, -1.1], size: [0.25, 0.3, 0.25] },
       { id: 'breech', type: 'breech', part: 'gun', center: [0, 0, 0.9], size: [0.35, 0.35, 1.2] },
-      { id: 'barrel', type: 'barrel', part: 'gun', center: [0, 0, -2.5], size: [0.2, 0.2, 5.0] },
+      { id: 'barrel', type: 'barrel', part: 'gun', center: [0, 0, -2.15], size: [0.2, 0.2, 4.3] },
     ],
     crew: [
       // 4 人:车长兼无线电员、炮手、装填手、驾驶员

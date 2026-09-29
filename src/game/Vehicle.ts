@@ -4,7 +4,7 @@ import type { Loadout, ShellSpec, VehicleSpec, WeaponSpec } from '../data/types'
 import { REFERENCE_ROLLING_RESISTANCE, SURFACES, type SurfaceSpec } from '../data/surfaces';
 import { applyGunPose, buildVehicleModel, type VehicleModel } from './models';
 import { DamageModel } from './damage/DamageModel';
-import { VehicleFrames } from './damage/geometry';
+import { VehicleFrames, turretRingOffset } from './damage/geometry';
 import { superelevation } from './Ballistics';
 import { autoSteer, clampYaw, isCasemate } from './casemate';
 
@@ -167,7 +167,7 @@ export class Vehicle {
     this.selectedShell = Math.max(0, (spec.weapons[0]?.ammo ?? []).findIndex((a) => this.damage.rounds(a.id) > 0));
     this.tryLoad();
     const { hull, turret } = spec;
-    this.turretOffset = new THREE.Vector3(0, hull.height / 2, 0);
+    this.turretOffset = turretRingOffset(spec);
     this.gunOffset = new THREE.Vector3(0, turret.height / 2, -turret.length / 2);
     this.casemate = isCasemate(spec);
 
@@ -187,7 +187,7 @@ export class Vehicle {
     );
     this.turretCollider = world.createCollider(
       RAPIER.ColliderDesc.cuboid(turret.width / 2, turret.height / 2, turret.length / 2)
-        .setTranslation(0, hull.height / 2 + turret.height / 2, 0)
+        .setTranslation(0, hull.height / 2 + turret.height / 2, turret.offset ?? 0)
         .setDensity(VEHICLE_DENSITY)
         .setFriction(0)
         .setFrictionCombineRule(RAPIER.CoefficientCombineRule.Min),

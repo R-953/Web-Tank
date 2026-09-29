@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import type { VehicleSpec } from '../../data/types';
 import { applyGunPose, buildVehicleModel } from '../../game/models';
 import { clampYaw } from '../../game/casemate';
+import { turretRingOffset } from '../../game/damage/geometry';
 
 /**
  * 机库背景(3D):水泥地面、钢结构厂房、展示台上的载具,暖色主光 + 冷色补光。
@@ -51,7 +52,7 @@ export class HangarScene {
     const root = new THREE.Group();
     const turretPivot = new THREE.Group();
     const gunPivot = new THREE.Group();
-    turretPivot.position.set(0, spec.hull.height / 2, 0);
+    turretPivot.position.copy(turretRingOffset(spec));
     gunPivot.position.set(0, spec.turret.height / 2, -spec.turret.length / 2);
     root.add(turretPivot);
     turretPivot.add(gunPivot);

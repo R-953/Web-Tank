@@ -118,6 +118,11 @@ export interface TurretSpec {
    * 不设 = 可 360° 旋转的炮塔。
    */
   traverse?: readonly [left: number, right: number];
+  /**
+   * 炮塔座圈 / 战斗室盒子中心沿车体纵轴的位置,m,负值 = 靠车头;缺省 0(车体正中)。
+   * 炮耳轴在盒子正面,所以炮口伸出车首 = barrelLength + length / 2 − offset − hull.length / 2。
+   */
+  offset?: number;
 }
 
 /** 炮手瞄准镜 */

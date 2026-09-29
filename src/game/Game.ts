@@ -387,7 +387,7 @@ export class Game {
    */
   lineOfSight(from: Vehicle, to: Vehicle): boolean {
     const a = from.muzzle().origin;
-    const b = to.physicsPosition().add(new THREE.Vector3(0, to.spec.hull.height / 2 + to.spec.turret.height / 2, 0).applyQuaternion(to.physicsQuaternion()));
+    const b = to.physicsPosition().add(new THREE.Vector3(0, to.spec.hull.height / 2 + to.spec.turret.height / 2, to.spec.turret.offset ?? 0).applyQuaternion(to.physicsQuaternion()));
     const d = b.clone().sub(a);
     const dist = d.length();
     if (dist < 1) return true;
