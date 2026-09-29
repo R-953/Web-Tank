@@ -1,7 +1,7 @@
 # 006-casemate-aiming:固定战斗室(无炮塔)车辆的瞄准逻辑
 
 - 负责:Claude Code(主程)
-- 状态:进行中
+- 状态:待审查
 - 分支:`task/006-casemate-aiming`
 - 规模:M
 
@@ -48,3 +48,23 @@
 - 不做新车的专属三维模型(先用通用模型);不做自由视角键。
 
 ## 结果(完成后填写)
+
+- 改动文件:
+  - 新增 `src/game/casemate.ts`(`isCasemate` / `yawLimits` / `clampYaw` / `autoSteer`)、`tests/casemate.test.ts`(10 个)
+  - `src/data/types.ts`:`TurretSpec.traverse?` 可选字段
+  - `src/game/Vehicle.ts`:
+    - 火炮水平角夹进射界,自动转向用 `steerInput()`,新增公开方法 `canTraverseTo()`
+    - 战斗室碰撞盒不转;炮口、机枪、炮管命中框改用「炮塔坐标系转角」+「火炮转角」两个辅助函数
+    - 固定战斗室的瞄准角以炮耳轴为准(近距离不偏)
+  - `src/game/damage/geometry.ts`:`VehicleFrames` 对固定战斗室把水平角加在火炮坐标系
+  - `src/game/models/index.ts`:`applyGunPose()`,游戏、击杀回放、机库共用
+  - `src/game/Controllers.ts`:`GunnerAI` 目标在射界外时停车
+  - `src/ui/hud/VehicleStatus.ts`、`src/ui/KillCam.ts`、`src/ui/menu/Hangar.ts`、`src/ui/menu/MainMenu.ts`:显示同步;机库信息栏对固定战斗室显示「射界」「方向机」「战斗室装甲」
+- 设计要点:
+  - 火炮最终朝向对两种车都是「车体 × 水平角 × 俯仰」,只是水平角加在哪个节点不同。所以弹道、表尺、AI 对准、瞄准镜位置的代码都不用改
+  - 自动转向量和超出射界的角度成正比,超出 6° 打满,避免来回摆;目标进射界后车体停住,不回正
+- 命令与结果:`npm run lint` 通过;`npm test` 21 个文件 220 个测试全部通过(原 210 + 新 10,已有测试没改);`npm run build` 通过
+- 实机验证:在任务 007 的 StuG III G 上做了,见 007 的结果
+- 偏差 / 待决定:
+  - 巡逻中的固定战斗室 AI 转向交战后,巡逻控制器不会把车头转回巡逻线。目前没有这样的车,以后有了再改 `PatrolController`
+  - 没做自由视角键:固定战斗室车回头看时车体会跟着转(War Thunder 用单独的键解决)
