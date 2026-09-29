@@ -23,7 +23,7 @@
 - 不改核心数据结构(`src/data/types.ts` 的已有字段、`GameEvent`、`Bindings` 等),只允许加**可选**字段。确实需要改,在任务卡里写明理由,等负责人确认。
 - 下面这些文件归主程维护。其他 agent 不要改;确需改动,在回报里说明原因和建议的改法:
   `src/game/Game.ts`、`src/game/Vehicle.ts`、`src/game/damage/**`、`src/main.ts`、`src/data/types.ts`、`.github/**`、`Readme.md`、`Changelog.md`、`AGENTS.md`
-- 数值要有公开出处,写进代码注释或 `docs/physics-validation.md`。找不到出处就保留原值,不要自己编。
+- 数值要有公开出处,写进代码注释或 `docs/physics-validation.md`。公开资料查不到或查不准时,直接用 [War Thunder 官方 wiki](https://wiki.warthunder.com/) 的设定,并注明「War Thunder 值」;两者都没有就保留原值,不要自己编。
 - 代码注释和界面文字用简体中文,风格与现有代码一致。TypeScript 严格模式,不要用 `any` 绕过类型检查。
 - 新功能要带测试。纯逻辑写单元测试,不依赖 DOM 和渲染。不删除、不放宽已有测试,除非任务卡要求。
 - 不提交生成物:`dist/`、`node_modules/`、`Claude outputs/`。
