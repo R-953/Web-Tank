@@ -19,6 +19,22 @@ export interface MinimapMarker {
   z: number;
   team: 'enemy' | 'ally';
   dead: boolean;
+  /** 车头朝向(弧度,约定同 draw() 的 heading);箭头样式要用,没有时画圆点 */
+  heading?: number;
+}
+
+/** 其他车辆的标记样式:圆点 / 箭头(带朝向) */
+export type MarkerStyle = 'dot' | 'arrow';
+
+/**
+ * 箭头样式的三角形顶点(小地图像素):[尖端, 右后, 左后]。
+ * 以 (x, y) 为中心,尖端指向车头;heading 约定同 draw()(0 = 北 / 上,正值向左),与玩家箭头的 rotate(-heading) 一致。
+ */
+export function arrowVertices(x: number, y: number, heading: number): [number, number][] {
+  const s = Math.sin(heading);
+  const c = Math.cos(heading);
+  const rot = (lx: number, ly: number): [number, number] => [x + lx * c + ly * s, y - lx * s + ly * c];
+  return [rot(0, -6), rot(4, 4), rot(-4, 4)];
 }
 
 /** 小地图当前显示的世界范围:中心 (cx, cz)、半边长 half(m) */
@@ -73,7 +89,7 @@ export function zoomCircle(radius: number, steps: number): number {
  * 右下角小地图(War Thunder 风格):地表颜色 + 山体阴影 + 水面,10 × 10 网格,上边标数字、左边标字母。
  *   - 方形:北朝上,缺省显示整张地图;滚轮以光标处为中心放大(放大后玩家跑出视野会自动跟过去)。
  *   - 圆形:北朝上,以玩家为中心,滚轮改变显示半径。
- * 敌军红点、友军蓝点,被击毁的变灰;玩家是黄色箭头加一条视线。双击放的标记是黄色菱形。
+ * 敌军红点、友军蓝点(可在设置里改成指向车头的箭头),被击毁的变灰;玩家是黄色箭头加一条视线。双击放的标记是黄色菱形。
  */
 export class Minimap {
   private readonly canvas: HTMLCanvasElement;
@@ -81,6 +97,7 @@ export class Minimap {
   private background: HTMLCanvasElement | null = null;
   private mapSize = 1;
   private shapeValue: 'square' | 'circle' = 'square';
+  private markerStyle: MarkerStyle = 'dot';
   private view: MapView = { cx: 0, cz: 0, half: 1 };
   private circleRadius = CIRCLE_RADIUS.default;
   private markerValue: { x: number; z: number } | null = null;
@@ -112,6 +129,10 @@ export class Minimap {
 
   setShape(shape: 'square' | 'circle'): void {
     this.shapeValue = shape;
+  }
+
+  setMarkerStyle(style: MarkerStyle): void {
+    this.markerStyle = style;
   }
 
   setVisible(v: boolean): void {
@@ -255,9 +276,25 @@ export class Minimap {
 
     for (const m of markers) {
       const [x, y] = toPx(m.x, m.z);
+      const color = m.team === 'enemy' ? '#ff3b30' : '#3aa0ff';
+      // 箭头样式:活着的车画指向车头的三角;被击毁的照旧画灰点加 ×
+      if (this.markerStyle === 'arrow' && !m.dead && m.heading !== undefined) {
+        const [tip, right, left] = arrowVertices(x, y, m.heading);
+        c.beginPath();
+        c.moveTo(tip[0], tip[1]);
+        c.lineTo(right[0], right[1]);
+        c.lineTo(left[0], left[1]);
+        c.closePath();
+        c.fillStyle = color;
+        c.fill();
+        c.lineWidth = 1;
+        c.strokeStyle = 'rgba(0,0,0,.8)';
+        c.stroke();
+        continue;
+      }
       c.beginPath();
       c.arc(x, y, m.dead ? 3 : 3.8, 0, Math.PI * 2);
-      c.fillStyle = m.dead ? '#5a5a5a' : m.team === 'enemy' ? '#ff3b30' : '#3aa0ff';
+      c.fillStyle = m.dead ? '#5a5a5a' : color;
       c.fill();
       c.lineWidth = 1;
       c.strokeStyle = 'rgba(0,0,0,.8)';
