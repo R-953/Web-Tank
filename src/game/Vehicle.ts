@@ -27,6 +27,8 @@ export const BRAKE_DECEL = 5;
 export const COAST_DECEL = 1.5;
 /** 没有油门且速度低于该值时直接刹停(驻车制动),m/s */
 const PARKING_SPEED = 1;
+/** 倒车判定:向后速度超过该值,或低于该值时正在踩倒车,m/s(转向键按汽车习惯反过来) */
+const REVERSE_STEER_SPEED = 0.5;
 /** 履带抗侧滑能力,m/s²(约 0.8g) */
 const LATERAL_GRIP_ACCEL = 8;
 /**
@@ -48,7 +50,10 @@ const BARREL_DAMAGE_DISPERSION_MRAD = 3;
 export interface VehicleControls {
   /** -1 倒车 .. 1 前进 */
   throttle: number;
-  /** -1 右转 .. 1 左转 */
+  /**
+   * 转向键:-1 右 .. 1 左。前进和原地转向时 1 = 车头左转;倒车时按汽车习惯反过来,
+   * 1 = 车尾向左摆(车头右转),例如 S + D 向右后方倒车。
+   */
   steer: number;
   /** 世界坐标瞄准点,null = 炮塔保持不动 */
   aimPoint: THREE.Vector3 | null;
@@ -505,12 +510,18 @@ export class Vehicle {
   }
 
   /**
-   * 实际使用的转向输入。固定战斗室车没有手动转向、而瞄准点超出射界时,车体自动转向把火炮带过去
-   * (War Thunder 鼠标瞄准的做法);手动转向键始终优先。
+   * 车体转向量,正值 = 车头向左转(逆时针)。
+   *   - 手动转向键:倒车时反过来(汽车习惯,S + D 向右后方倒车);
+   *   - 固定战斗室车没按转向键、瞄准点超出射界时,车体自动转向把火炮带过去(War Thunder 鼠标瞄准的做法)。
+   *     自动转向本身就是「车头该往哪边转」,倒车时不反。
    */
-  private steerInput(): number {
+  private steerInput(fwdSpeed: number, throttle: number): number {
     const steer = this.controls.steer;
-    if (!this.casemate || steer !== 0) return steer;
+    if (steer !== 0) {
+      const reversing = fwdSpeed < -REVERSE_STEER_SPEED || (fwdSpeed <= REVERSE_STEER_SPEED && throttle < 0);
+      return reversing ? -steer : steer;
+    }
+    if (!this.casemate) return 0;
     const local = this.aimLocal();
     return local ? autoSteer(this.spec, Math.atan2(-local.x, -local.z)) : 0;
   }
@@ -552,7 +563,7 @@ export class Vehicle {
     const av = this.body.angvel();
     const w = new THREE.Vector3(av.x, av.y, av.z);
     const wUp = w.dot(up);
-    const targetYawRate = THREE.MathUtils.clamp(this.steerInput(), -1, 1) * maxYawRate;
+    const targetYawRate = THREE.MathUtils.clamp(this.steerInput(fwdSpeed, throttle), -1, 1) * maxYawRate;
     const turnAccel = this.spec.hull.turnRate * DEG2RAD * TURN_RESPONSE;
     const newWUp = moveTowards(wUp, targetYawRate, turnAccel * dt);
     // Rapier 每步按 v /= (1 + dt·damping) 衰减角速度,这里预先放大抵消
