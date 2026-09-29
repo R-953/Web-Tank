@@ -1,7 +1,7 @@
 # 003-research-m4a3-76w:M4A3(76)W 数据调研(只出数据和出处)
 
-- 负责:Gemini CLI(要用网页搜索;读 AGENTS.md 的设置见看板下方的说明)
-- 状态:待领取(000 完成之后)
+- 负责:Claude Code(原定 Gemini CLI;2026-09-29 负责人决定本轮由 Claude Code 代做)
+- 状态:待审查
 - 分支:`task/003-research-m4a3-76w`
 - 规模:M(只写文档,不写代码)
 
@@ -37,3 +37,23 @@
 - [ ] 没有改动 `src/`、`tests/`
 
 ## 结果(完成后填写)
+
+- 新增文件:`docs/research/m4a3-76w.md`(资料来源、VVSS / HVSS 对比、防护、机动、火炮、瞄准镜、弹药与两套穿深表、同轴机枪、内部布局、`VehicleSpec` 草稿、待决定事项)。没有改动 `src/`、`tests/`
+- 主要来源:
+  - afvdatabase 的 M4A3(76)W 数据表(注明转载自 Hunnicutt《Sherman》1994;VVSS 尺寸表取自《Catalogue of Standard Ordnance Items》),下载网页原文逐字核对过
+  - Wikipedia「76 mm gun M1」(引 Leventhal 1996、Hunnicutt 1978 等)和「M4 Sherman」,读的是条目源码
+  - bulletpicker.com 的 M62 弹丸和 M66A1 引信页(引 TM 9-1904 等)
+  - Wikipedia「M1919」
+  - War Thunder wiki 只作量级参考,没有当作出处
+- 没查到或只能估算的:
+  - 没查到:M71D 倍率、M42A1 引信、同轴机枪在 6,250 发里的份额、.30 AP M2 弹数据、两个车底弹药箱各在哪一侧
+  - 估算:装填时间、高低机速度、转向速度、起步加速度、车体盒 / 炮塔盒尺寸、所有模块和乘员坐标、M62 引信延时
+- 来源矛盾(都已在文档里列出并给了建议):
+  - M93 弹重:3.45 kg,另说 4.24 kg(后者未能核实)
+  - M62 装药:65 g,另说 77 g
+  - 两种悬挂的重量和尺寸不同
+- 没能打开的来源:
+  - theshermantank.com(人机验证,没有绕过)
+  - Axis History Forum、G503 论坛(403)
+  - CGSC 馆藏的 HVAP 文件(没有正文)
+- 需要负责人决定:见文档第 11 节,共 7 条,最重要的三条是悬挂型号、M93 弹重和瞄准镜倍率
