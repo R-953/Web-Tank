@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { HitReplay } from '../game/Game';
-import { buildVehicleModel } from '../game/models';
+import { applyGunPose, buildVehicleModel } from '../game/models';
 import { buildShellModel } from '../game/models/shell';
 import type { Segment } from '../game/damage/penetration';
 
@@ -160,8 +160,7 @@ export class KillCam {
     gunPivot.position.set(0, turret.height / 2, -turret.length / 2);
     root.add(turretPivot);
     turretPivot.add(gunPivot);
-    turretPivot.rotation.y = r.turretYaw;
-    gunPivot.rotation.x = r.gunPitch;
+    applyGunPose(r.spec, { turretPivot, gunPivot }, r.turretYaw, r.gunPitch);
 
     // 半透明外壳 + 轮廓线
     const temp = buildVehicleModel(r.spec, { root, turretPivot, gunPivot });

@@ -1,4 +1,5 @@
 import { VehicleFrames } from '../../game/damage/geometry';
+import { isCasemate } from '../../game/casemate';
 import type { DamageModel, ModuleState } from '../../game/damage/DamageModel';
 import type { VehicleSpec } from '../../data/types';
 
@@ -106,11 +107,12 @@ export class VehicleStatus {
       this.drawModule(m, P, k, fireSource === m.id, pulse);
     }
 
-    // 炮塔:绕座圈中心按炮塔角旋转
+    // 炮塔:绕座圈中心按炮塔角旋转;固定战斗室不转,只有火炮绕炮耳轴在射界内转
+    const casemate = isCasemate(spec);
     c.save();
     const [tx, ty] = P(0, 0);
     c.translate(tx, ty);
-    c.rotate(-s.turretYaw);
+    if (!casemate) c.rotate(-s.turretYaw);
     const T = (x: number, z: number): [number, number] => [x * k, z * k];
     c.fillStyle = 'rgba(28,33,38,.8)';
     c.strokeStyle = 'rgba(235,240,245,.85)';
@@ -119,21 +121,27 @@ export class VehicleStatus {
     c.rect(-(turret.width / 2) * k, -(turret.length / 2) * k, turret.width * k, turret.length * k);
     c.fill();
     c.stroke();
-    // 炮管
+    for (const m of damage.modules) {
+      if (m.box.part !== 'turret') continue;
+      this.drawModuleAt(m, m.box.center.x, m.box.center.z, T, k, fireSource === m.id, pulse);
+    }
+    // 火炮坐标系:原点在炮耳轴(炮塔正面中部),不计俯仰
+    c.save();
+    c.translate(...T(0, -turret.length / 2));
+    if (casemate) c.rotate(-s.turretYaw);
     const barrel = damage.modules.find((m) => m.type === 'barrel');
     const barrelColor = barrel ? moduleColor(barrel.hp / barrel.maxHp) : null;
     c.strokeStyle = barrelColor ?? 'rgba(235,240,245,.85)';
     c.lineWidth = 3;
     c.beginPath();
-    c.moveTo(...T(0, -turret.length / 2));
-    c.lineTo(...T(0, -turret.length / 2 - turret.barrelLength));
+    c.moveTo(0, 0);
+    c.lineTo(...T(0, -turret.barrelLength));
     c.stroke();
     for (const m of damage.modules) {
-      if (m.box.part === 'hull' || m.type === 'barrel') continue;
-      // 炮塔 / 火炮坐标系里的模块:火炮系先换到炮塔系(不计俯仰)
-      const center = m.box.part === 'gun' ? { x: m.box.center.x, z: m.box.center.z - turret.length / 2 } : m.box.center;
-      this.drawModuleAt(m, center.x, center.z, T, k, fireSource === m.id, pulse);
+      if (m.box.part !== 'gun' || m.type === 'barrel') continue;
+      this.drawModuleAt(m, m.box.center.x, m.box.center.z, T, k, fireSource === m.id, pulse);
     }
+    c.restore();
     c.restore();
 
     // 乘员:按当前座位的位置(换位中画虚线圈)

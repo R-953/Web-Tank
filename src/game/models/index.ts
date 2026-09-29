@@ -6,6 +6,7 @@ import { periscope, roundHatch } from './parts';
 import { buildTigerI } from './tigerI';
 import { buildT3485 } from './t34_85';
 import { buildTigerII } from './tigerII';
+import { isCasemate } from '../casemate';
 
 export type { ModelParts } from './kit';
 
@@ -42,6 +43,16 @@ export function buildVehicleModel(spec: VehicleSpec, parts: ModelParts): Vehicle
 
 export function hasCustomModel(vehicleId: string): boolean {
   return vehicleId in BUILDERS;
+}
+
+/**
+ * 按火炮水平角 / 俯仰角摆放模型节点(游戏、击杀回放、机库共用)。
+ * 炮塔车:水平角转炮塔节点;固定战斗室车:战斗室不动,火炮节点先转水平角再俯仰。
+ */
+export function applyGunPose(spec: VehicleSpec, parts: Pick<ModelParts, 'turretPivot' | 'gunPivot'>, yaw: number, pitch: number): void {
+  const casemate = isCasemate(spec);
+  parts.turretPivot.rotation.y = casemate ? 0 : yaw;
+  parts.gunPivot.rotation.set(pitch, casemate ? yaw : 0, 0, 'YXZ');
 }
 
 /** 通用模型:车体(倾斜首上)+ 两侧会动的履带与负重轮 + 方形炮塔 + 炮管 */

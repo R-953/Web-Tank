@@ -102,7 +102,7 @@ export interface HullSpec {
   acceleration: number;
 }
 
-/** 炮塔外形参数 */
+/** 炮塔外形参数(固定战斗室车辆:这个盒子就是战斗室) */
 export interface TurretSpec {
   length: number;
   width: number;
@@ -112,6 +112,12 @@ export interface TurretSpec {
   elevation: readonly [min: number, max: number];
   /** 高低机速度(火炮俯仰),度/秒 */
   elevationSpeed: number;
+  /**
+   * 固定战斗室(突击炮、坦克歼击车):火炮左右射界 [向左, 向右],度,都填正数。
+   * 设了这个字段表示没有炮塔,战斗室不转,只有火炮在射界内转(速度仍是 turretRotationSpeed);
+   * 不设 = 可 360° 旋转的炮塔。
+   */
+  traverse?: readonly [left: number, right: number];
 }
 
 /** 炮手瞄准镜 */

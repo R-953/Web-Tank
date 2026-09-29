@@ -67,7 +67,8 @@ export interface AIContext {
  * 简单的还击 AI:只负责炮塔和开火,车体移动交给巡逻 / 静止控制器。
  *   - 玩家进入 alertRange 且有视线,或者自己被打中 / 被近弹惊动 → 进入交战状态;
  *   - 交战距离内有视线:转炮塔对准玩家(带移动提前量),按「真实距离 ×(1 ± 估距误差)」设表尺;
- *   - 瞄准 aimTime 秒、炮管对准、装填完毕就开火;每打一发修正一次估距误差。
+ *   - 瞄准 aimTime 秒、炮管对准、装填完毕就开火;每打一发修正一次估距误差;
+ *   - 固定战斗室车:目标在射界外时停车,车体自动原地转向(见 Vehicle 的自动转向),转进射界后再恢复移动。
  */
 export class GunnerAI {
   alerted = false;
@@ -124,7 +125,8 @@ export class GunnerAI {
       this.rangeError *= p.correction;
       this.rollAimOffset(ctx.rng, dist);
     }
-    return { ...base, aimPoint, sightRange, fire };
+    const throttle = self.canTraverseTo(aimPoint) ? base.throttle : 0;
+    return { ...base, throttle, aimPoint, sightRange, fire };
   }
 
   private acquire(ctx: AIContext): void {

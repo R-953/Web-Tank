@@ -2,10 +2,11 @@ import * as THREE from 'three';
 import RAPIER from '@dimforge/rapier3d-compat';
 import type { Loadout, ShellSpec, VehicleSpec, WeaponSpec } from '../data/types';
 import { REFERENCE_ROLLING_RESISTANCE, SURFACES, type SurfaceSpec } from '../data/surfaces';
-import { buildVehicleModel, type VehicleModel } from './models';
+import { applyGunPose, buildVehicleModel, type VehicleModel } from './models';
 import { DamageModel } from './damage/DamageModel';
 import { VehicleFrames } from './damage/geometry';
 import { superelevation } from './Ballistics';
+import { autoSteer, clampYaw, isCasemate } from './casemate';
 
 const DEG2RAD = Math.PI / 180;
 const UP = new THREE.Vector3(0, 1, 0);
@@ -107,7 +108,7 @@ export class Vehicle {
   readonly damage: DamageModel;
 
   controls: VehicleControls = idleControls();
-  /** 炮塔相对车体的水平角,弧度,0 = 朝车头 */
+  /** 火炮相对车体的水平角,弧度,0 = 朝车头,正值向左(炮塔车转炮塔,固定战斗室车只转火炮) */
   turretYaw = 0;
   /** 火炮俯仰角,弧度,正值 = 抬高 */
   gunPitch = 0;
@@ -132,6 +133,8 @@ export class Vehicle {
   private readonly turretOffset: THREE.Vector3;
   /** 火炮耳轴(炮塔本地坐标) */
   private readonly gunOffset: THREE.Vector3;
+  /** 固定战斗室:战斗室不转,水平角加在火炮上,并限制在射界内 */
+  private readonly casemate: boolean;
 
   private readonly prevPos = new THREE.Vector3();
   private readonly currPos = new THREE.Vector3();
@@ -161,6 +164,7 @@ export class Vehicle {
     const { hull, turret } = spec;
     this.turretOffset = new THREE.Vector3(0, hull.height / 2, 0);
     this.gunOffset = new THREE.Vector3(0, turret.height / 2, -turret.length / 2);
+    this.casemate = isCasemate(spec);
 
     const q = new THREE.Quaternion().setFromAxisAngle(UP, headingRad);
     this.body = world.createRigidBody(
@@ -270,7 +274,7 @@ export class Vehicle {
   /** 部件在世界坐标下的朝向(用于把命中法线转到本地坐标) */
   partQuaternion(part: VehiclePart, out = new THREE.Quaternion()): THREE.Quaternion {
     this.physicsQuaternion(out);
-    if (part === 'turret' || part === 'barrel') out.multiply(new THREE.Quaternion().setFromAxisAngle(UP, this.turretYaw));
+    if (part === 'barrel' || (part === 'turret' && !this.casemate)) out.multiply(new THREE.Quaternion().setFromAxisAngle(UP, this.turretYaw));
     if (part === 'barrel') out.multiply(new THREE.Quaternion().setFromAxisAngle(RIGHT, this.gunPitch));
     return out;
   }
@@ -303,7 +307,7 @@ export class Vehicle {
 
     this.drive(dt, world);
     this.aimTurret(dt);
-    const yawQ = new THREE.Quaternion().setFromAxisAngle(UP, this.turretYaw);
+    const yawQ = this.turretFrameYaw();
     this.turretCollider.setRotationWrtParent({ x: yawQ.x, y: yawQ.y, z: yawQ.z, w: yawQ.w });
     this.updateBarrelCollider();
 
@@ -366,12 +370,11 @@ export class Vehicle {
   /** 同轴机枪枪口:火炮坐标系里的安装点,方向与炮管平行 */
   mgMuzzle(): { origin: THREE.Vector3; dir: THREE.Vector3 } {
     const q = this.physicsQuaternion();
-    const qTurret = q.clone().multiply(new THREE.Quaternion().setFromAxisAngle(UP, this.turretYaw));
-    const qGun = qTurret.clone().multiply(new THREE.Quaternion().setFromAxisAngle(RIGHT, this.gunPitch));
+    const qGun = this.gunQuaternion(q);
     const m = this.mg.weapon?.mount ?? [0.35, 0, -0.4];
     const origin = this.physicsPosition()
       .add(this.turretOffset.clone().applyQuaternion(q))
-      .add(this.gunOffset.clone().applyQuaternion(qTurret))
+      .add(this.gunOffset.clone().applyQuaternion(q.clone().multiply(this.turretFrameYaw())))
       .add(new THREE.Vector3(m[0], m[1], m[2]).applyQuaternion(qGun));
     return { origin, dir: FORWARD.clone().applyQuaternion(qGun) };
   }
@@ -388,11 +391,10 @@ export class Vehicle {
   /** 炮口位置与指向(按物理状态计算,不受渲染插值影响) */
   muzzle(): { origin: THREE.Vector3; dir: THREE.Vector3 } {
     const q = this.physicsQuaternion();
-    const qTurret = q.clone().multiply(new THREE.Quaternion().setFromAxisAngle(UP, this.turretYaw));
-    const qGun = qTurret.clone().multiply(new THREE.Quaternion().setFromAxisAngle(RIGHT, this.gunPitch));
+    const qGun = this.gunQuaternion(q);
     const pivot = this.physicsPosition()
       .add(this.turretOffset.clone().applyQuaternion(q))
-      .add(this.gunOffset.clone().applyQuaternion(qTurret));
+      .add(this.gunOffset.clone().applyQuaternion(q.clone().multiply(this.turretFrameYaw())));
     const dir = FORWARD.clone().applyQuaternion(qGun);
     const origin = pivot.addScaledVector(dir, this.spec.turret.barrelLength);
     return { origin, dir };
@@ -432,12 +434,24 @@ export class Vehicle {
     this.hullCollider.setFrictionCombineRule(RAPIER.CoefficientCombineRule.Average);
   }
 
+  /** 炮塔(战斗室)坐标系相对车体的旋转:炮塔车 = 水平角,固定战斗室 = 不转 */
+  private turretFrameYaw(): THREE.Quaternion {
+    return this.casemate ? new THREE.Quaternion() : new THREE.Quaternion().setFromAxisAngle(UP, this.turretYaw);
+  }
+
+  /** 火炮在世界(或传入的车体朝向)下的旋转:车体 × 水平角 × 俯仰,两种车都一样 */
+  private gunQuaternion(hull = new THREE.Quaternion()): THREE.Quaternion {
+    return hull
+      .clone()
+      .multiply(new THREE.Quaternion().setFromAxisAngle(UP, this.turretYaw))
+      .multiply(new THREE.Quaternion().setFromAxisAngle(RIGHT, this.gunPitch));
+  }
+
   private updateBarrelCollider(): void {
-    const qYaw = new THREE.Quaternion().setFromAxisAngle(UP, this.turretYaw);
-    const qGun = qYaw.clone().multiply(new THREE.Quaternion().setFromAxisAngle(RIGHT, this.gunPitch));
+    const qGun = this.gunQuaternion();
     const center = this.turretOffset
       .clone()
-      .add(this.gunOffset.clone().applyQuaternion(qYaw))
+      .add(this.gunOffset.clone().applyQuaternion(this.turretFrameYaw()))
       .add(new THREE.Vector3(0, 0, -this.spec.turret.barrelLength / 2).applyQuaternion(qGun));
     this.barrelCollider.setTranslationWrtParent({ x: center.x, y: center.y, z: center.z });
     this.barrelCollider.setRotationWrtParent({ x: qGun.x, y: qGun.y, z: qGun.z, w: qGun.w });
@@ -474,8 +488,12 @@ export class Vehicle {
   syncVisual(alpha: number): void {
     this.root.position.lerpVectors(this.prevPos, this.currPos, alpha);
     this.root.quaternion.slerpQuaternions(this.prevQuat, this.currQuat, alpha);
-    this.turretPivot.rotation.y = this.prevTurretYaw + wrapAngle(this.currTurretYaw - this.prevTurretYaw) * alpha;
-    this.gunPivot.rotation.x = this.prevGunPitch + (this.currGunPitch - this.prevGunPitch) * alpha;
+    applyGunPose(
+      this.spec,
+      this,
+      this.prevTurretYaw + wrapAngle(this.currTurretYaw - this.prevTurretYaw) * alpha,
+      this.prevGunPitch + (this.currGunPitch - this.prevGunPitch) * alpha,
+    );
     const t = this.travel;
     this.model.animate(t.prevL + (t.currL - t.prevL) * alpha, t.prevR + (t.currR - t.prevR) * alpha);
   }
@@ -484,6 +502,17 @@ export class Vehicle {
   get engineRpm(): number {
     const v = Math.abs(this.forwardSpeed) / Math.max(1, this.spec.maxSpeed / 3.6);
     return Math.min(1, 0.15 + 0.85 * v);
+  }
+
+  /**
+   * 实际使用的转向输入。固定战斗室车没有手动转向、而瞄准点超出射界时,车体自动转向把火炮带过去
+   * (War Thunder 鼠标瞄准的做法);手动转向键始终优先。
+   */
+  private steerInput(): number {
+    const steer = this.controls.steer;
+    if (!this.casemate || steer !== 0) return steer;
+    const local = this.aimLocal();
+    return local ? autoSteer(this.spec, Math.atan2(-local.x, -local.z)) : 0;
   }
 
   private drive(dt: number, world: RAPIER.World): void {
@@ -523,7 +552,7 @@ export class Vehicle {
     const av = this.body.angvel();
     const w = new THREE.Vector3(av.x, av.y, av.z);
     const wUp = w.dot(up);
-    const targetYawRate = THREE.MathUtils.clamp(this.controls.steer, -1, 1) * maxYawRate;
+    const targetYawRate = THREE.MathUtils.clamp(this.steerInput(), -1, 1) * maxYawRate;
     const turnAccel = this.spec.hull.turnRate * DEG2RAD * TURN_RESPONSE;
     const newWUp = moveTowards(wUp, targetYawRate, turnAccel * dt);
     // Rapier 每步按 v /= (1 + dt·damping) 衰减角速度,这里预先放大抵消
@@ -568,12 +597,36 @@ export class Vehicle {
     return moveTowards(fwdSpeed, target, Math.max(braking ? brakeDecel : COAST_DECEL, c) * dt);
   }
 
-  private aimTurret(dt: number): void {
+  /**
+   * 瞄准点相对火炮转动中心的位置(车体朝向):炮塔车以座圈中心为准,固定战斗室以炮耳轴为准
+   * (火炮绕炮耳轴转,近距离时两者的角度差不能忽略)。没有瞄准点返回 null。
+   */
+  private aimLocal(): THREE.Vector3 | null {
     const aim = this.controls.aimPoint;
-    if (!aim) return;
-    const qInv = this.physicsQuaternion().invert();
-    const local = aim.clone().sub(this.physicsPosition()).applyQuaternion(qInv).sub(this.turretOffset);
-    const desiredYaw = Math.atan2(-local.x, -local.z);
+    return aim ? this.fromGunCenter(aim) : null;
+  }
+
+  private fromGunCenter(p: THREE.Vector3): THREE.Vector3 {
+    const local = this.worldToHull(p).sub(this.turretOffset);
+    if (this.casemate) {
+      local.x -= this.gunOffset.x;
+      local.z -= this.gunOffset.z;
+    }
+    return local;
+  }
+
+  /** 火炮在水平方向上能否指向该点:炮塔车总是能,固定战斗室要在射界内 */
+  canTraverseTo(p: THREE.Vector3): boolean {
+    if (!this.casemate) return true;
+    const local = this.fromGunCenter(p);
+    return autoSteer(this.spec, Math.atan2(-local.x, -local.z)) === 0;
+  }
+
+  private aimTurret(dt: number): void {
+    const local = this.aimLocal();
+    if (!local) return;
+    // 固定战斗室:超出射界就停在射界边上(车体自动转向见 drive)
+    const desiredYaw = clampYaw(this.spec, Math.atan2(-local.x, -local.z));
     const horizontal = Math.hypot(local.x, local.z);
     const [minElev, maxElev] = this.spec.turret.elevation;
     const shell = this.activeShell;
