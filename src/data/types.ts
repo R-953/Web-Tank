@@ -69,10 +69,20 @@ export interface ShellSpec {
 export interface WeaponSpec {
   id: string;
   name: string;
-  /** 装填时间,秒(满编装填手、炮闩完好) */
+  /** 主炮:装填时间,秒(满编装填手、炮闩完好);机枪:换弹链时间 */
   reloadTime: number;
-  /** 可携带的弹种;第一种是默认弹,敌方 AI 也主要用它 */
+  /** 可携带的弹种;第一种是默认弹,敌方 AI 也主要用它。机枪只有一种弹 */
   ammo: ShellSpec[];
+  /** 武器类型,缺省为主炮 'cannon';'mg' = 同轴机枪(不占弹药架,单独计弹链) */
+  kind?: 'cannon' | 'mg';
+  /** 机枪:射速,发 / 分 */
+  rateOfFire?: number;
+  /** 机枪:每条弹链(弹鼓)的发数 */
+  beltSize?: number;
+  /** 机枪:携带总发数 */
+  rounds?: number;
+  /** 机枪:枪口在火炮坐标系里的位置(随火炮俯仰),m;缺省在炮管右侧 */
+  mount?: Vec3;
 }
 
 /** 出发前的携弹方案:弹种 id → 发数 */
@@ -257,6 +267,38 @@ export interface SpawnSpec {
   ammoFraction?: number;
 }
 
+/** 植物种类:阔叶树、针叶树、灌木(草丛按地表自动生成,不在区域里写) */
+export type PlantKind = 'tree' | 'pine' | 'bush';
+
+/**
+ * 植被区:在圆形或多边形区域内按密度撒点。用固定种子,每次加载位置完全一样(确定性,不是每局随机)。
+ * 水面、陡坡和出生点附近会自动跳过。
+ */
+export interface VegetationZone {
+  kind: PlantKind;
+  /** 圆形区域:中心 [x, z] 与半径 */
+  at?: Vec2;
+  radius?: number;
+  /** 或多边形区域:顶点 [x, z] 按顺序 */
+  polygon?: Vec2[];
+  /** 密度,株 / 公顷(10 000 m²) */
+  density: number;
+  seed: number;
+  /** 大小倍数范围,缺省 [0.8, 1.2] */
+  scale?: readonly [number, number];
+}
+
+export interface VegetationSpec {
+  zones: VegetationZone[];
+  /**
+   * 草丛:按地表自动铺满(只在镜头附近生成和渲染)。density = 草地上每 100 m² 的草丛数,
+   * 土地、沙地等按比例减少,浅水里不长。
+   */
+  grass?: { density: number; seed: number };
+  /** 出生点周围多少米内不长树和灌木,缺省 12 */
+  clearRadius?: number;
+}
+
 export interface MapSpec {
   id: string;
   name: string;
@@ -267,6 +309,8 @@ export interface MapSpec {
   surface?: SurfaceSpec;
   /** 水面高度,m;低于它的地面是浅水(可以涉水,但很慢)。缺省没有水 */
   waterLevel?: number;
+  /** 草丛、灌木、树林;缺省没有植被 */
+  vegetation?: VegetationSpec;
   obstacles: ObstacleSpec[];
   spawns: {
     player: SpawnSpec;

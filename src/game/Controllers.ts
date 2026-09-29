@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { Vec2 } from '../data/types';
-import { AI } from '../data/ai';
+import { AI, type AIParams } from '../data/ai';
 import { REVERSE_SPEED_RATIO, idleControls, type Vehicle, type VehicleControls } from './Vehicle';
 
 /** 非玩家载具的控制器:每个固定步给出控制输入 */
@@ -77,8 +77,9 @@ export class GunnerAI {
   private aimDelay = 0;
   private rangeError = 0;
   private readonly aimOffset = new THREE.Vector3();
+  private readonly lastPos = new THREE.Vector3();
 
-  constructor(private readonly params: typeof AI = AI) {}
+  constructor(private readonly params: AIParams = AI) {}
 
   /** 被玩家打中,或玩家的炮弹落在附近 */
   alert(): void {
@@ -89,7 +90,7 @@ export class GunnerAI {
     const p = this.params;
     const target = ctx.player;
     if (self.isDead || target.isDead) return base;
-    const myPos = self.physicsPosition();
+    const myPos = self.physicsPosition(this.lastPos);
     const targetPos = target.physicsPosition();
     const dist = myPos.distanceTo(targetPos);
     if (dist > p.engageRange && !this.alerted) return base;
@@ -121,7 +122,7 @@ export class GunnerAI {
     if (fire) {
       // 看到落点后修正估距,下一发换个瞄准点
       this.rangeError *= p.correction;
-      this.rollAimOffset(ctx.rng);
+      this.rollAimOffset(ctx.rng, dist);
     }
     return { ...base, aimPoint, sightRange, fire };
   }
@@ -131,11 +132,18 @@ export class GunnerAI {
     this.acquiredAt = ctx.time;
     this.aimDelay = p.aimTime[0] + (p.aimTime[1] - p.aimTime[0]) * ctx.rng();
     this.rangeError = (ctx.rng() * 2 - 1) * p.rangeError;
-    this.rollAimOffset(ctx.rng);
+    this.rollAimOffset(ctx.rng, ctx.player.physicsPosition().distanceTo(this.lastPos));
   }
 
-  private rollAimOffset(rng: () => number): void {
+  /** 瞄准点偏移:目标附近的均匀偏移 + 随距离放大的高斯散布 */
+  private rollAimOffset(rng: () => number, dist: number): void {
     const s = this.params.aimSpread;
-    this.aimOffset.set((rng() * 2 - 1) * s, (rng() * 2 - 1) * s * 0.5 + 0.3, (rng() * 2 - 1) * s);
+    const sigma = (this.params.dispersionMrad / 1000) * dist;
+    const gauss = () => Math.sqrt(-2 * Math.log(1 - rng() * 0.999999)) * Math.cos(2 * Math.PI * rng());
+    this.aimOffset.set(
+      (rng() * 2 - 1) * s + gauss() * sigma,
+      (rng() * 2 - 1) * s * 0.5 + 0.3 + gauss() * sigma,
+      (rng() * 2 - 1) * s + gauss() * sigma,
+    );
   }
 }

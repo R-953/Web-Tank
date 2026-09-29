@@ -17,6 +17,13 @@ const TRACER_LEN = 3.5;
 const TRACER_GEO = new THREE.BoxGeometry(0.12, 0.12, TRACER_LEN).translate(0, 0, -TRACER_LEN / 2);
 const TRACER_MAT = new THREE.MeshBasicMaterial({ color: 0xffb15a, transparent: true, opacity: 0.85, depthWrite: false });
 const TRACER_AXIS = new THREE.Vector3(0, 0, 1);
+/** 口径小于它(mm)的算枪弹:只画一根细曳光,不建弹体模型 */
+export const SMALL_CALIBER = 20;
+const BULLET_TRACER_LEN = 2.2;
+const BULLET_TRACER_GEO = new THREE.BoxGeometry(0.035, 0.035, BULLET_TRACER_LEN).translate(0, 0, -BULLET_TRACER_LEN / 2);
+const BULLET_TRACER_MAT = new THREE.MeshBasicMaterial({ color: 0xffd08a, transparent: true, opacity: 0.9, depthWrite: false });
+/** 枪弹最多飞行多久(之后已经没有杀伤力,也看不见了),秒 */
+const BULLET_MAX_AGE = 4;
 
 /**
  * 弹道积分一步:空气阻力(对 dv/dt = −k|v|v 的精确单步解)+ 重力;位移按步首、步末速度的平均值
@@ -63,7 +70,8 @@ export class Projectile {
     origin: THREE.Vector3,
     dir: THREE.Vector3,
   ) {
-    this.mesh.add(buildShellModel(shell), new THREE.Mesh(TRACER_GEO, TRACER_MAT));
+    if (this.isBullet) this.mesh.add(new THREE.Mesh(BULLET_TRACER_GEO, BULLET_TRACER_MAT));
+    else this.mesh.add(buildShellModel(shell), new THREE.Mesh(TRACER_GEO, TRACER_MAT));
     this.dragK = dragK(shell);
     this.position = origin.clone();
     this.velocity = dir.clone().normalize().multiplyScalar(shell.muzzleVelocity);
@@ -99,8 +107,25 @@ export class Projectile {
     this.position.add(disp);
     this.currPos.copy(this.position);
     this.age += dt;
-    if (this.age > MAX_AGE || this.position.y < -100) this.alive = false;
+    if (this.age > (this.isBullet ? BULLET_MAX_AGE : MAX_AGE) || this.position.y < -100) this.alive = false;
     return null;
+  }
+
+  /** 枪弹(口径 < 20 mm) */
+  get isBullet(): boolean {
+    return this.shell.caliber < SMALL_CALIBER;
+  }
+
+  /**
+   * 命中后继续飞(打断树干的动能弹):从命中点沿弹道前移 distance 米,速度乘 speedFactor。
+   * 下一步的射线从新位置出发,不会再打到同一个碰撞体。
+   */
+  passThrough(distance: number, speedFactor: number): void {
+    const dir = this.velocity.clone().normalize();
+    this.position.addScaledVector(dir, distance);
+    this.currPos.copy(this.position);
+    this.velocity.multiplyScalar(speedFactor);
+    this.alive = true;
   }
 
   /** 当前弹速下的穿深,mm(化学能弹与弹速无关) */

@@ -77,7 +77,7 @@ export function slopeRig(spec: VehicleSpec, slopeDeg: number) {
 function rig(world: RAPIER.World, v: Vehicle) {
   const step = (controls: Partial<VehicleControls> = {}) => {
     v.controls = { ...idleControls(), ...controls };
-    const req = v.fixedUpdate(DT, world);
+    const req = v.fixedUpdate(DT, world)[0] ?? null;
     world.timestep = DT;
     world.step();
     v.capturePose();

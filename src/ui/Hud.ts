@@ -2,41 +2,67 @@ import type { GameEvent, HitReplay } from '../game/Game';
 import type { ArmorFace } from '../game/Damage';
 import type { VehiclePart } from '../game/Vehicle';
 import type { DamageModel } from '../game/damage/DamageModel';
-import type { Loadout, VehicleSpec } from '../data/types';
-import { CREW_ROLE_NAMES } from '../data/modules';
+import type { VehicleSpec } from '../data/types';
 import { SHELL_SHORT, SHELL_TYPES } from '../data/shells';
-import { ammoCapacity, clampLoadout, loadoutTotal } from '../game/Loadout';
 import { KILLCAM } from './KillCam';
+import { MINIMAP } from './Minimap';
+import { VehicleStatus, STATUS_SIZE } from './hud/VehicleStatus';
 
-/** 一种弹在 HUD 里的显示 */
+/** 一种弹在快捷栏里的显示 */
 export interface AmmoLine {
+  id: string;
   name: string;
+  /** 弹种简称,如 APCBC */
   type: string;
+  /** 车内剩余(含膛内) */
   count: number;
   selected: boolean;
+  /** 膛里装的是这种 */
+  loaded: boolean;
+  /** 快捷键简称 */
+  key: string;
 }
 
 export interface HudState {
-  /** 玩家载具的模块 / 乘员状态 */
+  spec: VehicleSpec;
   damage: DamageModel;
+  /** 炮塔相对车体,弧度,0 = 朝车头,正值 = 向左 */
+  turretYaw: number;
+  /** 视线相对车体,同上 */
+  viewYaw: number;
+  /** 视线的世界朝向,弧度,0 = 北(−Z),正值 = 向左(西) */
+  compassYaw: number;
+  /** 带符号,倒车为负 */
+  speedKmh: number;
+  /** 0..1 */
+  engineRpm: number;
+  /** −1..1 */
+  throttle: number;
+  surface: string;
+  /** 按满编装填计的剩余秒数(实际 = / damage.reloadRate) */
   reloadRemaining: number;
   reloadTime: number;
-  /** 炮膛里的弹名;null = 空膛 */
+  /** 膛里的弹名;null = 空膛 */
   loaded: string | null;
   ammo: AmmoLine[];
-  speedKmh: number;
-  /** 脚下地表的名字 */
-  surface: string;
+  mg: { name: string; inBelt: number; beltSize: number; reserve: number; reloading: number; reloadTime: number; firing: boolean; key: string } | null;
+  keys: { fire: string; repair: string; extinguish: string; nextShell: string; scope: string; zoom: string; cursor: string };
   targetsDestroyed: number;
   targetsTotal: number;
   /** 炮管实际指向在屏幕上的位置(像素),null = 不在画面内 */
   gunMarker: { x: number; y: number } | null;
-  pointerLocked: boolean;
-  victory: boolean;
-  defeat: boolean;
   scoped: boolean;
   sightRange: number;
   magnification: number;
+  /** 操作提示;null = 不显示 */
+  hints: string | null;
+  /** 帧率;null = 不显示 */
+  fps: number | null;
+  /** Alt 光标位置(客户端像素);null = 不在光标模式 */
+  cursor: { x: number; y: number } | null;
+  /** 地图标记:距离与屏幕位置(null = 在身后) */
+  marker: { distance: number; screen: { x: number; y: number } | null } | null;
+  alive: boolean;
 }
 
 const FACE_LABEL: Record<ArmorFace, string> = {
@@ -49,63 +75,71 @@ const FACE_LABEL: Record<ArmorFace, string> = {
 const PART_LABEL: Record<VehiclePart, string> = { hull: '车体', turret: '炮塔', barrel: '炮管' };
 
 const FEED_LIFETIME = 6;
-const FEED_MAX = 7;
+const FEED_MAX = 5;
 
 const CSS = `
-.hud { position: fixed; inset: 0; pointer-events: none; font: 14px/1.4 system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; color: #f2f2f2; text-shadow: 0 1px 2px rgba(0,0,0,.8); user-select: none; }
+.hud { position: fixed; inset: 0; pointer-events: none; font: 13px/1.35 system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; color: #f2f2f2; text-shadow: 0 1px 2px rgba(0,0,0,.85); user-select: none; z-index: 4; }
+.hud.hidden { display: none; }
 .hud-crosshair { position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px; }
 .hud-crosshair::before, .hud-crosshair::after { content: ""; position: absolute; background: rgba(255,255,255,.9); box-shadow: 0 0 2px #000; }
 .hud-crosshair::before { left: 8px; top: 0; width: 2px; height: 18px; }
 .hud-crosshair::after { top: 8px; left: 0; height: 2px; width: 18px; }
-.hud.scoped .hud-crosshair, .hud.scoped .hud-hint { display: none; }
+.hud.scoped .hud-crosshair { display: none; }
 .hud-gun { position: absolute; left: 0; top: 0; width: 26px; height: 26px; margin: -13px 0 0 -13px; border: 2px solid #7cfc9a; border-radius: 50%; box-shadow: 0 0 3px #000; transition: border-color .1s; }
 .hud-gun.reloading { border-color: #ffb347; border-style: dashed; }
 .hud-gun.disabled { border-color: #ff4d4d; }
-.hud-panel { position: absolute; background: rgba(15,18,22,.55); border-radius: 6px; padding: 8px 12px; }
-.hud-objective { left: 16px; top: 16px; }
-.hud-hint { left: 16px; top: 58px; font-size: 12px; opacity: .85; }
-.hud-status { left: 16px; bottom: 16px; font-size: 13px; }
-.hud-status .row { display: flex; flex-wrap: wrap; gap: 2px 10px; max-width: 360px; }
-.hud-status .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 4px; vertical-align: middle; box-shadow: 0 0 2px #000; }
-.hud-status .swap { opacity: .7; font-style: italic; }
-.hud-status .repair { color: #ffd166; margin-top: 4px; }
-.hud-reload { left: 50%; bottom: 16px; width: 440px; margin-left: -220px; text-align: center; }
-.hud-ammo { display: flex; justify-content: center; gap: 10px; margin-top: 6px; font-size: 12px; }
-.hud-ammo span { opacity: .6; }
-.hud-ammo span.sel { opacity: 1; color: #ffd166; }
-.hud-ammo span.empty { text-decoration: line-through; }
-.hud-bar { height: 6px; background: rgba(255,255,255,.2); border-radius: 3px; overflow: hidden; margin-top: 4px; }
-.hud-bar > div { height: 100%; background: #7cfc9a; width: 100%; }
-.hud-bar.reloading > div { background: #ffb347; }
-.hud-feed { right: 16px; top: ${KILLCAM.margin * 2 + KILLCAM.height}px; width: 440px; display: flex; flex-direction: column; gap: 4px; background: none; padding: 0; }
-.hud-feed div { background: rgba(15,18,22,.6); border-left: 3px solid #999; padding: 4px 8px; border-radius: 3px; transition: opacity .4s; }
+.hud-box { position: absolute; background: rgba(14,17,20,.5); border: 1px solid rgba(255,255,255,.08); border-radius: 4px; }
+.hud.scoped .hud-box { background: rgba(14,17,20,.35); }
+.hud-top { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.hud-compass { display: block; }
+.hud-objective { font-size: 12px; opacity: .92; }
+.hud-topleft { position: absolute; left: 12px; top: 10px; font-size: 12px; display: flex; flex-direction: column; gap: 4px; max-width: calc(50vw - 200px); }
+.hud-fps { font-variant-numeric: tabular-nums; opacity: .85; }
+.hud-hint { opacity: .8; }
+.hud.scoped .hud-hint { display: none; }
+.hud-status { left: 12px; bottom: 12px; padding: 6px 8px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.hud-vstatus { display: block; }
+.hud-drive { display: grid; grid-template-columns: auto 1fr; gap: 1px 8px; width: ${STATUS_SIZE}px; font-size: 12px; font-variant-numeric: tabular-nums; align-items: center; }
+.hud-drive .speed { font-size: 18px; font-weight: 600; }
+.hud-drive .speed small { font-size: 11px; font-weight: 400; opacity: .8; margin-left: 2px; }
+.hud-rpm { height: 5px; background: rgba(255,255,255,.15); border-radius: 3px; overflow: hidden; }
+.hud-rpm > div { height: 100%; background: #9fd3ff; width: 0; }
+.hud-rpm.bad > div { background: #f08a1e; }
+.hud-drive .dim { opacity: .75; }
+.hud-bottom { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.hud-msgs { display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 18px; font-size: 14px; font-weight: 600; }
+.hud-msgs .red { color: #ff5a4a; }
+.hud-msgs .amber { color: #ffcf5a; }
+.hud-msgs .white { color: #f2f2f2; font-weight: 500; }
+.hud-bar { position: relative; display: flex; gap: 4px; align-items: stretch; padding: 4px; }
+.hud-slot { position: relative; width: 64px; height: 50px; background: rgba(30,36,42,.75); border: 1px solid rgba(255,255,255,.14); border-radius: 3px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
+.hud-slot .key { position: absolute; left: 3px; top: 1px; font-size: 10px; opacity: .7; }
+.hud-slot .ico { font-size: 11px; font-weight: 600; white-space: nowrap; }
+.hud-slot .val { font-size: 12px; font-variant-numeric: tabular-nums; opacity: .92; }
+.hud-slot .prog { position: absolute; left: 0; bottom: 0; height: 3px; background: #ffb347; width: 0; }
+.hud-slot.sel { border-color: #e0b44c; box-shadow: inset 0 0 0 1px #e0b44c; }
+.hud-slot.loaded::after { content: ""; position: absolute; right: 4px; top: 4px; width: 6px; height: 6px; border-radius: 50%; background: #7cfc9a; box-shadow: 0 0 3px #000; }
+.hud-slot.empty { opacity: .45; }
+.hud-slot.alert { border-color: #ff5a4a; background: rgba(90,20,16,.8); }
+.hud-slot.flash { animation: hudflash .6s steps(2) infinite; }
+.hud-slot.busy .prog { background: #7cc4ff; }
+.hud-slot.ok .ico { color: #bfe8c0; }
+.hud-slot.wide { width: 74px; }
+.hud-sep { width: 1px; background: rgba(255,255,255,.15); margin: 2px 2px; }
+@keyframes hudflash { 0% { background: rgba(120,24,16,.9); } 100% { background: rgba(30,36,42,.75); } }
+.hud-feed { position: absolute; right: 16px; top: ${KILLCAM.margin * 2 + KILLCAM.height}px; width: ${KILLCAM.width}px; display: flex; flex-direction: column; gap: 3px; max-height: calc(100vh - ${KILLCAM.margin * 3 + KILLCAM.height + MINIMAP.size + MINIMAP.label + MINIMAP.margin}px); overflow: hidden; }
+.hud-feed div { background: rgba(15,18,22,.62); border-left: 3px solid #999; padding: 3px 8px; border-radius: 3px; transition: opacity .4s; font-size: 12px; }
 .hud-feed .pen { border-color: #ff8a3d; }
 .hud-feed .nopen { border-color: #9ab; }
 .hud-feed .kill { border-color: #ff4d4d; font-weight: 600; }
 .hud-feed .self { border-color: #ffd166; }
-.hud-feed .incoming { border-color: #e04040; background: rgba(60,10,10,.6); }
-.hud-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.35); pointer-events: auto; cursor: pointer; }
-.hud-overlay.hidden { display: none; }
-.hud-card { background: rgba(15,18,22,.88); border-radius: 10px; padding: 22px 30px; max-width: 560px; text-align: center; }
-.hud-card h1 { margin: 0 0 8px; font-size: 22px; }
-.hud-card p { margin: 6px 0; }
-.hud-card .keys { opacity: .85; font-size: 13px; }
-.hud-loadout { margin: 12px auto 4px; cursor: default; font-size: 13px; text-align: left; display: inline-block; }
-.hud-loadout table { border-collapse: collapse; }
-.hud-loadout td { padding: 2px 8px; }
-.hud-loadout td.n { width: 34px; text-align: center; font-variant-numeric: tabular-nums; }
-.hud-loadout button { font: inherit; color: #eee; background: #2b3138; border: 1px solid #555; border-radius: 4px; width: 26px; cursor: pointer; }
-.hud-loadout button.apply { width: auto; padding: 3px 12px; margin-top: 8px; background: #3a5a3a; }
-.hud-loadout .total { margin-top: 6px; opacity: .85; }
+.hud-feed .incoming { border-color: #e04040; background: rgba(70,12,12,.66); }
+.hud-cursor { position: fixed; left: 0; top: 0; width: 16px; height: 22px; display: none; filter: drop-shadow(0 1px 1px rgba(0,0,0,.8)); pointer-events: none; z-index: 7; }
+.hud-marker { position: absolute; left: 0; top: 0; display: none; transform: translate(-50%, -100%); text-align: center; font-size: 12px; font-weight: 600; color: #ffd166; white-space: nowrap; }
+.hud.scoped .hud-top { display: none; }
+.hud-marker i { display: block; width: 10px; height: 10px; margin: 2px auto 0; background: #ffd166; transform: rotate(45deg); border: 1px solid #000; }
+.hud-marker.edge { color: #ffe39b; }
 `;
-
-const COLOR = { ok: '#3ecf5a', hurt: '#f0d23a', bad: '#f07b1e', dead: '#555' };
-function ratioColor(r: number): string {
-  if (r <= 0) return COLOR.dead;
-  if (r < 0.5) return COLOR.bad;
-  if (r < 1) return COLOR.hurt;
-  return COLOR.ok;
-}
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className: string, parent: HTMLElement): HTMLElementTagNameMap[K] {
   const e = document.createElement(tag);
@@ -114,36 +148,52 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, className: string, pa
   return e;
 }
 
-/** 携弹编辑器的输入:当前车型、当前方案,点「应用」时回调 */
-export interface LoadoutEditor {
-  spec: VehicleSpec;
-  loadout: Loadout;
-  onApply(loadout: Loadout): void;
+interface Slot {
+  root: HTMLDivElement;
+  key: HTMLSpanElement;
+  ico: HTMLSpanElement;
+  val: HTMLSpanElement;
+  prog: HTMLDivElement;
 }
 
-type OverlayMode = 'start' | 'victory' | 'defeat' | null;
+/** 状态提示的优先级:red > amber > white */
+type Msg = { text: string; cls: 'red' | 'amber' | 'white' };
 
-/** HUD:准星、炮管指向、装填 / 弹种、表尺、自车模块 / 乘员、命中记录、开始 / 胜利 / 失败界面(纯 DOM) */
+/**
+ * 战斗 HUD(纯 DOM + 2D 画布),布局参照 War Thunder:
+ *   左下车辆状态(俯视图 + 速度 / 转速)· 正下方状态提示和快捷栏(弹种、机枪、维修、灭火、瞄准镜)·
+ *   上方罗盘和任务 · 右上击杀回放(由 KillCam 画在 WebGL 画布上)下面是命中记录 · 右下小地图(Minimap)。
+ */
 export class Hud {
   private readonly root: HTMLDivElement;
   private readonly gun: HTMLDivElement;
+  private readonly compass: HTMLCanvasElement;
+  private readonly compassCtx: CanvasRenderingContext2D;
   private readonly objective: HTMLDivElement;
-  private readonly status: HTMLDivElement;
-  private readonly reloadText: HTMLDivElement;
-  private readonly reloadBar: HTMLDivElement;
-  private readonly reloadFill: HTMLDivElement;
-  private readonly ammoRow: HTMLDivElement;
+  private readonly fps: HTMLDivElement;
+  private readonly hint: HTMLDivElement;
+  private readonly status: VehicleStatus;
+  private readonly drive: HTMLDivElement;
+  private readonly speedEl: HTMLDivElement;
+  private readonly gearEl: HTMLDivElement;
+  private readonly rpmBar: HTMLDivElement;
+  private readonly rpmFill: HTMLDivElement;
+  private readonly surfaceEl: HTMLDivElement;
+  private readonly crewEl: HTMLDivElement;
+  private readonly msgs: HTMLDivElement;
+  private readonly bar: HTMLDivElement;
   private readonly feed: HTMLDivElement;
-  private readonly overlay: HTMLDivElement;
-  private readonly card: HTMLDivElement;
+  private readonly cursor: HTMLDivElement;
+  private readonly markerEl: HTMLDivElement;
+  private readonly markerText: HTMLSpanElement;
   private feedItems: Array<{ el: HTMLDivElement; bornAt: number }> = [];
-  private overlayMode: OverlayMode = null;
-  private lastStatus = '';
-  private lastAmmo = '';
-  private editor: LoadoutEditor | null = null;
-  private draft: Loadout = {};
+  private slots: { ammo: Slot[]; mg: Slot | null; repair: Slot; fire: Slot; sight: Slot } | null = null;
+  private barSignature = '';
+  private lastMsgs = '';
+  private lastHint = '';
+  private compassDpr = 0;
 
-  constructor(parent: HTMLElement, onOverlayClick: () => void) {
+  constructor(parent: HTMLElement) {
     const style = document.createElement('style');
     style.textContent = CSS;
     document.head.appendChild(style);
@@ -151,66 +201,78 @@ export class Hud {
     this.root = el('div', 'hud', parent);
     el('div', 'hud-crosshair', this.root);
     this.gun = el('div', 'hud-gun', this.root);
-    this.objective = el('div', 'hud-panel hud-objective', this.root);
-    const hint = el('div', 'hud-panel hud-hint', this.root);
-    hint.textContent = 'WASD 移动 · 鼠标 瞄准 · 左键/空格 开火 · 1–4 弹种 · Shift 开镜 · Z 倍率 · 滚轮 表尺 · F 维修 · R 重开';
-    this.status = el('div', 'hud-panel hud-status', this.root);
-    const reload = el('div', 'hud-panel hud-reload', this.root);
-    this.reloadText = el('div', '', reload);
-    this.reloadBar = el('div', 'hud-bar', reload);
-    this.reloadFill = el('div', '', this.reloadBar);
-    this.ammoRow = el('div', 'hud-ammo', reload);
-    this.feed = el('div', 'hud-panel hud-feed', this.root);
-    this.overlay = el('div', 'hud-overlay', this.root);
-    this.card = el('div', 'hud-card', this.overlay);
-    this.overlay.addEventListener('click', onOverlayClick);
+
+    const top = el('div', 'hud-top', this.root);
+    this.compass = el('canvas', 'hud-compass', top);
+    this.compass.style.width = '360px';
+    this.compass.style.height = '30px';
+    this.compassCtx = this.compass.getContext('2d')!;
+    this.objective = el('div', 'hud-objective', top);
+
+    const tl = el('div', 'hud-topleft', this.root);
+    this.fps = el('div', 'hud-fps', tl);
+    this.hint = el('div', 'hud-hint', tl);
+
+    const status = el('div', 'hud-box hud-status', this.root);
+    this.status = new VehicleStatus(status);
+    this.drive = el('div', 'hud-drive', status);
+    this.speedEl = el('div', 'speed', this.drive);
+    this.gearEl = el('div', 'dim', this.drive);
+    el('div', 'dim', this.drive).textContent = '转速';
+    this.rpmBar = el('div', 'hud-rpm', this.drive);
+    this.rpmFill = el('div', '', this.rpmBar);
+    this.surfaceEl = el('div', 'dim', this.drive);
+    this.crewEl = el('div', 'dim', this.drive);
+
+    const bottom = el('div', 'hud-bottom', this.root);
+    this.msgs = el('div', 'hud-msgs', bottom);
+    this.bar = el('div', 'hud-box hud-bar', bottom);
+
+    this.feed = el('div', 'hud-feed', this.root);
+
+    this.markerEl = el('div', 'hud-marker', this.root);
+    this.markerText = el('span', '', this.markerEl);
+    el('i', '', this.markerEl);
+
+    // 光标要盖在小地图上面,所以不放在 HUD 容器里(HUD 的层级在小地图之下)
+    this.cursor = el('div', 'hud-cursor', parent);
+    this.cursor.innerHTML =
+      '<svg width="16" height="22" viewBox="0 0 16 22"><path d="M1 1 L1 17 L5 13 L8 20 L11 19 L8 12 L14 12 Z" fill="#fff" stroke="#000" stroke-width="1.2" stroke-linejoin="round"/></svg>';
   }
 
-  /** 设置开始界面里的携弹编辑器(每局开始前调用) */
-  setLoadoutEditor(editor: LoadoutEditor): void {
-    this.editor = editor;
-    this.draft = { ...editor.loadout };
-    if (this.overlayMode === 'start') this.setOverlay('start');
+  setVisible(v: boolean): void {
+    this.root.classList.toggle('hidden', !v);
+    if (!v) this.cursor.style.display = 'none';
   }
 
   update(s: HudState, now: number): void {
     this.root.classList.toggle('scoped', s.scoped);
-    this.objective.textContent = `目标:摧毁全部靶车 ${s.targetsDestroyed} / ${s.targetsTotal}`;
+    this.objective.textContent = `摧毁全部靶车 ${s.targetsDestroyed} / ${s.targetsTotal}`;
+    this.fps.textContent = s.fps === null ? '' : `${Math.round(s.fps)} FPS`;
+    const hint = s.hints ?? '';
+    if (hint !== this.lastHint) {
+      this.hint.textContent = hint;
+      this.lastHint = hint;
+    }
+    this.drawCompass(s.compassYaw);
 
     const d = s.damage;
     const reloading = !s.loaded;
-    const canFire = d.canFire;
-    const selected = s.ammo.find((a) => a.selected);
-    let reloadLabel: string;
-    if (!canFire) reloadLabel = '无法开火';
-    else if (s.loaded) reloadLabel = `${s.loaded} 已装填`;
-    else if (selected && selected.count === 0) reloadLabel = `${selected.name} 已打光 — 按数字键换弹`;
-    else reloadLabel = `装填 ${selected?.name ?? ''} ${(s.reloadRemaining / Math.max(d.reloadRate, 1e-6)).toFixed(1)}s`;
-    this.reloadText.textContent = `${reloadLabel}   ·   表尺 ${s.sightRange} m${s.scoped ? `   ·   ${s.magnification}×` : ''}`;
-    this.reloadBar.classList.toggle('reloading', reloading);
-    const ratio = s.loaded ? 1 : s.reloadTime > 0 ? 1 - s.reloadRemaining / s.reloadTime : 1;
-    this.reloadFill.style.width = `${Math.round(ratio * 100)}%`;
-    const ammoHtml = s.ammo
-      .map((a, i) => `<span class="${a.selected ? 'sel' : ''} ${a.count === 0 ? 'empty' : ''}" title="${a.type}">[${i + 1}] ${a.name} ×${a.count}</span>`)
-      .join('');
-    if (ammoHtml !== this.lastAmmo) {
-      this.ammoRow.innerHTML = ammoHtml;
-      this.lastAmmo = ammoHtml;
-    }
-
-    if (s.gunMarker) {
+    if (s.gunMarker && s.alive) {
       this.gun.style.display = '';
       this.gun.style.transform = `translate(${s.gunMarker.x.toFixed(1)}px, ${s.gunMarker.y.toFixed(1)}px)`;
       this.gun.classList.toggle('reloading', reloading);
-      this.gun.classList.toggle('disabled', !canFire);
+      this.gun.classList.toggle('disabled', !d.canFire);
     } else {
       this.gun.style.display = 'none';
     }
 
-    this.renderStatus(s);
-
-    const mode: OverlayMode = s.defeat ? 'defeat' : s.victory ? 'victory' : s.pointerLocked ? null : 'start';
-    if (mode !== this.overlayMode) this.setOverlay(mode);
+    this.status.draw({ spec: s.spec, damage: d, turretYaw: s.turretYaw, viewYaw: s.viewYaw, time: now });
+    this.updateDrive(s);
+    this.updateMessages(s);
+    this.updateBar(s);
+    this.updateCursor(s.cursor);
+    this.updateMarker(s.marker);
 
     this.feedItems = this.feedItems.filter((item) => {
       const age = now - item.bornAt;
@@ -225,11 +287,14 @@ export class Hud {
 
   onEvent(e: GameEvent, now: number): void {
     if (e.type === 'hit' && e.shooterId === 'player') {
-      this.onPlayerHit(e.targetName, e.part, e.replay, now);
+      const { cls, html } = this.describeHit(e.part, e.replay, e.targetName);
+      this.pushFeed(html, cls, now);
     } else if (e.type === 'hit' && e.targetId === 'player') {
-      this.onIncomingHit(e.part, e.replay, now);
+      const { html } = this.describeHit(e.part, e.replay, '我方');
+      this.pushFeed(`被击中 · ${html}`, 'incoming', now);
     } else if (e.type === 'destroyed' && e.vehicleId !== 'player') {
-      this.pushFeed(`${e.name} 已摧毁(${e.cause === 'ammo' ? '弹药殉爆' : '乘员不足'})`, 'kill', now);
+      const cause = { ammo: '弹药殉爆', crew: '乘员不足', fire: '烧毁' }[e.cause];
+      this.pushFeed(`${e.name} 已摧毁(${cause})`, 'kill', now);
     } else if (e.type === 'repair' && e.vehicleId === 'player') {
       const text = { start: `开始维修,约 ${Math.round(e.seconds)} 秒(维修期间不能移动)`, cancel: '维修已取消', done: '维修完成' }[e.state];
       this.pushFeed(text, 'self', now);
@@ -237,16 +302,272 @@ export class Hud {
       this.pushFeed(e.state === 'start' ? `${e.crew} 正在顶替${e.to}` : `${e.crew} 已接替${e.to}`, 'self', now);
     } else if (e.type === 'ammo-lost' && e.vehicleId === 'player') {
       this.pushFeed(`弹药架被打坏(没有殉爆),损失 ${e.rounds} 发`, 'incoming', now);
+    } else if (e.type === 'fire' && e.vehicleId === 'player') {
+      const text = {
+        start: `起火:${e.module ?? ''}`,
+        extinguishing: '正在灭火…',
+        extinguished: '火已扑灭',
+        'burnt-out': '火已自行熄灭',
+        'no-extinguisher': '没有灭火器了',
+      }[e.state];
+      this.pushFeed(text, e.state === 'start' || e.state === 'no-extinguisher' ? 'incoming' : 'self', now);
+    } else if (e.type === 'fire' && e.state === 'start') {
+      this.pushFeed(`${e.name} 起火`, 'pen', now);
+    } else if (e.type === 'cook-off') {
+      this.pushFeed(e.vehicleId === 'player' ? '弹药被火引燃殉爆' : `${e.name} 弹药被引燃殉爆`, e.vehicleId === 'player' ? 'incoming' : 'kill', now);
     }
   }
 
   reset(): void {
     this.feedItems.forEach((i) => i.el.remove());
     this.feedItems = [];
-    this.overlayMode = null;
-    this.lastStatus = '';
-    this.lastAmmo = '';
+    this.lastMsgs = '';
+    this.msgs.innerHTML = '';
+    this.barSignature = '';
   }
+
+  // ------------------------------------------------------------------ 罗盘
+
+  private drawCompass(yaw: number): void {
+    const W = 360;
+    const H = 30;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    if (dpr !== this.compassDpr) {
+      this.compassDpr = dpr;
+      this.compass.width = W * dpr;
+      this.compass.height = H * dpr;
+    }
+    const c = this.compassCtx;
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.clearRect(0, 0, W, H);
+    // 方位角:从北顺时针,度
+    const bearing = ((((-yaw * 180) / Math.PI) % 360) + 360) % 360;
+    const span = 90; // 画面宽度对应的角度
+    const pxPerDeg = W / span;
+    const grad = c.createLinearGradient(0, 0, W, 0);
+    grad.addColorStop(0, 'rgba(14,17,20,0)');
+    grad.addColorStop(0.15, 'rgba(14,17,20,.5)');
+    grad.addColorStop(0.85, 'rgba(14,17,20,.5)');
+    grad.addColorStop(1, 'rgba(14,17,20,0)');
+    c.fillStyle = grad;
+    c.fillRect(0, 0, W, 20);
+    c.font = '11px system-ui, sans-serif';
+    c.textAlign = 'center';
+    c.textBaseline = 'alphabetic';
+    const names: Record<number, string> = { 0: '北', 45: '东北', 90: '东', 135: '东南', 180: '南', 225: '西南', 270: '西', 315: '西北' };
+    const start = Math.ceil((bearing - span / 2) / 5) * 5;
+    for (let a = start; a <= bearing + span / 2; a += 5) {
+      const x = W / 2 + (a - bearing) * pxPerDeg;
+      const n = ((a % 360) + 360) % 360;
+      const alpha = 1 - Math.abs(x - W / 2) / (W / 2);
+      c.globalAlpha = Math.max(0, alpha);
+      c.strokeStyle = '#e8e8e8';
+      c.lineWidth = 1;
+      c.beginPath();
+      const major = n % 15 === 0;
+      c.moveTo(x, 0);
+      c.lineTo(x, major ? 7 : 4);
+      c.stroke();
+      if (n % 45 === 0) {
+        c.fillStyle = n === 0 ? '#ffd166' : '#f2f2f2';
+        c.fillText(names[n], x, 18);
+      } else if (major) {
+        c.fillStyle = 'rgba(242,242,242,.75)';
+        c.fillText(String(n), x, 17);
+      }
+    }
+    c.globalAlpha = 1;
+    // 当前方位
+    c.fillStyle = '#ffd166';
+    c.beginPath();
+    c.moveTo(W / 2 - 4, 30);
+    c.lineTo(W / 2 + 4, 30);
+    c.lineTo(W / 2, 24);
+    c.closePath();
+    c.fill();
+    c.font = 'bold 11px system-ui, sans-serif';
+    c.fillText(`${Math.round(bearing) % 360}°`, W / 2 + 22, 29);
+  }
+
+  // ------------------------------------------------------------------ 左下:驾驶信息
+
+  private updateDrive(s: HudState): void {
+    const kmh = s.speedKmh;
+    const reverse = kmh < -0.5;
+    this.speedEl.innerHTML = `${Math.round(Math.abs(kmh))}<small>km/h</small>`;
+    const gear = !s.alive ? '—' : reverse ? 'R 倒车' : Math.abs(s.throttle) < 0.01 && Math.abs(kmh) < 0.5 ? 'N 空挡' : s.throttle < 0 ? '刹车' : 'D 前进';
+    this.gearEl.textContent = gear;
+    this.rpmFill.style.width = `${Math.round(Math.max(0, Math.min(1, s.engineRpm)) * 100)}%`;
+    const engine = s.damage.modules.find((m) => m.type === 'engine');
+    this.rpmBar.classList.toggle('bad', !!engine && engine.hp < engine.maxHp);
+    this.surfaceEl.textContent = s.surface;
+    this.crewEl.textContent = `乘员 ${s.damage.aliveCount} / ${s.damage.crew.length}`;
+  }
+
+  // ------------------------------------------------------------------ 正下方:状态提示
+
+  private updateMessages(s: HudState): void {
+    const d = s.damage;
+    const out: Msg[] = [];
+    if (!s.alive) out.push({ text: '已被击毁', cls: 'red' });
+    else {
+      if (d.fire) {
+        if (d.fire.extinguishing !== null) out.push({ text: `正在灭火 ${Math.max(0, d.fire.extinguishing).toFixed(1)}s`, cls: 'amber' });
+        else if (d.extinguishers > 0) out.push({ text: `起火!按 ${s.keys.extinguish} 灭火`, cls: 'red' });
+        else out.push({ text: '起火!没有灭火器了', cls: 'red' });
+      }
+      if (d.repair) out.push({ text: `维修中 ${(d.repair.remaining / Math.max(d.repairRate, 1e-6)).toFixed(1)}s(${s.keys.repair} 取消)`, cls: 'amber' });
+      const broken = (type: string) => d.modules.some((m) => m.type === type && m.hp <= 0);
+      if (broken('engine')) out.push({ text: '发动机损坏', cls: 'red' });
+      else if (broken('transmission')) out.push({ text: '传动装置损坏', cls: 'red' });
+      if (broken('track')) out.push({ text: '履带断裂', cls: 'red' });
+      if (!d.canFire) out.push({ text: '无法开火(炮闩 / 炮管损坏或没有炮手)', cls: 'red' });
+      if (!d.repair && d.brokenRepairable().length && !d.fire) out.push({ text: `有模块被打坏 — 按 ${s.keys.repair} 维修`, cls: 'amber' });
+      const selected = s.ammo.find((a) => a.selected);
+      if (d.canFire && !s.loaded) {
+        if (selected && selected.count === 0) out.push({ text: `${selected.name} 已打光 — 换弹(${s.keys.nextShell} 或数字键)`, cls: 'amber' });
+        else out.push({ text: `装填 ${selected?.name ?? ''} ${(s.reloadRemaining / Math.max(d.reloadRate, 1e-6)).toFixed(1)}s`, cls: 'white' });
+      }
+    }
+    const html = out
+      .slice(0, 3)
+      .map((m) => `<div class="${m.cls}">${m.text}</div>`)
+      .join('');
+    if (html !== this.lastMsgs) {
+      this.msgs.innerHTML = html;
+      this.lastMsgs = html;
+    }
+  }
+
+  // ------------------------------------------------------------------ 正下方:快捷栏
+
+  private makeSlot(parent: HTMLElement, wide = false): Slot {
+    const root = el('div', `hud-slot${wide ? ' wide' : ''}`, parent);
+    const key = el('span', 'key', root);
+    const ico = el('span', 'ico', root);
+    const val = el('span', 'val', root);
+    const prog = el('div', 'prog', root);
+    return { root, key, ico, val, prog };
+  }
+
+  private updateBar(s: HudState): void {
+    const sig = `${s.ammo.map((a) => a.id).join(',')}|${s.mg ? 'mg' : ''}`;
+    if (sig !== this.barSignature || !this.slots) {
+      this.barSignature = sig;
+      this.bar.innerHTML = '';
+      const ammo = s.ammo.map(() => this.makeSlot(this.bar));
+      let mg: Slot | null = null;
+      if (s.mg) {
+        el('div', 'hud-sep', this.bar);
+        mg = this.makeSlot(this.bar, true);
+      }
+      el('div', 'hud-sep', this.bar);
+      const repair = this.makeSlot(this.bar);
+      const fire = this.makeSlot(this.bar);
+      el('div', 'hud-sep', this.bar);
+      const sight = this.makeSlot(this.bar, true);
+      this.slots = { ammo, mg, repair, fire, sight };
+    }
+    const d = s.damage;
+    const sl = this.slots;
+    s.ammo.forEach((a, i) => {
+      const slot = sl.ammo[i];
+      slot.key.textContent = a.key;
+      slot.ico.textContent = a.type;
+      slot.val.textContent = String(a.count);
+      slot.root.title = a.name;
+      slot.root.className = `hud-slot${a.selected ? ' sel' : ''}${a.loaded ? ' loaded' : ''}${a.count === 0 ? ' empty' : ''}`;
+      const loading = a.selected && !s.loaded && a.count > 0 && d.canFire;
+      slot.prog.style.width = loading && s.reloadTime > 0 ? `${Math.round((1 - s.reloadRemaining / s.reloadTime) * 100)}%` : a.loaded ? '100%' : '0';
+      slot.prog.style.background = a.loaded ? '#7cfc9a' : '';
+    });
+    if (sl.mg && s.mg) {
+      const m = s.mg;
+      sl.mg.key.textContent = m.key;
+      sl.mg.ico.textContent = '机枪';
+      sl.mg.val.textContent = m.reloading > 0 ? `换弹链 ${m.reloading.toFixed(1)}s` : `${m.inBelt} / ${m.reserve}`;
+      sl.mg.root.title = m.name;
+      sl.mg.root.className = `hud-slot wide${m.inBelt + m.reserve === 0 ? ' empty' : ''}${m.firing ? ' sel' : ''}`;
+      sl.mg.prog.style.width = m.reloading > 0 ? `${Math.round((1 - m.reloading / Math.max(m.reloadTime, 1e-6)) * 100)}%` : `${Math.round((m.inBelt / Math.max(m.beltSize, 1)) * 100)}%`;
+      sl.mg.prog.style.background = m.reloading > 0 ? '#ffb347' : 'rgba(200,220,255,.55)';
+    }
+    // 维修
+    const r = sl.repair;
+    r.key.textContent = s.keys.repair;
+    r.ico.textContent = '维修';
+    if (d.repair) {
+      r.val.textContent = `${(d.repair.remaining / Math.max(d.repairRate, 1e-6)).toFixed(0)}s`;
+      r.root.className = 'hud-slot busy';
+      r.prog.style.width = `${Math.round((1 - d.repair.remaining / Math.max(d.repair.total, 1e-6)) * 100)}%`;
+    } else {
+      const need = d.brokenRepairable().length > 0 || d.damagedRepairable().length > 0;
+      r.val.textContent = need ? '可维修' : '完好';
+      r.root.className = `hud-slot${need ? '' : ' ok empty'}`;
+      r.prog.style.width = '0';
+    }
+    // 灭火
+    const f = sl.fire;
+    f.key.textContent = s.keys.extinguish;
+    f.ico.textContent = '灭火';
+    f.val.textContent = `× ${d.extinguishers}`;
+    if (d.fire && d.fire.extinguishing !== null) {
+      f.root.className = 'hud-slot busy';
+      f.prog.style.width = `${Math.round((1 - d.fire.extinguishing / 2) * 100)}%`;
+    } else {
+      f.root.className = `hud-slot${d.fire ? ' alert flash' : ''}${d.extinguishers === 0 ? ' empty' : ''}`;
+      f.prog.style.width = '0';
+    }
+    // 瞄准镜
+    const v = sl.sight;
+    v.key.textContent = s.keys.scope;
+    v.ico.textContent = s.scoped ? `${s.magnification}×` : '瞄准镜';
+    v.val.textContent = `表尺 ${s.sightRange} m`;
+    v.root.className = `hud-slot wide${s.scoped ? ' sel' : ''}`;
+    v.prog.style.width = '0';
+  }
+
+  // ------------------------------------------------------------------ 光标 / 标记
+
+  private updateCursor(p: { x: number; y: number } | null): void {
+    if (!p) {
+      this.cursor.style.display = 'none';
+      return;
+    }
+    this.cursor.style.display = 'block';
+    this.cursor.style.transform = `translate(${p.x.toFixed(0)}px, ${p.y.toFixed(0)}px)`;
+  }
+
+  private updateMarker(m: HudState['marker']): void {
+    if (!m) {
+      this.markerEl.style.display = 'none';
+      return;
+    }
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    const pad = 24;
+    let x: number;
+    let y: number;
+    let edge = false;
+    if (m.screen) {
+      x = m.screen.x;
+      y = m.screen.y;
+      if (x < pad || x > W - pad || y < pad + 20 || y > H - pad) edge = true;
+      x = Math.min(W - pad, Math.max(pad, x));
+      y = Math.min(H - pad, Math.max(pad + 20, y));
+    } else {
+      // 在身后:贴在画面底边
+      x = W / 2;
+      y = H - pad - 150;
+      edge = true;
+    }
+    this.markerEl.style.display = 'block';
+    this.markerEl.classList.toggle('edge', edge);
+    this.markerEl.style.left = `${x.toFixed(0)}px`;
+    this.markerEl.style.top = `${y.toFixed(0)}px`;
+    this.markerText.textContent = `${m.distance >= 1000 ? (m.distance / 1000).toFixed(2) + ' km' : Math.round(m.distance) + ' m'}${m.screen ? '' : ' ↓'}`;
+  }
+
+  // ------------------------------------------------------------------ 命中记录
 
   private describeHit(part: VehiclePart, r: HitReplay, targetName: string): { cls: string; html: string } {
     const ext = r.external;
@@ -282,101 +603,10 @@ export class Hud {
     return { cls: 'pen', html: `击穿 · ${where} · ${armor} ≤ 穿深 ${pen}mm · ${shell}${extNote}<br>${result}` };
   }
 
-  private onPlayerHit(targetName: string, part: VehiclePart, r: HitReplay, now: number): void {
-    const { cls, html } = this.describeHit(part, r, targetName);
-    this.pushFeed(html, cls, now);
-  }
-
-  private onIncomingHit(part: VehiclePart, r: HitReplay, now: number): void {
-    const { html } = this.describeHit(part, r, '我方');
-    this.pushFeed(`被击中 · ${html}`, 'incoming', now);
-  }
-
-  private renderStatus(s: HudState): void {
-    const d = s.damage;
-    const crew = d.crew
-      .map((c) => {
-        const name = CREW_ROLE_NAMES[c.homeRole];
-        const seat = c.swap ? `<span class="swap">→${CREW_ROLE_NAMES[c.swap.to]}</span>` : c.seat && c.seat !== c.homeRole ? `(${CREW_ROLE_NAMES[c.seat]})` : '';
-        const pct = c.alive && c.hp < 100 ? ` ${Math.round(c.hp)}%` : '';
-        return `<span><i class="dot" style="background:${ratioColor(c.alive ? c.hp / 100 : 0)}"></i>${name}${seat}${pct}</span>`;
-      })
-      .join('');
-    const modules = d.modules
-      .filter((m) => m.type !== 'ammo' && m.type !== 'fuel')
-      .map((m) => `<span><i class="dot" style="background:${ratioColor(m.hp / m.maxHp)}"></i>${m.name}</span>`)
-      .join('');
-    let repair = '';
-    if (d.repair) repair = `<div class="repair">维修中 ${(d.repair.remaining / Math.max(d.repairRate, 1e-6)).toFixed(1)}s(F 取消)</div>`;
-    else if (d.brokenRepairable().length) repair = `<div class="repair">有模块被打坏 — 按 F 维修</div>`;
-    else if (d.damagedRepairable().length) repair = `<div class="repair" style="opacity:.75">有模块受损 — 可按 F 维修</div>`;
-    const html = `<div>${Math.round(s.speedKmh)} km/h · ${s.surface} · 乘员 ${d.aliveCount}/${d.crew.length} · 弹药 ${s.ammo.reduce((n, a) => n + a.count, 0)}/${d.ammoCapacity}</div><div class="row">${crew}</div><div class="row">${modules}</div>${repair}`;
-    if (html !== this.lastStatus) {
-      this.status.innerHTML = html;
-      this.lastStatus = html;
-    }
-  }
-
   private pushFeed(html: string, cls: string, now: number): void {
     const item = el('div', cls, this.feed);
     item.innerHTML = html;
     this.feedItems.push({ el: item, bornAt: now });
     while (this.feedItems.length > FEED_MAX) this.feedItems.shift()?.el.remove();
-  }
-
-  private setOverlay(mode: OverlayMode): void {
-    this.overlayMode = mode;
-    this.overlay.classList.toggle('hidden', mode === null);
-    if (mode === 'start') {
-      this.card.innerHTML = `
-        <h1>河谷试验场</h1>
-        <p>点击画面开始(锁定鼠标);Esc 暂停</p>
-        <p class="keys">WASD 移动车体 · 鼠标 转动视角,炮塔会跟随准星 · 左键 / 空格 开火 · 1–4 切换弹种<br>
-        Shift 开镜 / 关镜 · Z 切换倍率 · 滚轮 调表尺(下滚加远)· F 维修 · R 重新开始</p>
-        <p class="keys">远处目标:开镜后用分划估距(两侧三角间隔 4 密位,3 m 高的坦克占 4 密位 ≈ 750 m),
-        把表尺调到这个距离再打。北边每 500 m 有一根测距标杆。敌方发现你(或被你打)后会还击。</p>`;
-      this.renderLoadoutEditor();
-    } else if (mode === 'victory') {
-      this.card.innerHTML = `<h1>训练完成</h1><p>全部靶车已摧毁</p><p class="keys">按 R 重新开始</p>`;
-    } else if (mode === 'defeat') {
-      this.card.innerHTML = `<h1>被击毁</h1><p>存活乘员不足或弹药殉爆</p><p class="keys">按 R 重新开始</p>`;
-    }
-  }
-
-  /** 开始界面里的携弹编辑器:每种弹 − / + ,「应用并重新开始」生效 */
-  private renderLoadoutEditor(): void {
-    const ed = this.editor;
-    if (!ed) return;
-    const box = el('div', 'hud-loadout', this.card);
-    box.addEventListener('click', (ev) => ev.stopPropagation());
-    const cap = ammoCapacity(ed.spec);
-    const draw = () => {
-      const ammo = ed.spec.weapons[0]?.ammo ?? [];
-      const total = loadoutTotal(this.draft);
-      box.innerHTML = `<div>携弹(弹药架共 ${cap} 发;少带弹时最先取空的弹药架会空着)</div>
-        <table>${ammo
-          .map(
-            (a) =>
-              `<tr><td>${a.name}</td><td>${SHELL_TYPES[a.type].name} · ${SHELL_SHORT[a.type]}</td>
-              <td><button data-id="${a.id}" data-d="-5">−</button></td><td class="n">${this.draft[a.id] ?? 0}</td>
-              <td><button data-id="${a.id}" data-d="5">+</button></td></tr>`,
-          )
-          .join('')}</table>
-        <div class="total">合计 ${total} / ${cap} 发</div>
-        <button class="apply">应用并重新开始</button>`;
-      box.querySelectorAll<HTMLButtonElement>('button[data-id]').forEach((b) =>
-        b.addEventListener('click', () => {
-          const id = b.dataset.id!;
-          const delta = Number(b.dataset.d);
-          const next = { ...this.draft, [id]: Math.max(0, (this.draft[id] ?? 0) + delta) };
-          // 超出容量时只加到满为止
-          if (loadoutTotal(next) > cap) next[id] = Math.max(0, (this.draft[id] ?? 0) + (cap - loadoutTotal(this.draft)));
-          this.draft = clampLoadout(ed.spec, next);
-          draw();
-        }),
-      );
-      box.querySelector<HTMLButtonElement>('button.apply')!.addEventListener('click', () => ed.onApply({ ...this.draft }));
-    };
-    draw();
   }
 }

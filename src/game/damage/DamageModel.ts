@@ -30,7 +30,7 @@ export interface CrewMember {
 
 export type DamageTarget = { kind: 'module'; module: ModuleState } | { kind: 'crew'; member: CrewMember };
 
-export type DamageSource = 'shell' | 'spall' | 'blast' | 'fragment' | 'external' | 'detonation';
+export type DamageSource = 'shell' | 'spall' | 'blast' | 'fragment' | 'external' | 'detonation' | 'fire';
 
 export interface HitRecord {
   kind: 'module' | 'crew';
@@ -63,7 +63,22 @@ export type DamageEvent =
   | { type: 'swap-start'; member: CrewMember; to: CrewRole }
   | { type: 'swap-done'; member: CrewMember; to: CrewRole }
   | { type: 'repaired'; modules: string[] }
-  | { type: 'ammo-lost'; rack: string; rounds: number };
+  | { type: 'ammo-lost'; rack: string; rounds: number }
+  | { type: 'fire-start'; module: string }
+  | { type: 'fire-out'; reason: 'extinguished' | 'burnt-out' }
+  | { type: 'cook-off' };
+
+/** 起火状态 */
+export interface FireState {
+  /** 起火的模块 id */
+  source: string;
+  /** 已经烧了多久,秒 */
+  burning: number;
+  /** 燃料还能烧多久,秒 */
+  remaining: number;
+  /** 正在灭火:还剩多少秒扑灭;null = 没在灭 */
+  extinguishing: number | null;
+}
 
 /** 岗位优先级:越靠前越要先补上 */
 const SEAT_PRIORITY: CrewRole[] = ['gunner', 'driver', 'loader', 'commander', 'radio'];
@@ -80,6 +95,11 @@ export class DamageModel {
   readonly racks: AmmoRack[];
   /** 被打坏但没殉爆的弹药架(弹药报废),由 update() 以事件形式报出 */
   private lostAmmo: { rack: string; rounds: number }[] = [];
+  /** 起火;null = 没着火 */
+  fire: FireState | null = null;
+  /** 剩余灭火器次数 */
+  extinguishers: number = DAMAGE.fire.extinguishers;
+  private pendingFireEvents: DamageEvent[] = [];
   private readonly seats = new Map<CrewRole, { part: 'hull' | 'turret'; center: readonly [number, number, number] }>();
   knockedOut = false;
   /** 弹药殉爆 */
@@ -343,6 +363,11 @@ export class DamageModel {
     const before = m.hp;
     m.hp = Math.max(0, m.hp - amount);
     const destroyed = before > 0 && m.hp <= 0;
+    if ((m.type === 'fuel' || m.type === 'engine') && source !== 'fire' && !this.fire && !this.knockedOut) {
+      const f = DAMAGE.fire;
+      const p = destroyed ? f.destroyedChance[m.type] : f.chance[m.type];
+      if (rng ? rng() < p : p >= 0.5) this.ignite(m.id, rng);
+    }
     if (destroyed && m.type === 'ammo' && !this.detonated) {
       const rack = this.rackOf(m);
       const rounds = rack ? this.rackRounds(rack) : 1;
@@ -400,9 +425,15 @@ export class DamageModel {
   }
 
   /** 每个固定步调用:推进换位与维修 */
-  update(dt: number): DamageEvent[] {
+  update(dt: number, rng?: () => number): DamageEvent[] {
     const events: DamageEvent[] = [];
-    if (this.knockedOut) return events;
+    this.burn(dt, rng);
+    events.push(...this.pendingFireEvents);
+    this.pendingFireEvents = [];
+    if (this.knockedOut) {
+      if (this.fire) this.fire = null;
+      return events;
+    }
 
     for (const lost of this.lostAmmo) events.push({ type: 'ammo-lost', ...lost });
     this.lostAmmo = [];
@@ -440,6 +471,75 @@ export class DamageModel {
       }
     }
     return events;
+  }
+
+  /** 点火(已经着火或已被摧毁时无效) */
+  ignite(moduleId: string, rng?: () => number): void {
+    if (this.fire || this.knockedOut) return;
+    const [lo, hi] = DAMAGE.fire.burnTime;
+    const t = rng ? rng() : 0.5;
+    this.fire = { source: moduleId, burning: 0, remaining: lo + (hi - lo) * t, extinguishing: null };
+    this.pendingFireEvents.push({ type: 'fire-start', module: moduleId });
+  }
+
+  /** 开始灭火(按键);没着火、正在灭、灭火器用完或没有活着的乘员时返回 false */
+  extinguish(): boolean {
+    if (!this.fire || this.fire.extinguishing !== null || this.extinguishers <= 0 || this.aliveCount === 0 || this.knockedOut) return false;
+    this.fire.extinguishing = DAMAGE.fire.extinguishTime;
+    return true;
+  }
+
+  /** 燃烧一步:伤害起火点附近的模块 / 乘员,推进灭火和殉爆判定 */
+  private burn(dt: number, rng?: () => number): void {
+    const fire = this.fire;
+    if (!fire) return;
+    const f = DAMAGE.fire;
+    fire.burning += dt;
+    fire.remaining -= dt;
+    if (fire.extinguishing !== null) {
+      fire.extinguishing -= dt;
+      if (fire.extinguishing <= 0) {
+        this.extinguishers--;
+        this.fire = null;
+        this.pendingFireEvents.push({ type: 'fire-out', reason: 'extinguished' });
+        return;
+      }
+    }
+    if (fire.remaining <= 0) {
+      this.fire = null;
+      this.pendingFireEvents.push({ type: 'fire-out', reason: 'burnt-out' });
+      return;
+    }
+    const src = this.module(fire.source);
+    if (!src) return;
+    const center = hullPoint(this.spec, src.box.part, src.box.center);
+    for (const m of this.modules) {
+      if (m.external || m.hp <= 0) continue;
+      const d = distanceToBox(this.spec, m, center);
+      if (d > f.radius) continue;
+      if (m.type === 'ammo') {
+        // 弹药架被烤:烧够一段时间后按剩余弹量掷骰殉爆
+        const rack = this.rackOf(m);
+        const rounds = rack ? this.rackRounds(rack) : 0;
+        if (rounds > 0 && fire.burning >= f.cookOffDelay) {
+          const p = f.cookOffChance * (rounds / (rack?.capacity ?? 1)) * dt;
+          if (rng ? rng() < p : false) {
+            this.detonated = true;
+            for (const c of this.crew) if (c.alive) this.killCrew(c);
+            this.pendingFireEvents.push({ type: 'cook-off' });
+            this.checkKnockout();
+            this.fire = null;
+            return;
+          }
+        }
+        continue;
+      }
+      this.applyDamage({ kind: 'module', module: m }, f.moduleDps * dt, 'fire', 0);
+    }
+    for (const c of this.crew) {
+      if (!c.alive) continue;
+      if (distanceToCrew(this.spec, c, center) <= f.radius) this.applyDamage({ kind: 'crew', member: c }, f.crewDps * dt, 'fire', 0);
+    }
   }
 
   /** 找一个岗位优先级更低、没在换位的活着的乘员来顶替 role */
@@ -489,4 +589,32 @@ function moduleDisplayName(m: ModuleSpec): string {
           ? '前部'
           : '';
   return `${side}${pos}${where}${base}`;
+}
+
+/**
+ * 模块 / 乘员盒子中心换到车体坐标(忽略炮塔转角:起火点都在车体里,炮塔绕中心转,距离误差很小)。
+ * 火炮坐标系的原点在炮塔正面耳轴处。
+ */
+function hullPoint(spec: VehicleSpec, part: 'hull' | 'turret' | 'gun', c: { x: number; y: number; z: number }) {
+  const p = { x: c.x, y: c.y, z: c.z };
+  if (part === 'turret' || part === 'gun') p.y += spec.hull.height / 2;
+  if (part === 'gun') {
+    p.y += spec.turret.height / 2;
+    p.z -= spec.turret.length / 2;
+  }
+  return p;
+}
+
+function distanceToBox(spec: VehicleSpec, m: ModuleState, p: { x: number; y: number; z: number }): number {
+  const c = hullPoint(spec, m.box.part, m.box.center);
+  const h = m.box.half;
+  const dx = Math.max(0, Math.abs(p.x - c.x) - h.x);
+  const dy = Math.max(0, Math.abs(p.y - c.y) - h.y);
+  const dz = Math.max(0, Math.abs(p.z - c.z) - h.z);
+  return Math.hypot(dx, dy, dz);
+}
+
+function distanceToCrew(spec: VehicleSpec, c: CrewMember, p: { x: number; y: number; z: number }): number {
+  const q = hullPoint(spec, c.box.part, c.box.center);
+  return Math.hypot(p.x - q.x, p.y - q.y, p.z - q.z);
 }

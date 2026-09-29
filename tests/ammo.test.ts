@@ -255,7 +255,7 @@ describe('装填与换弹(整车)', () => {
     const step = (seconds: number, fire = false) => {
       for (let i = 0; i < Math.round(seconds * 60); i++) {
         v.controls = { ...v.controls, fire };
-        const req = v.fixedUpdate(1 / 60, world);
+        const req = v.fixedUpdate(1 / 60, world)[0] ?? null;
         world.step();
         v.capturePose();
         if (req) return req;

@@ -90,6 +90,12 @@ export class KillCam {
     if (!this.replay) this.next(performance.now());
   }
 
+  /** 清空队列并停止当前回放(离开战斗时) */
+  stop(): void {
+    this.queue.length = 0;
+    this.next(performance.now());
+  }
+
   update(nowMs: number): void {
     if (!this.replay) return;
     const t = (nowMs - this.startMs) / 1000;
@@ -159,12 +165,13 @@ export class KillCam {
 
     // 半透明外壳 + 轮廓线
     const temp = buildVehicleModel(r.spec, { root, turretPivot, gunPivot });
-    temp.forEach((m) => m.dispose());
+    temp.materials.forEach((m) => m.dispose());
     root.traverse((o) => {
       if (o instanceof THREE.Mesh) {
         o.material = GHOST;
         o.castShadow = false;
-        o.add(new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry, 25), EDGE));
+        // 车轮 / 履带板是 InstancedMesh,轮廓线画不到实例的位置上,跳过
+        if (!(o instanceof THREE.InstancedMesh)) o.add(new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry, 25), EDGE));
       }
     });
 

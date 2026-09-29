@@ -58,4 +58,25 @@ export const DAMAGE = {
    * 半径 R = radiusK × (TNT 当量 kg)^(1/3),伤害 = peak × (1 − d / R)。
    */
   externalBlast: { radiusK: 3.0, peak: 180 },
+
+  /**
+   * 起火(简单版):发动机 / 油箱被弹体、破片、冲击波伤到时掷骰起火,打坏时概率更高。
+   * 火在起火模块周围 radius 米内持续伤害模块和乘员;烧 cookOffDelay 秒后,附近还有弹的弹药架每秒按概率殉爆;
+   * 燃料烧完(burnTime)自己熄灭;按灭火键要 extinguishTime 秒扑灭,灭火器次数有限。数值为估算。
+   */
+  fire: {
+    chance: { fuel: 0.3, engine: 0.12 },
+    destroyedChance: { fuel: 0.7, engine: 0.35 },
+    radius: 1.6,
+    moduleDps: 6,
+    crewDps: 5,
+    burnTime: [25, 40] as const,
+    extinguishTime: 2,
+    extinguishers: 3,
+    cookOffDelay: 12,
+    /** 每秒殉爆概率 = 该值 × 弹药架剩余弹数 / 容量 */
+    cookOffChance: 0.08,
+    /** 敌方 AI 起火后多久开始灭火,秒 */
+    aiReaction: [6, 10] as const,
+  },
 } as const;

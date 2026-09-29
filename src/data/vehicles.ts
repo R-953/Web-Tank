@@ -58,6 +58,20 @@ export const TIGER_I: VehicleSpec = {
         { id: 'sprgr', name: 'Sprgr. L/4.5', type: 'HE', caliber: 88, mass: 9.0, muzzleVelocity: 820, penetration: hePenetration(0.86), explosiveMass: 860, fuseDelay: 0, fuseSensitivity: 0.1 },
       ],
     },
+    {
+      id: 'mg34_coax',
+      name: 'MG 34 同轴机枪',
+      kind: 'mg',
+      reloadTime: 5, // 换弹链
+      rateOfFire: 900,
+      beltSize: 150,
+      rounds: 2550,
+      mount: [0.38, 0.02, -0.35],
+      // 7.92 mm SmK 钢芯弹:12.8 g,约 755 m/s,近距离穿深约 12 mm
+      ammo: [
+        { id: 'smk', name: '7.92 mm SmK', type: 'AP', caliber: 7.92, mass: 0.0128, muzzleVelocity: 755, penetration: 12, explosiveMass: 0, fuseDelay: 0, fuseSensitivity: 0, dragCoefficient: 0.3 },
+      ],
+    },
   ],
   // 车体长 6.32 / 宽 3.56 / 全高 3.00(炮塔约 0.95);转向速度为估算值
   hull: { length: 6.32, width: 3.56, height: 1.95, turnRate: 15, acceleration: 6.0 },
@@ -120,6 +134,20 @@ export const T34_85: VehicleSpec = {
         { id: 'o365k', name: 'O-365K', type: 'HE', caliber: 85, mass: 9.54, muzzleVelocity: 785, penetration: hePenetration(0.741), explosiveMass: 741, fuseDelay: 0, fuseSensitivity: 0.1 },
       ],
     },
+    {
+      id: 'dt_coax',
+      name: 'DT 同轴机枪',
+      kind: 'mg',
+      reloadTime: 6, // 换弹鼓
+      rateOfFire: 600,
+      beltSize: 63,
+      rounds: 1008,
+      mount: [0.3, 0.02, -0.3],
+      // 7.62 mm B-32 穿甲燃烧弹:9.6 g,约 820 m/s,近距离穿深约 10 mm
+      ammo: [
+        { id: 'b32', name: '7.62 mm B-32', type: 'AP', caliber: 7.62, mass: 0.0096, muzzleVelocity: 820, penetration: 10, explosiveMass: 0, fuseDelay: 0, fuseSensitivity: 0, dragCoefficient: 0.3 },
+      ],
+    },
   ],
   // 车体长 6.10 / 宽 3.00 / 全高约 2.6;转向速度为估算值
   hull: { length: 6.1, width: 3.0, height: 1.62, turnRate: 20, acceleration: 5.5 },
@@ -177,6 +205,20 @@ export const TIGER_II: VehicleSpec = {
         { id: 'gr39_3hl', name: 'Gr.39/3 HL', type: 'HEAT', caliber: 88, mass: 7.65, muzzleVelocity: 600, penetration: 110, explosiveMass: 680, fuseDelay: 0, fuseSensitivity: 0.3 },
         // 9.4 kg,1.0 kg 阿马托炸药;初速没找到可靠出处,按 750 m/s 估算
         { id: 'sprgr43', name: 'Sprgr.43', type: 'HE', caliber: 88, mass: 9.4, muzzleVelocity: 750, penetration: hePenetration(1.0), explosiveMass: 1000, fuseDelay: 0, fuseSensitivity: 0.1 },
+      ],
+    },
+    {
+      id: 'mg34_coax',
+      name: 'MG 34 同轴机枪',
+      kind: 'mg',
+      reloadTime: 5, // 换弹链
+      rateOfFire: 900,
+      beltSize: 150,
+      rounds: 2700,
+      mount: [0.4, 0.02, -0.4],
+      // 7.92 mm SmK 钢芯弹:12.8 g,约 755 m/s,近距离穿深约 12 mm
+      ammo: [
+        { id: 'smk', name: '7.92 mm SmK', type: 'AP', caliber: 7.92, mass: 0.0128, muzzleVelocity: 755, penetration: 12, explosiveMass: 0, fuseDelay: 0, fuseSensitivity: 0, dragCoefficient: 0.3 },
       ],
     },
   ],

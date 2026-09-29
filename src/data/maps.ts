@@ -69,6 +69,18 @@ export const TRAINING_GROUND: MapSpec = {
     { position: [-10, -65], size: [12, 3, 2], rotationY: 0 },
     { position: [-60, -10], size: [4, 6, 4], rotationY: 10 },
   ],
+  // 植被:东南角一小片树林、西北角灌木丛,虎王旁边几丛灌木做半遮挡;玩家到两辆靶车之间留空
+  vegetation: {
+    zones: [
+      { kind: 'tree', at: [70, 62], radius: 18, density: 180, seed: 101 },
+      { kind: 'bush', at: [72, 45], radius: 16, density: 220, seed: 102 },
+      { kind: 'bush', at: [-72, -62], radius: 22, density: 220, seed: 103 },
+      { kind: 'pine', at: [-78, -78], radius: 16, density: 200, seed: 104 },
+      { kind: 'bush', at: [-50, -34], radius: 7, density: 400, seed: 105 },
+    ],
+    grass: { density: 16, seed: 106 },
+    clearRadius: 10,
+  },
   spawns: {
     player: { vehicleId: 'tiger_i', position: [0, 70], heading: 0 },
     targets: [
@@ -186,6 +198,48 @@ export const RIVER_VALLEY: MapSpec = {
     { position: [800, 200], size: [9, 5, 9], rotationY: 40 },
     { position: [-1000, 700], size: [10, 5, 8], rotationY: -20 },
   ],
+  /**
+   * 植被(固定种子撒点,每次加载一样):
+   *   - 出生点西侧一片阔叶林、东侧一片小树林,可以绕着走、躲进去;
+   *   - 河谷两岸是河滩林和灌木,西边丘陵是针叶林,北边山脚两片针叶林;
+   *   - 平原上几条东西向的树篱(树 + 灌木),田野里稀疏的灌木,荒漠里零星的灌丛;
+   *   - 靶车旁边有几丛灌木做半遮挡。
+   * 玩家(0, 1200)到各靶车的视线走廊里不放树林和树篱。
+   */
+  vegetation: {
+    zones: [
+      // --- 出生点附近
+      { kind: 'tree', polygon: [[-420, 1060], [-160, 1090], [-150, 1320], [-430, 1330]], density: 90, seed: 201 },
+      { kind: 'bush', polygon: [[-420, 1060], [-160, 1090], [-150, 1320], [-430, 1330]], density: 50, seed: 202 },
+      { kind: 'tree', at: [230, 1300], radius: 60, density: 160, seed: 203 },
+      { kind: 'bush', at: [200, 1220], radius: 45, density: 80, seed: 204 },
+      // --- 河谷两岸(水面和泥滩里自动跳过)
+      { kind: 'tree', polygon: [[-800, 1100], [-600, 1100], [-470, 500], [-430, 0], [-640, 0], [-720, 500]], density: 18, seed: 211 },
+      { kind: 'bush', polygon: [[-820, 1200], [-580, 1200], [-450, 500], [-410, -400], [-660, -400], [-740, 500]], density: 15, seed: 212 },
+      { kind: 'pine', polygon: [[-700, -400], [-450, -400], [-520, -900], [-700, -950]], density: 30, seed: 213 },
+      // --- 西部丘陵的针叶林
+      { kind: 'pine', at: [-1120, 380], radius: 170, density: 45, seed: 221 },
+      { kind: 'pine', at: [-1280, -250], radius: 140, density: 40, seed: 222 },
+      { kind: 'tree', at: [-1050, 1050], radius: 150, density: 30, seed: 223 },
+      // --- 北部山脚
+      { kind: 'pine', at: [320, -1000], radius: 140, density: 45, seed: 231 },
+      { kind: 'pine', at: [-330, -1000], radius: 110, density: 40, seed: 232 },
+      // --- 平原上的树篱(东西向窄条),避开玩家到靶车的视线走廊
+      { kind: 'tree', polygon: [[460, 940], [820, 930], [820, 946], [460, 956]], density: 170, seed: 241 },
+      { kind: 'bush', polygon: [[460, 936], [820, 926], [820, 950], [460, 960]], density: 260, seed: 242 },
+      { kind: 'tree', polygon: [[-420, 520], [-320, 515], [-320, 531], [-420, 536]], density: 170, seed: 243 },
+      { kind: 'bush', polygon: [[-460, 512], [-300, 505], [-300, 535], [-460, 540]], density: 240, seed: 244 },
+      { kind: 'tree', polygon: [[350, 40], [620, 20], [620, 36], [350, 56]], density: 150, seed: 245 },
+      // --- 田野里稀疏的灌木、荒漠里零星的灌丛
+      { kind: 'bush', polygon: [[-450, 1100], [450, 1100], [450, -600], [-450, -600]], density: 2, seed: 251 },
+      { kind: 'bush', at: [950, 550], radius: 600, density: 1.5, seed: 252, scale: [0.6, 1.0] },
+      // --- 靶车旁的半遮挡
+      { kind: 'bush', at: [150, 585], radius: 14, density: 250, seed: 261 },
+      { kind: 'bush', at: [990, 520], radius: 16, density: 200, seed: 262 },
+      { kind: 'bush', at: [110, -125], radius: 18, density: 200, seed: 263 },
+    ],
+    grass: { density: 16, seed: 290 },
+  },
   spawns: {
     player: { vehicleId: 'tiger_i', position: [0, 1200], heading: 0 },
     targets: [

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import RAPIER from '@dimforge/rapier3d-compat';
 import type { Loadout, ShellSpec, VehicleSpec, WeaponSpec } from '../data/types';
 import { REFERENCE_ROLLING_RESISTANCE, SURFACES, type SurfaceSpec } from '../data/surfaces';
-import { buildVehicleModel } from './models';
+import { buildVehicleModel, type VehicleModel } from './models';
 import { DamageModel } from './damage/DamageModel';
 import { VehicleFrames } from './damage/geometry';
 import { superelevation } from './Ballistics';
@@ -54,9 +54,14 @@ export interface VehicleControls {
   fire: boolean;
   /** 表尺距离,m:火炮在瞄准线基础上按射表抬高,0 = 不抬高 */
   sightRange: number;
+  /** 同轴机枪开火(按住连发) */
+  fireMg?: boolean;
 }
 
-export const idleControls = (): VehicleControls => ({ throttle: 0, steer: 0, aimPoint: null, fire: false, sightRange: 0 });
+export const idleControls = (): VehicleControls => ({ throttle: 0, steer: 0, aimPoint: null, fire: false, sightRange: 0, fireMg: false });
+
+/** 机枪散布(1σ),毫弧度 */
+const MG_DISPERSION_MRAD = 1.5;
 
 export interface FireRequest {
   weapon: WeaponSpec;
@@ -114,10 +119,15 @@ export class Vehicle {
   loaded: { shell: ShellSpec; rack: string | null } | null = null;
   /** 脚下的地表(Game 每步按位置更新),决定滚动阻力和抓地 */
   surface: SurfaceSpec = SURFACES.grass;
+  /** 同轴机枪状态:当前弹链剩余、备用发数、射击间隔计时、换弹链剩余时间 */
+  readonly mg: { weapon: WeaponSpec | null; inBelt: number; reserve: number; cooldown: number; reloading: number };
 
   private wreck = false;
   private flashTimer = 0;
   private readonly materials: THREE.MeshStandardMaterial[];
+  private readonly model: VehicleModel;
+  /** 左右履带累计行驶距离(m),给行走机构动画用;prev / curr 用于渲染插值 */
+  private readonly travel = { prevL: 0, prevR: 0, currL: 0, currR: 0 };
   /** 炮塔旋转中心(车体本地坐标) */
   private readonly turretOffset: THREE.Vector3;
   /** 火炮耳轴(炮塔本地坐标) */
@@ -141,6 +151,10 @@ export class Vehicle {
     loadout?: Loadout,
   ) {
     this.damage = new DamageModel(spec, loadout);
+    const mgWeapon = spec.weapons.find((w) => w.kind === 'mg') ?? null;
+    const total = mgWeapon?.rounds ?? 0;
+    const belt = Math.min(total, mgWeapon?.beltSize ?? total);
+    this.mg = { weapon: mgWeapon, inBelt: belt, reserve: total - belt, cooldown: 0, reloading: 0 };
     // 出发时炮膛里已经有一发
     this.selectedShell = Math.max(0, (spec.weapons[0]?.ammo ?? []).findIndex((a) => this.damage.rounds(a.id) > 0));
     this.tryLoad();
@@ -180,7 +194,8 @@ export class Vehicle {
     this.gunPivot.position.copy(this.gunOffset);
     this.root.add(this.turretPivot);
     this.turretPivot.add(this.gunPivot);
-    this.materials = buildVehicleModel(spec, { root: this.root, turretPivot: this.turretPivot, gunPivot: this.gunPivot });
+    this.model = buildVehicleModel(spec, { root: this.root, turretPivot: this.turretPivot, gunPivot: this.gunPivot });
+    this.materials = this.model.materials;
     this.root.name = `vehicle:${id}`;
     this.capturePose();
     this.capturePose();
@@ -270,14 +285,15 @@ export class Vehicle {
   }
 
   /** 固定步更新:驾驶、炮塔、装填。满足开火条件时返回开火请求。 */
-  fixedUpdate(dt: number, world: RAPIER.World): FireRequest | null {
+  fixedUpdate(dt: number, world: RAPIER.World): FireRequest[] {
+    const shots: FireRequest[] = [];
     if (this.flashTimer > 0) {
       this.flashTimer -= dt;
       if (this.flashTimer <= 0) this.setEmissive(0x000000);
     }
     if (this.isDead) {
       this.becomeWreck();
-      return null;
+      return shots;
     }
     // 装填:只有还有这种弹时才推进;速度受炮闩和装填手(或兼任的炮手)效率影响
     if (!this.loaded && this.selectedShellSpec && this.damage.rounds(this.selectedShellSpec.id) > 0) {
@@ -299,13 +315,65 @@ export class Vehicle {
       const { origin, dir } = this.muzzle();
       // 炮管受损 → 散布变大
       const sigma = (1 - this.damage.barrelFactor) * BARREL_DAMAGE_DISPERSION_MRAD * 1e-3;
-      if (sigma > 0) {
-        const g = () => Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random());
-        dir.add(new THREE.Vector3(g() * sigma, g() * sigma, g() * sigma)).normalize();
-      }
-      return { weapon, shell, origin, dir };
+      if (sigma > 0) jitter(dir, sigma);
+      shots.push({ weapon, shell, origin, dir });
     }
-    return null;
+    this.updateMachineGun(dt, shots);
+    return shots;
+  }
+
+  /** 同轴机枪:按射速连发;打完一条弹链换链(换链速度受装填手效率影响,炮手在位才能射击) */
+  private updateMachineGun(dt: number, shots: FireRequest[]): void {
+    const mg = this.mg;
+    const w = mg.weapon;
+    if (!w) return;
+    mg.cooldown -= dt;
+    if (mg.reloading > 0) {
+      mg.cooldown = Math.max(0, mg.cooldown);
+      mg.reloading -= dt * Math.max(0.25, this.damage.seatEfficiency('loader') || this.damage.seatEfficiency('gunner') * 0.5);
+      if (mg.reloading <= 0) {
+        const belt = Math.min(mg.reserve, w.beltSize ?? mg.reserve);
+        mg.inBelt = belt;
+        mg.reserve -= belt;
+        mg.reloading = 0;
+      }
+      return;
+    }
+    if (mg.inBelt <= 0) {
+      if (mg.reserve > 0) mg.reloading = w.reloadTime;
+      mg.cooldown = Math.max(0, mg.cooldown);
+      return;
+    }
+    if (!this.controls.fireMg || !this.occupant('gunner')) {
+      mg.cooldown = Math.max(0, mg.cooldown);
+      return;
+    }
+    const interval = 60 / (w.rateOfFire ?? 600);
+    while (mg.cooldown <= 0 && mg.inBelt > 0) {
+      const { origin, dir } = this.mgMuzzle();
+      jitter(dir, MG_DISPERSION_MRAD * 1e-3);
+      shots.push({ weapon: w, shell: w.ammo[0], origin, dir });
+      mg.inBelt--;
+      mg.cooldown += interval;
+    }
+    if (mg.inBelt <= 0 && mg.reserve > 0) mg.reloading = w.reloadTime;
+  }
+
+  private occupant(role: 'gunner'): boolean {
+    return !!this.damage.occupant(role);
+  }
+
+  /** 同轴机枪枪口:火炮坐标系里的安装点,方向与炮管平行 */
+  mgMuzzle(): { origin: THREE.Vector3; dir: THREE.Vector3 } {
+    const q = this.physicsQuaternion();
+    const qTurret = q.clone().multiply(new THREE.Quaternion().setFromAxisAngle(UP, this.turretYaw));
+    const qGun = qTurret.clone().multiply(new THREE.Quaternion().setFromAxisAngle(RIGHT, this.gunPitch));
+    const m = this.mg.weapon?.mount ?? [0.35, 0, -0.4];
+    const origin = this.physicsPosition()
+      .add(this.turretOffset.clone().applyQuaternion(q))
+      .add(this.gunOffset.clone().applyQuaternion(qTurret))
+      .add(new THREE.Vector3(m[0], m[1], m[2]).applyQuaternion(qGun));
+    return { origin, dir: FORWARD.clone().applyQuaternion(qGun) };
   }
 
   /**
@@ -385,6 +453,22 @@ export class Vehicle {
     this.physicsQuaternion(this.currQuat);
     this.currTurretYaw = this.turretYaw;
     this.currGunPitch = this.gunPitch;
+    // 行走机构:车体沿车头方向的位移 ± 偏航角变化 × 半轮距 = 左右履带各自走过的距离
+    const t = this.travel;
+    t.prevL = t.currL;
+    t.prevR = t.currR;
+    const fwd = FORWARD.clone().applyQuaternion(this.currQuat);
+    const d = this.currPos.clone().sub(this.prevPos).dot(fwd);
+    const yawOf = (q: THREE.Quaternion) => {
+      const f = FORWARD.clone().applyQuaternion(q);
+      return Math.atan2(-f.x, -f.z);
+    };
+    const dYaw = wrapAngle(yawOf(this.currQuat) - yawOf(this.prevQuat));
+    const halfTrack = this.spec.hull.width * 0.4;
+    if (Math.abs(d) < 5 && Math.abs(dYaw) < 1) {
+      t.currL += d - dYaw * halfTrack;
+      t.currR += d + dYaw * halfTrack;
+    }
   }
 
   syncVisual(alpha: number): void {
@@ -392,6 +476,14 @@ export class Vehicle {
     this.root.quaternion.slerpQuaternions(this.prevQuat, this.currQuat, alpha);
     this.turretPivot.rotation.y = this.prevTurretYaw + wrapAngle(this.currTurretYaw - this.prevTurretYaw) * alpha;
     this.gunPivot.rotation.x = this.prevGunPitch + (this.currGunPitch - this.prevGunPitch) * alpha;
+    const t = this.travel;
+    this.model.animate(t.prevL + (t.currL - t.prevL) * alpha, t.prevR + (t.currR - t.prevR) * alpha);
+  }
+
+  /** 左右履带的平均行驶速度对应的发动机「转速」比例(音效用),0..1 */
+  get engineRpm(): number {
+    const v = Math.abs(this.forwardSpeed) / Math.max(1, this.spec.maxSpeed / 3.6);
+    return Math.min(1, 0.15 + 0.85 * v);
   }
 
   private drive(dt: number, world: RAPIER.World): void {
@@ -501,4 +593,10 @@ export class Vehicle {
   private setEmissive(hex: number): void {
     this.materials.forEach((m) => m.emissive.setHex(hex));
   }
+}
+
+/** 给方向加一点高斯散布(1σ = sigma 弧度) */
+function jitter(dir: THREE.Vector3, sigma: number): void {
+  const g = () => Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random());
+  dir.add(new THREE.Vector3(g() * sigma, g() * sigma, g() * sigma)).normalize();
 }

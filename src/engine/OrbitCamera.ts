@@ -6,6 +6,8 @@ export const THIRD_PERSON_FOV = 70;
  * 瞄准镜视场 ≈ 该值 / 倍率(度)。取自实物:TZF 9d 2.5× 视场 25°、5× 视场 12.5°;TSh-16 4× 视场 16°。
  */
 export const SIGHT_FOV_AT_1X = 62.5;
+/** 单次 rotate() 最多转动的角度,弧度(防止异常的巨大鼠标位移把视角甩到背后) */
+const MAX_STEP = 0.5;
 
 /**
  * 相机:鼠标控制朝向,两种模式——
@@ -26,6 +28,7 @@ export class OrbitCamera {
   maxPitch = 0.3;
   mode: 'third' | 'sight' = 'third';
   magnification = 1;
+  private userSensitivity = { mouse: 1, sight: 1, scaleWithZoom: true, invertY: false };
 
   private readonly pivot = new THREE.Vector3();
   private readonly dir = new THREE.Vector3();
@@ -48,11 +51,27 @@ export class OrbitCamera {
     this.applyFov();
   }
 
+  /**
+   * 玩家灵敏度设置:
+   *   mouse 第三人称倍数;sight 开镜倍数;
+   *   scaleWithZoom 开镜后再按视场缩放(放大越多转得越慢,屏幕上的移动速度与倍率无关——War Thunder 的默认手感);
+   *     关掉时只按 1/√倍率 缩放,高倍镜下转得相对快一些;
+   *   invertY 反转上下。
+   */
+  setSensitivity(s: { mouse: number; sight: number; scaleWithZoom: boolean; invertY: boolean }): void {
+    this.userSensitivity = { ...s };
+  }
+
   rotate(dx: number, dy: number): void {
-    // 放大后同样的鼠标位移转得更少,手感与视场成正比
-    const k = this.sensitivity * (this.fov / THIRD_PERSON_FOV);
-    this.yaw -= dx * k;
-    this.pitch = THREE.MathUtils.clamp(this.pitch - dy * k, this.minPitch, this.maxPitch);
+    const u = this.userSensitivity;
+    let k = this.sensitivity;
+    if (this.mode === 'sight') k *= u.sight * (u.scaleWithZoom ? this.fov / THIRD_PERSON_FOV : 1 / Math.sqrt(this.magnification));
+    else k *= u.mouse;
+    // 第二道保险:一次最多转 MAX_STEP(输入层已经过滤了尖峰)
+    const dYaw = THREE.MathUtils.clamp(dx * k, -MAX_STEP, MAX_STEP);
+    const dPitch = THREE.MathUtils.clamp(dy * k, -MAX_STEP, MAX_STEP) * (u.invertY ? -1 : 1);
+    this.yaw -= dYaw;
+    this.pitch = THREE.MathUtils.clamp(this.pitch - dPitch, this.minPitch, this.maxPitch);
   }
 
   /** 视线方向(单位向量) */

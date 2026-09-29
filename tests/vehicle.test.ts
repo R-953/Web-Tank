@@ -20,7 +20,7 @@ function setup() {
   const v = new Vehicle('v', SHOOTER, world, new THREE.Vector3(0, SHOOTER.hull.height / 2 + 0.3, 0), 0);
   const step = (controls: Partial<VehicleControls> = {}) => {
     v.controls = { ...idleControls(), ...controls };
-    const req = v.fixedUpdate(DT, world);
+    const req = v.fixedUpdate(DT, world)[0] ?? null;
     world.timestep = DT;
     world.step();
     v.capturePose();
