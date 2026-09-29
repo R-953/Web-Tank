@@ -5,3 +5,8 @@ coverage/
 *.log
 .DS_Store
 Thumbs.db
+Claude outputs/
+
+# 各 Coding Agent 的本机私有设置(不提交)
+.claude/settings.local.json
+CLAUDE.local.md
