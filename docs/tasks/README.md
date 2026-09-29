@@ -5,7 +5,7 @@
 | 编号 | 任务 | 负责 | 车道 | 状态 |
 |---|---|---|---|---|
 | [000](000-git-sync.md) | 理顺 git,把第五轮和协作机制推上 GitHub | Claude Code | 主程 | 已合并 |
-| [001](001-perf-baseline.md) | 本机帧率基线(低 / 中 / 高画质) | Claude Code(代 Antigravity) | 界面 / 实测 | 待领取(等 Chrome 连上) |
+| [001](001-perf-baseline.md) | 本机帧率基线(低 / 中 / 高画质) | Claude Code(代 Antigravity) | 界面 / 实测 | 待审查 |
 | [002](002-minimap-marker-style.md) | 小地图标记样式:圆点 / 箭头 | Claude Code(代 Copilot) | 小任务 | 待审查 |
 | [003](003-research-m4a3-76w.md) | M4A3(76)W 数据调研(只出数据和出处) | Claude Code(代 Gemini CLI) | 内容 | 待审查 |
 | [004](004-local-model-eval.md) | 本地模型能力测试 | 负责人 + LM Studio | 杂务 | 待领取(随时) |
@@ -13,6 +13,7 @@
 | [006](006-casemate-aiming.md) | 固定战斗室(无炮塔)车辆的瞄准逻辑 | Claude Code | 主程 | 待审查 |
 | [007](007-casemate-vehicles.md) | 两辆代表性固定战斗室车辆:StuG III G、SU-100(数据) | Claude Code | 主程 / 内容 | 待审查(基于 006) |
 | [008](008-freelook-reverse-steer.md) | C 键自由视角;倒车时转向按汽车习惯 | Claude Code | 主程 | 待审查(基于 007) |
+| [009](009-casemate-models.md) | StuG III G、SU-100 专属模型(战斗室可前后偏移) | Claude Code | 主程 / 内容 | 待审查(基于 008) |
 
 ### 候选车辆(负责人 2026-09-29 提出方向,型号待确认后再开卡)
 
