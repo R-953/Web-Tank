@@ -12,6 +12,7 @@
 | [005](005-menu-dropdown-overlap.md) | 主界面下拉菜单被车辆信息面板盖住 | Claude Code | 主程 | 待审查 |
 | [006](006-casemate-aiming.md) | 固定战斗室(无炮塔)车辆的瞄准逻辑 | Claude Code | 主程 | 待审查 |
 | [007](007-casemate-vehicles.md) | 两辆代表性固定战斗室车辆:StuG III G、SU-100(数据) | Claude Code | 主程 / 内容 | 待审查(基于 006) |
+| [008](008-freelook-reverse-steer.md) | C 键自由视角;倒车时转向按汽车习惯 | Claude Code | 主程 | 待审查(基于 007) |
 
 ### 候选车辆(负责人 2026-09-29 提出方向,型号待确认后再开卡)
 
