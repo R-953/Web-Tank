@@ -84,7 +84,8 @@ describe('河谷试验场(3 km)', () => {
     expect(waterCells).toBeGreaterThan(100);
   });
 
-  it('所有出生点都在地图内、不在水里;玩家出生点能直接看到至少两辆靶车', () => {
+  // 生成整张 3 km 地图(地形 + 植被)单独跑就要 4–5 秒,机器忙时会超过 Vitest 默认的 5 秒,所以单独放宽超时(断言不变)
+  it('所有出生点都在地图内、不在水里;玩家出生点能直接看到至少两辆靶车', { timeout: 30_000 }, () => {
     const game = new Game({ map: RIVER_VALLEY, vehicles: VEHICLES, seed: 1, enemyAi: false });
     for (let i = 0; i < 60; i++) game.fixedUpdate(1 / 60);
     for (const v of game.vehicles) {

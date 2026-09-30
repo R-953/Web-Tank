@@ -454,6 +454,8 @@ async function start(): Promise<void> {
     // 1. 瞄准镜 / 弹种 / 维修 / 灭火 等按键
     if (locked && actions.pressed('restart') && selection) {
       startBattle(selection);
+      // 提前结束这一帧也要清空「刚按下」,否则下一帧还会读到重开键,变成每帧都重开一局
+      input.endFrame();
       return;
     }
     if (locked && actions.pressed('minimapShape')) {
