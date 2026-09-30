@@ -256,68 +256,6 @@ export const TIGER_II: VehicleSpec = {
 };
 
 /**
- * 突击炮:StuG III Ausf. G。固定战斗室,火炮左右各 10°(出处见 docs/physics-validation.md 第 9 节)。
- * 「炮塔」盒子是战斗室,中心在车体中部偏前 0.8 m;装甲倾角没核实,按竖直填。
- */
-export const STUG_III_G: VehicleSpec = {
-  id: 'stug_iii_g',
-  name: 'StuG III Ausf. G',
-  // 车体正面 80(50 + 30 附加板)/ 侧面 30 / 后部 50,War Thunder 值
-  armor: { front: 80, side: 30, rear: 50 },
-  // 战斗室正面 80 / 侧面 30 / 后部 30,War Thunder 值
-  turretArmor: { front: 80, side: 30, rear: 30 },
-  maxSpeed: 40,
-  turretRotationSpeed: 10.5, // 火炮方向机,War Thunder 值(历史满改、新手乘员)
-  weapons: [
-    {
-      id: 'stuk40',
-      name: '7.5 cm StuK 40 L/48',
-      reloadTime: 6.5, // War Thunder 值
-      ammo: [
-        // 6.8 kg,18 g 黑索今 / 蜡;135mm@100m、109mm@1000m(美英 50% 判据计算值)→ 炮口 138,阻力系数按表拟合
-        { id: 'pzgr39', name: 'Pzgr.39', type: 'APCBC-HE', caliber: 75, mass: 6.8, muzzleVelocity: 750, penetration: 138, explosiveMass: 18, fuseDelay: 1.2, fuseSensitivity: 15, dragCoefficient: 0.43 },
-        // 4.1 kg 钨芯;176mm@100m、130mm@1000m → 炮口 182,阻力系数按表拟合
-        { id: 'pzgr40', name: 'Pzgr.40', type: 'APCR', caliber: 75, mass: 4.1, muzzleVelocity: 930, penetration: 182, explosiveMass: 0, fuseDelay: 0, fuseSensitivity: 0, dragCoefficient: 0.36 },
-        // 9.75 lb = 4.42 kg,1.422 lb = 645 g 阿马托(按 TNT 计)
-        { id: 'sprgr34', name: 'Sprgr.34', type: 'HE', caliber: 75, mass: 4.42, muzzleVelocity: 550, penetration: hePenetration(0.645), explosiveMass: 645, fuseDelay: 0, fuseSensitivity: 0.1 },
-      ],
-    },
-  ],
-  // 含炮全长 6.85 / 宽 2.95 / 全高 2.16;车体长按「含炮全长 − 炮口伸出约 1.35 m」估算,车体盒高 = 全高 − 战斗室 0.66
-  // 转向速度估算(同底盘量级取 20°/s);加速度按功重比 12.3 hp/t 比照 T-34-85 估算
-  hull: { length: 5.5, width: 2.95, height: 1.5, turnRate: 20, acceleration: 4.3 },
-  // 战斗室尺寸、位置估算(从首上后缘到车体中部);炮口伸出 1.35 m → barrelLength = 1.35 − 2.5/2 + (−0.8) + 5.5/2 = 2.05
-  // 俯仰 −6° / +17°、高低机 3.5°/s 为 War Thunder 值
-  turret: { length: 2.5, width: 2.3, height: 0.66, barrelLength: 2.05, elevation: [-6, 17], elevationSpeed: 3.5, traverse: [10, 10], offset: -0.8 },
-  // Sfl.Zf.1a 潜望式瞄准镜;倍率用 War Thunder 值 4.7–5×
-  sight: { magnifications: [4.7, 5], reticle: 'german' },
-  internals: {
-    modules: [
-      { id: 'engine', type: 'engine', part: 'hull', center: [0, 0, 1.9], size: [1.2, 0.8, 1.2] },
-      { id: 'transmission', type: 'transmission', part: 'hull', center: [0, -0.2, -2.3], size: [1.4, 0.5, 0.7] },
-      ...pair('fuel', 'fuel', 'hull', [0.95, 0, 1.9], [0.3, 0.5, 1.0]),
-      // 共 54 发:战斗室左右两侧各 16 发,车底 22 发
-      rack('ammo_left', 'turret', [-0.95, 0.05, 0.2], [0.3, 0.5, 1.2], 16, 1),
-      rack('ammo_right', 'turret', [0.95, 0.05, 0.2], [0.3, 0.5, 1.2], 16, 2),
-      rack('ammo_floor', 'hull', [0.2, -0.35, 0.2], [0.9, 0.3, 1.0], 22, 3),
-      ...pair('track', 'track', 'hull', [1.275, -0.4, 0], [0.4, 0.7, 5.0]),
-      { id: 'traverse', type: 'traverse', part: 'turret', center: [-0.3, -0.1, -0.9], size: [0.3, 0.3, 0.3] },
-      { id: 'elevation', type: 'elevation', part: 'turret', center: [-0.3, 0.2, -1.0], size: [0.25, 0.3, 0.25] },
-      { id: 'breech', type: 'breech', part: 'gun', center: [0, 0, 0.7], size: [0.3, 0.3, 0.9] },
-      { id: 'barrel', type: 'barrel', part: 'gun', center: [0, 0, -1.025], size: [0.15, 0.15, 2.05] },
-    ],
-    crew: [
-      // 4 人:驾驶员在车体左前;炮手在火炮左侧,车长在炮手后面,装填手在右侧
-      crew('driver', 'hull', -0.5, 0, -1.6),
-      crew('gunner', 'turret', -0.45, 0.05, -0.5),
-      crew('commander', 'turret', -0.5, 0.3, 0.6),
-      crew('loader', 'turret', 0.5, 0, 0.1),
-    ],
-  },
-  color: 0x9c8a55,
-};
-
-/**
  * 坦克歼击车:SU-100。T-34 底盘,固定战斗室,火炮左右各 8°(出处见 docs/physics-validation.md 第 9 节)。
  * 首上装甲一直延伸到战斗室顶,所以车体和战斗室正面用同一块板。
  */
@@ -375,10 +313,74 @@ export const SU_100: VehicleSpec = {
   color: 0x4f5b31,
 };
 
+/**
+ * 坦克歼击车:ISU-122。IS-2 底盘,固定战斗室,火炮左 3° / 右 7°(火炮偏在右侧;出处见 docs/physics-validation.md 第 10 节)。
+ * 火炮在模型和物理里都按车体中线放置(数据结构没有横向偏移);装甲倾角没核实,按竖直填。
+ */
+export const ISU_122: VehicleSpec = {
+  id: 'isu_122',
+  name: 'ISU-122',
+  // 车体正面 90 / 侧面 90 / 后部 60,War Thunder 值(Wikipedia:正面 90、侧面 90)
+  armor: { front: 90, side: 90, rear: 60 },
+  // 战斗室正面 90 / 侧面 75 / 后部 60,War Thunder 值;防盾 120 mm(Wikipedia)没有单独建模
+  turretArmor: { front: 90, side: 75, rear: 60 },
+  maxSpeed: 37,
+  turretRotationSpeed: 4.9, // 火炮方向机,War Thunder 值(历史满改、新手乘员)
+  weapons: [
+    {
+      id: 'a19s',
+      name: '122 mm A-19S',
+      // War Thunder 值(新手乘员;满级 20 s)。Wikipedia 写射速 1.5 发/分(40 s),和其他车一样按 WT 取值
+      reloadTime: 26,
+      ammo: [
+        // 25 kg,装药 156 g;150/130/115/100 mm @ 500/1000/1500/2000 m(Shirokorad,90°)→ 炮口 171,阻力系数按表拟合
+        { id: 'br471', name: 'BR-471', type: 'APHE', caliber: 122, mass: 25, muzzleVelocity: 800, penetration: 171, explosiveMass: 156, fuseDelay: 1.2, fuseSensitivity: 19, dragCoefficient: 0.67 },
+        // 1945 年初列装;25 kg;155/145/135/125 mm @ 500/1000/1500/2000 m(同上)→ 炮口 167;装药没查到,用 War Thunder 值 160 g
+        { id: 'br471b', name: 'BR-471B', type: 'APHEBC', caliber: 122, mass: 25, muzzleVelocity: 800, penetration: 167, explosiveMass: 160, fuseDelay: 1.2, fuseSensitivity: 19, dragCoefficient: 0.36 },
+        // 25 kg,装药 3.6 kg TNT
+        { id: 'of471', name: 'OF-471', type: 'HE', caliber: 122, mass: 25, muzzleVelocity: 800, penetration: hePenetration(3.6), explosiveMass: 3600, fuseDelay: 0, fuseSensitivity: 0.1 },
+      ],
+    },
+  ],
+  // 含炮全长 9.85 / 宽 3.07 / 全高 2.48(Wikipedia);车体长 6.77 m 为 IS 系底盘的常见资料值(估算,没找到可引用的出处)
+  // 车体盒高 1.55、战斗室 0.93 按侧面照片比例分(估算);转向比照虎式取 15°/s,加速度按功重比 11.4 hp/t 比照 T-34-85(估算)
+  hull: { length: 6.77, width: 3.07, height: 1.55, turnRate: 15, acceleration: 4.0 },
+  // 战斗室尺寸、位置估算(占车体前 60%);炮口伸出 9.85 − 6.77 = 3.08 m → barrelLength = 3.08 − 3.6/2 + (−1.1) + 6.77/2 = 3.57
+  // 俯仰 −3° / +22°、高低机 2.8°/s、射界左 3° / 右 7° 为 War Thunder 值(Wikipedia 只写了仰角)
+  turret: { length: 3.6, width: 2.7, height: 0.93, barrelLength: 3.57, elevation: [-3, 22], elevationSpeed: 2.8, traverse: [3, 7], offset: -1.1 },
+  // ST-10 潜望式瞄准镜;倍率用 War Thunder 值 1.9–3.5×
+  sight: { magnifications: [1.9, 3.5], reticle: 'soviet' },
+  internals: {
+    modules: [
+      { id: 'engine', type: 'engine', part: 'hull', center: [0, -0.05, 1.7], size: [1.2, 0.9, 1.5] },
+      { id: 'transmission', type: 'transmission', part: 'hull', center: [0, -0.2, 2.9], size: [1.8, 0.6, 0.8] },
+      ...pair('fuel', 'fuel', 'hull', [1.15, 0.1, 0.5], [0.35, 0.6, 1.2]),
+      // 共 30 发(Wikipedia):战斗室左壁 12 发、后壁 8 发、车底 10 发(分布估算)
+      rack('ammo_left', 'turret', [-1.1, 0.1, 0.3], [0.3, 0.5, 1.4], 12, 1),
+      rack('ammo_rear', 'turret', [0.3, 0.2, 1.55], [1.6, 0.4, 0.3], 8, 2),
+      rack('ammo_floor', 'hull', [0, -0.5, -0.6], [1.4, 0.3, 1.4], 10, 3),
+      ...pair('track', 'track', 'hull', [1.21, -0.375, 0], [0.65, 0.8, 6.3]),
+      { id: 'traverse', type: 'traverse', part: 'turret', center: [-0.35, -0.1, -1.2], size: [0.3, 0.3, 0.3] },
+      { id: 'elevation', type: 'elevation', part: 'turret', center: [-0.35, 0.15, -1.3], size: [0.25, 0.3, 0.25] },
+      { id: 'breech', type: 'breech', part: 'gun', center: [0, 0, 1.2], size: [0.4, 0.4, 1.6] },
+      { id: 'barrel', type: 'barrel', part: 'gun', center: [0, 0, -1.785], size: [0.22, 0.22, 3.57] },
+    ],
+    crew: [
+      // 5 人:车长、炮手、驾驶员、装填手、闩手(第二装填手,岗位按装填手算)
+      crew('driver', 'hull', -0.6, -0.1, -2.5),
+      crew('gunner', 'turret', -0.65, 0, -0.6),
+      crew('commander', 'turret', 0.75, 0.15, -0.8),
+      crew('loader', 'turret', 0.6, 0, 0.5),
+      crew('loader', 'turret', -0.6, 0, 0.8),
+    ],
+  },
+  color: 0x535e36,
+};
+
 export const VEHICLES: Readonly<Record<string, VehicleSpec>> = {
   [TIGER_I.id]: TIGER_I,
   [T34_85.id]: T34_85,
   [TIGER_II.id]: TIGER_II,
-  [STUG_III_G.id]: STUG_III_G,
   [SU_100.id]: SU_100,
+  [ISU_122.id]: ISU_122,
 };

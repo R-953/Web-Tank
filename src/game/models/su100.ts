@@ -1,5 +1,5 @@
 import type { VehicleSpec } from '../../data/types';
-import { DEG, ModelKit, bothSides, box, darker, extrude, palette, prism, revolve, rod, type ModelParts, type Tuple3, type Vec2 } from './kit';
+import { DEG, ModelKit, bothSides, box, darker, extrude, loft, palette, prism, revolve, rod, type ModelParts, type Tuple3, type Vec2 } from './kit';
 import { discWheel, rubberRoadWheel, runningGear } from './running';
 import { axe, headlight, periscope, rectHatch, roundHatch, shovel, spareLink, towCables } from './parts';
 
@@ -8,7 +8,8 @@ import { axe, headlight, periscope, rectHatch, roundHatch, shovel, spareLink, to
  *   首上 75 mm / 55° 装甲从车鼻一直延伸到战斗室顶(驾驶员舱门 + 两具潜望镜、备用履带板、大灯)、53° 首下、40° 内倾侧装甲;
  *   战斗室在车体前半部:侧板接着车体侧装甲往上(内倾角按 20° 估算)、平顶,右前方外凸的车长指挥塔座 + 指挥塔(5 个观察窗 + 潜望镜)、
  *   炮手瞄准镜舱盖、装填手矩形舱盖、潜望镜、后部两个通风罩、侧面扶手;
- *   首上固定的铸造炮框 + 大型铸造球面防盾(随火炮转动)+ D-10S 长炮管(略收细、无制退器);
+ *   首上栓着的铸造炮框(矮胖鼓包,底边法兰一圈螺栓)+ 顶上向前伸出的眉板,
+ *   炮框正面嵌着球形防盾(随火炮转动,正面短套筒根部一圈螺栓法兰)+ D-10S 长炮管(略收细、无制退器);
  *   5 对大直径挂胶克里斯蒂负重轮、前诱导轮、后主动轮;
  *   发动机舱百叶窗 / 检修舱盖、尾板排气管与传动检修门、侧面外挂油桶、翼子板、拖车钢缆与随车工具。
  * 车体部分沿用 T-34-85 模型的坐标(两者车体盒同为 6.1 × 3.0 × 1.62 m)。
@@ -233,47 +234,72 @@ export function buildSU100(spec: VehicleSpec, { root, turretPivot, gunPivot }: M
     for (let k = 0; k + 1 < pts.length; k++) T.add(rod(pts[k], pts[k + 1], 0.02, 4), C.shade);
     for (const p of pts) T.add(box(0.1, 0.03, 0.03), C.shade, [p[0] - s * 0.045, p[1], p[2]]);
   });
-  // 首上固定的铸造炮框:轴线沿首上法线,中心在炮耳轴到首上的垂足处;防盾后下部嵌在炮框里
+  // ---------------- 首上的铸造炮框 + 眉板(挂战斗室,不随火炮转动)
+  // 炮耳轴在战斗室盒子正面中心,离首上板面 ≈ 0.48 m,整个球形防盾都悬在板面外,靠炮框托住:
+  // 炮框是栓在首上的矮胖铸造鼓包,截面为超椭圆,沿炮管方向从正面(球心后 8 cm)往后伸,
+  // 顶面缓缓降低、在战斗室顶前缘没入首上;下半截收窄,在防盾下面形成一圈圆弧托座。
+  // 防盾是以耳轴为球心的球,射界内怎么转占的空间都不变:前半球从炮框正面伸出,后半球始终包在炮框里
   const gy = ch / 2; // 炮耳轴(战斗室盒子正面中心)
   const gz = -turret.length / 2;
-  const dPivot = (cz(gy) - gz) * Math.cos(55 * DEG); // 炮耳轴到首上的垂直距离 ≈ 0.48
-  const foot: Tuple3 = [0, gy - dPivot * gn[1], gz - dPivot * gn[2]];
-  T.add(
-    revolve(
-      [
-        [0.47, -0.08],
-        [0.47, 0.14],
-        [0.42, 0.22],
-        [0.38, 0.26],
-      ],
-      'y',
-      14,
-    ),
-    C.paint,
-    foot,
-    glRot,
-  );
+  const mR = 0.33; // 球形防盾半径(估算:照片上球径约为炮管套筒直径的 2.3 倍)
+  const glY = (z: number) => (z - cz(0)) / glacisK; // 首上板面在战斗室坐标里的高度
+  const frame = [
+    { z: gz + 0.08, a: 0.49, yc: 0.25, up: 0.42, down: 0.51 }, // 正面(四周倒角 4 cm)
+    { z: gz + 0.13, a: 0.53, yc: 0.25, up: 0.46, down: 0.51 },
+    { z: cz(ch) + 0.07, a: 0.42, yc: 0.14, up: ch - 0.15, down: 0.5 }, // 顶面在战斗室顶前缘处低于车顶 5 mm,再往后埋进战斗室
+  ].map((r) => hoodRing(r, 24));
+  T.add(loft(frame), C.paint);
+  // 炮框底边的法兰 + 一圈螺栓,压在首上板面上(上端到战斗室顶前缘为止)
+  const sin35 = Math.sin(35 * DEG);
+  const sMax = ch / sin35; // 战斗室顶前缘沿板面的坐标
+  const foot = hoodFootprint(frame, glY).map(([x, y]): Vec2 => [x, y / sin35]); // 板面坐标(横向 x,沿坡向上 s)
+  const onGlacis = (x: number, s: number, off: number): Tuple3 => [x, s * sin35 + off * gn[1], cz(s * sin35) + off * gn[2]];
+  T.add(extrude(clipBelow(inflate(foot, 0.07), sMax), 'y', -0.01, 0.03), C.paint, onGlacis(0, 0, 0), glRot);
+  const bolt = revolve([[0.026, -0.01], [0.026, 0.02], [0.017, 0.032]], 'y', 6);
+  for (const [x, s] of spaced(clipBelow(inflate(foot, 0.035), sMax - 0.04), 0.13)) T.add(bolt, C.shade, onGlacis(x, s, 0.03), glRot);
+  // 眉板:从炮框顶面向前伸出的弯折平板,两翼顺着炮框圆顶往下折;压在防盾上方 3 cm,
+  // 仰到 +20° 时法兰、套筒都在它下面 / 前面
+  const by = gy + mR + 0.03;
+  const browT = 0.045;
+  const brow: Vec2[] = [
+    [-0.36, by - 0.075],
+    [-0.14, by],
+    [0.14, by],
+    [0.36, by - 0.075],
+    [0.36, by - 0.075 + browT],
+    [0.14, by + browT],
+    [-0.14, by + browT],
+    [-0.36, by - 0.075 + browT],
+  ];
+  T.add(extrude(brow, 'z', gz - 0.24, gz + 0.4), C.paint);
 
-  // ---------------- 防盾 + D-10S 炮(无制退器)
-  // 铸造球面防盾:绕竖轴的旋转椭球(宽 0.76、高 0.6),中心在炮耳轴上,
-  // 所以 ±8° 水平转动时外形不变;往炮框方向伸出 0.31–0.36 m,俯仰全程都嵌在炮框(厚 0.26、离耳轴 ≈ 0.48)里
-  const mRx = 0.38;
-  const mRy = 0.3;
+  // ---------------- 球形防盾 + D-10S 炮(无制退器),随火炮转动
   const mant: Vec2[] = [];
-  for (let k = -4; k <= 4; k++) {
-    const a = k * 20 * DEG;
-    mant.push([mRx * Math.cos(a), mRy * Math.sin(a)]);
+  for (let k = 1; k <= 11; k++) mant.push([mR * Math.sin(k * 15 * DEG), -mR * Math.cos(k * 15 * DEG)]);
+  G.add(revolve(mant, 'z', 16), C.paint);
+  // 瞄准镜孔(左,略高于球心):深色圆孔贴在球面上
+  const sl = Math.hypot(0.5, 0.1, 0.86);
+  const sight: Tuple3 = [-0.5 / sl, 0.1 / sl, -0.86 / sl];
+  G.add(
+    revolve([[0.036, 0.03], [0.036, -0.006]], 'z', 8),
+    C.dark,
+    [sight[0] * mR, sight[1] * mR, sight[2] * mR],
+    [Math.atan2(sight[1], -sight[2]), Math.asin(-sight[0]), 0], // 局部 -Z 转到球面法线方向
+  );
+  // 炮管套筒:根部一圈带 8 个螺栓的法兰(从球面里长出来),短圆筒,前端倒角
+  G.add(revolve([[0.16, -0.21], [0.2, -0.23], [0.21, -0.26], [0.21, -0.3], [0.195, -0.32]], 'z', 16), C.paint);
+  const flangeBolt = revolve([[0.02, -0.31], [0.02, -0.335], [0.013, -0.345]], 'z', 6);
+  for (let k = 0; k < 8; k++) {
+    const a = ((k + 0.5) / 8) * Math.PI * 2;
+    G.add(flangeBolt, C.shade, [0.175 * Math.cos(a), 0.175 * Math.sin(a), 0]);
   }
-  G.add(revolve(mant, 'y', 14), C.paint);
-  // 瞄准镜孔(左)
-  G.add(box(0.07, 0.07, 0.05), C.dark, [-0.2, 0.06, -0.3]);
-  // 炮管护套 + 炮管(略收细,炮口不加厚)
+  G.add(revolve([[0.14, -0.3], [0.14, -0.56], [0.125, -0.6]], 'z', 14), C.paint);
+  // 炮管(略收细,炮口不加厚)
   const muzzle = -turret.barrelLength;
-  G.add(revolve([[0.16, -0.28], [0.16, -0.62], [0.13, -0.68]], 'z', 12), C.paint);
   G.add(
     revolve(
       [
-        [0.115, -0.64],
+        [0.112, -0.58],
         [0.105, -1.4],
         [0.086, muzzle],
       ],
@@ -283,6 +309,105 @@ export function buildSU100(spec: VehicleSpec, { root, turretPivot, gunPivot }: M
     ),
     null,
   );
+}
+
+/** 炮框截面:z 处、以 (0, yc) 为中心的超椭圆,半宽 a,上 / 下半高 up / down(指数 2.4,比椭圆方一些,像铸件) */
+function hoodRing(r: { z: number; a: number; yc: number; up: number; down: number }, n: number): Tuple3[] {
+  const e = 2 / 2.4;
+  const ring: Tuple3[] = [];
+  for (let k = 0; k < n; k++) {
+    const t = (k / n) * Math.PI * 2;
+    const c = Math.cos(t);
+    const s = Math.sin(t);
+    ring.push([r.a * Math.sign(c) * Math.abs(c) ** e, r.yc + (s >= 0 ? r.up : r.down) * Math.sign(s) * Math.abs(s) ** e, r.z]);
+  }
+  return ring;
+}
+
+/**
+ * 炮框和首上板面的交线,返回 [x, 板面高度 y],按绕中心的角度排好(凸多边形)。
+ * 沿每条母线(各圈同一序号的点连成的折线)找它钻进板面的位置;
+ * 正面圈底部本来就在板面以下的点不算,改取正面圈和板面那条水平线的两个交点。
+ */
+function hoodFootprint(rings: readonly (readonly Tuple3[])[], glY: (z: number) => number): Vec2[] {
+  const out: Vec2[] = [];
+  const above = (p: Tuple3) => p[1] - glY(p[2]); // > 0:在板面外
+  const n = rings[0].length;
+  for (let j = 0; j < n; j++) {
+    if (above(rings[0][j]) <= 0) continue;
+    for (let i = 0; i + 1 < rings.length; i++) {
+      const a = rings[i][j];
+      const b = rings[i + 1][j];
+      const fa = above(a);
+      const fb = above(b);
+      if (fb > 0) continue;
+      const t = fa / (fa - fb);
+      out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]);
+      break;
+    }
+  }
+  const front = rings[0];
+  const y0 = glY(front[0][2]);
+  for (let j = 0; j < n; j++) {
+    const a = front[j];
+    const b = front[(j + 1) % n];
+    if ((a[1] - y0) * (b[1] - y0) >= 0) continue;
+    const t = (y0 - a[1]) / (b[1] - a[1]);
+    out.push([a[0] + (b[0] - a[0]) * t, y0]);
+  }
+  const cx = out.reduce((s, p) => s + p[0], 0) / out.length;
+  const cy = out.reduce((s, p) => s + p[1], 0) / out.length;
+  return out.sort((p, q) => Math.atan2(p[1] - cy, p[0] - cx) - Math.atan2(q[1] - cy, q[0] - cx));
+}
+
+/** 凸多边形(逆时针)各顶点沿两条邻边外法线的平分方向外扩 d */
+function inflate(poly: readonly Vec2[], d: number): Vec2[] {
+  const n = poly.length;
+  const normal = (a: Vec2, b: Vec2): Vec2 => {
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    return [(b[1] - a[1]) / len, -(b[0] - a[0]) / len];
+  };
+  return poly.map((p, i) => {
+    const n0 = normal(poly[(i + n - 1) % n], p);
+    const n1 = normal(p, poly[(i + 1) % n]);
+    const len = Math.hypot(n0[0] + n1[0], n0[1] + n1[1]);
+    const m: Vec2 = [(n0[0] + n1[0]) / len, (n0[1] + n1[1]) / len];
+    // 平分方向上走 d / cos(半角),两条邻边都外移 d(尖角处限制在 2d 以内)
+    const k = d / Math.max(0.5, m[0] * n0[0] + m[1] * n0[1]);
+    return [p[0] + m[0] * k, p[1] + m[1] * k];
+  });
+}
+
+/** 多边形裁掉第二个坐标大于 vMax 的部分 */
+function clipBelow(poly: readonly Vec2[], vMax: number): Vec2[] {
+  const out: Vec2[] = [];
+  for (let i = 0; i < poly.length; i++) {
+    const a = poly[i];
+    const b = poly[(i + 1) % poly.length];
+    if (a[1] <= vMax) out.push(a);
+    if (a[1] <= vMax !== b[1] <= vMax) out.push([a[0] + ((b[0] - a[0]) * (vMax - a[1])) / (b[1] - a[1]), vMax]);
+  }
+  return out;
+}
+
+/** 沿多边形边界每隔 step 取一个点;clipBelow 裁出来的那条直边(两端都在最高处)跳过 */
+function spaced(poly: readonly Vec2[], step: number): Vec2[] {
+  const n = poly.length;
+  const vMax = Math.max(...poly.map((p) => p[1]));
+  const cut = poly.findIndex((p, i) => p[1] === vMax && poly[(i + 1) % n][1] === vMax);
+  const start = cut < 0 ? 0 : (cut + 1) % n;
+  const edges = cut < 0 ? n : n - 1;
+  const pts: Vec2[] = [];
+  let next = 0; // 到下一个点还要走的距离
+  for (let k = 0; k < edges; k++) {
+    const a = poly[(start + k) % n];
+    const b = poly[(start + k + 1) % n];
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    let t = next;
+    for (; t <= len; t += step) pts.push([a[0] + ((b[0] - a[0]) * t) / len, a[1] + ((b[1] - a[1]) * t) / len]);
+    next = t - len;
+  }
+  return pts;
 }
 
 /** 对称矩形截面(半宽 hw,前后 z0..z1) */

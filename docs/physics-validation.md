@@ -291,6 +291,8 @@
 
 ## 9. 第五轮追加(2026-09-29):固定战斗室车辆 StuG III G、SU-100
 
+> 2026-09-30:StuG III G 已在任务 010 换成 ISU-122(见第 10 节),本节 StuG 的数据只作记录。
+
 两辆车用来检验固定战斗室(无炮塔)的瞄准逻辑(任务 006 / 007)。数值来源按 AGENTS.md 的顺序:公开资料 → War Thunder 官方 wiki(下表记作「WT」,取历史模式、满改装、新手乘员)→ 估算。
 
 ### 9.1 数据与出处
@@ -350,3 +352,58 @@
 - [Sturmgeschütz III — Wikipedia](https://en.wikipedia.org/wiki/Sturmgesch%C3%BCtz_III)、[7.5 cm KwK 40 — Wikipedia](https://en.wikipedia.org/wiki/7.5_cm_KwK_40)
 - [SU-100 — Wikipedia](https://en.wikipedia.org/wiki/SU-100)、[D-10 tank gun — Wikipedia](https://en.wikipedia.org/wiki/D-10_tank_gun)、[100 mm field gun M1944 (BS-3) — Wikipedia](https://en.wikipedia.org/wiki/100_mm_field_gun_M1944_(BS-3))
 - [StuG III G — War Thunder 官方 wiki](https://wiki.warthunder.com/unit/germ_stug_III_ausf_G)、[SU-100 — War Thunder 官方 wiki](https://wiki.warthunder.com/unit/ussr_su_100_1945)
+
+## 10. 第五轮追加(2026-09-30):ISU-122 替换 StuG III G
+
+负责人决定把 StuG III G 换成 ISU-122:StuG 的模型不像,另外希望有一辆大口径苏系车对付虎王。数值来源顺序同第 9 节。
+
+### 10.1 数据与出处
+
+| 字段 | ISU-122 | 出处 |
+|---|---|---|
+| 火炮 | 122 mm A-19S | Wikipedia |
+| 射界(左 / 右) | 3° / 7°(火炮偏在右侧) | WT「−3 / 7°」;方向按火炮右偏推断(炮尾靠右侧壁,向右能转得更多) |
+| 方向机 / 高低机 | 4.9 / 2.8 °/s | WT |
+| 俯仰 | −3° / +22° | WT(Wikipedia 只写了仰角 18°,没有俯角) |
+| 装填 | 26 s | WT(满级乘员 20 s);Wikipedia 写射速 1.5 发/分(40 s),和第 9 节一样按 WT 取值 |
+| 瞄准镜倍率 | 1.9× / 3.5× | WT |
+| 最大速度 | 37 km/h | Wikipedia、Tank Encyclopedia |
+| 全长(含炮)/ 宽 / 高 | 9.85 / 3.07 / 2.48 m | Wikipedia、Tank Encyclopedia |
+| 战斗全重 / 发动机 | 45.5 t / 520 hp | Wikipedia |
+| 装甲(车体 前 / 侧 / 后) | 90 / 90 / 60 mm | WT(Wikipedia:正面 90、侧面 90) |
+| 装甲(战斗室) | 90 / 75 / 60 mm;防盾 120 mm 没有单独建模 | WT;防盾出自 Wikipedia |
+| 载弹量 | 30 发 | Wikipedia、WT |
+| 乘员 | 5 人:车长、炮手、驾驶员、装填手、闩手(按第二装填手算) | Tank Encyclopedia「optional second loader」、WT |
+
+弹药(弹重、初速、装药、穿深表出自 Wikipedia「122 mm gun M1931/37 (A-19)」,穿深表原始出处是 Shirokorad《苏联火炮百科》,90° 着角):
+
+| 弹 | 弹种 | 弹重 kg | 初速 m/s | 装药 | 穿深依据 | 炮口值 / 拟合 Cd |
+|---|---|---|---|---|---|---|
+| BR-471 | APHE | 25 | 800 | 156 g | 150 / 130 / 115 / 100 mm @ 500 / 1000 / 1500 / 2000 m | 171 / 0.67 |
+| BR-471B | APHEBC(1945 年初列装) | 25 | 800 | **WT 值 160 g**(A-IX-2) | 155 / 145 / 135 / 125 mm @ 500 / 1000 / 1500 / 2000 m | 167 / 0.36 |
+| OF-471 | HE | 25 | 800 | 3.6 kg TNT | 按装药查表 | — |
+
+- 拟合方法:按项目的弹道模型(穿深 ∝ 速度^1.43,v = v0·e^(−kx),k = 0.6·Cd·A/m),对 ln(穿深) 和距离做最小二乘,四个点的误差都在 1% 以内。BR-471 的 Cd 0.67 偏高,反映的是苏方表里尖头弹穿深掉得快,不是实际阻力。
+- 引信延迟 1.2 m、灵敏度 19 mm 为 WT 值。
+- War Thunder 页面上的穿深(两种穿甲弹都是 205 mm @ 10 m)是游戏自己的公式,比公开表高,没有采用。
+- **对虎王正面**:两种穿甲弹的炮口值(171 / 167 mm)都低于虎王首上的视线厚度 233 mm 和炮塔正面 183 mm,正面仍然打不穿。首下 100 mm @ 50°(约 156 mm)是弱点,但虎王的数据里没有建模(见 `vehicles.ts` 里虎王的注释)。
+
+### 10.2 估算项
+
+| 项 | ISU-122 | 方法 |
+|---|---|---|
+| 车体长 | 6.77 m | IS 系底盘的常见资料值,没找到可引用的出处 |
+| 车体盒高 / 战斗室盒高 | 1.55 / 0.93 m | 全高 2.48 m 按侧面照片比例分 |
+| 战斗室盒 | 3.6 × 2.7 × 0.93 m,中心前移 1.1 m | 按照片比例,占车体前 60% |
+| barrelLength | 3.57 m | 按炮口伸出 9.85 − 6.77 = 3.08 m 反推 |
+| turnRate | 15°/s | 比照同吨位的虎式 |
+| acceleration | 4.0 m/s² | 按功重比 11.4 hp/t 比照 T-34-85(15.8 hp/t → 5.5 m/s²) |
+| 装甲倾角 | 按竖直 | 没查到可引用的倾角 |
+| 弹药架分布 | 左壁 12、后壁 8、车底 10 | 按剖面布局估算 |
+| 内构坐标 | 全部 | 按剖面布局估算,±0.2 m |
+
+### 10.3 资料出处
+
+- [ISU-122 — Wikipedia](https://en.wikipedia.org/wiki/ISU-122)、[122 mm gun M1931/37 (A-19) — Wikipedia](https://en.wikipedia.org/wiki/122_mm_gun_M1931/37_(A-19))、[ISU-152 — Wikipedia](https://en.wikipedia.org/wiki/ISU-152)
+- [ISU-122 & ISU-122S — Tank Encyclopedia](https://tanks-encyclopedia.com/ww2/soviet/isu-122.php)
+- [ISU-122 — War Thunder 官方 wiki](https://wiki.warthunder.com/unit/ussr_isu_122)
