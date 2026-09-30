@@ -4,6 +4,7 @@ import { FixedStepper } from './engine/FixedStepper';
 import { InputManager } from './engine/Input';
 import { ActionInput } from './engine/ActionInput';
 import { OrbitCamera } from './engine/OrbitCamera';
+import { FreeLook } from './engine/FreeLook';
 import { Game, type GameEvent } from './game/Game';
 import { readPlayerControls } from './game/PlayerController';
 import { SIGHT_RANGE } from './game/Ballistics';
@@ -123,6 +124,7 @@ async function start(): Promise<void> {
   let zoomIndex = 0;
   let sightRange = 0;
   let cursor: { x: number; y: number } | null = null;
+  const freeLook = new FreeLook();
   // 双击按事件时间判断(不受帧率影响)
   let lastDown = -1e9;
   let doubleClick = false;
@@ -253,6 +255,7 @@ async function start(): Promise<void> {
     zoomIndex = 0;
     sightRange = 0;
     cursor = null;
+    freeLook.reset();
     resultAt = null;
     resultShown = false;
     wasLoaded = true;
@@ -395,7 +398,7 @@ async function start(): Promise<void> {
   const key = (a: ActionId) => bindingShort(cfg().controls.bindings[a][0] ?? cfg().controls.bindings[a][1]);
   const hints = () => {
     const move = [key('forward'), key('left'), key('back'), key('right')].join('');
-    return `${move} 移动 · ${key('fireMain')} 主炮 · ${key('fireMg')} 机枪 · 1–4 弹种 · ${key('scope')} 开镜 · ${key('zoomCycle')} 倍率 · 表尺 ${key('rangeUp')} / ${key('rangeDown')} · ${key('repair')} 维修 · ${key('extinguish')} 灭火 · 按住 ${key('cursor')} 操作小地图 · Esc 暂停`;
+    return `${move} 移动 · ${key('fireMain')} 主炮 · ${key('fireMg')} 机枪 · 1–4 弹种 · ${key('scope')} 开镜 · ${key('zoomCycle')} 倍率 · 表尺 ${key('rangeUp')} / ${key('rangeDown')} · ${key('repair')} 维修 · ${key('extinguish')} 灭火 · 按住 ${key('freeLook')} 自由视角 · 按住 ${key('cursor')} 操作小地图 · Esc 暂停`;
   };
 
   let last = performance.now();
@@ -487,14 +490,17 @@ async function start(): Promise<void> {
       orbit.setThirdPerson();
     }
 
-    // 2. 鼠标转动视角(光标模式下不转)
+    // 2. 鼠标转动视角(光标模式下不转)。自由视角:按住时瞄准点冻结,松开后视角复原(开镜时不可用)
+    const looking = freeLook.update(locked && alive && !scoped && !cursorMode && actions.isDown('freeLook'), orbit);
     if (locked && !cursorMode) orbit.rotate(dx, dy);
     updateCamera();
 
-    // 3. 准星射线 → 世界瞄准点 → 玩家控制
-    const ray = orbit.getAimRay();
-    const hit = g.raycast(ray.origin, ray.dir, AIM_DISTANCE, player);
-    aimPoint.copy(hit ?? ray.origin.addScaledVector(ray.dir, AIM_DISTANCE));
+    // 3. 准星射线 → 世界瞄准点 → 玩家控制(自由视角期间沿用按下时的瞄准点)
+    if (!looking) {
+      const ray = orbit.getAimRay();
+      const hit = g.raycast(ray.origin, ray.dir, AIM_DISTANCE, player);
+      aimPoint.copy(hit ?? ray.origin.addScaledVector(ray.dir, AIM_DISTANCE));
+    }
     const controls = readPlayerControls(actions, aimPoint, locked && alive, sightRange);
     if (justLocked) controls.fire = false;
     g.setPlayerControls(controls);

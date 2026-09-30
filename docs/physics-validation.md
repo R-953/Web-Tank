@@ -288,3 +288,65 @@
 ### 8.7 实机画面
 
 ![河谷试验场:河床浅水涉渡(地表显示「浅水」),右下角小地图,底部是弹种栏](images/river-valley.png)
+
+## 9. 第五轮追加(2026-09-29):固定战斗室车辆 StuG III G、SU-100
+
+两辆车用来检验固定战斗室(无炮塔)的瞄准逻辑(任务 006 / 007)。数值来源按 AGENTS.md 的顺序:公开资料 → War Thunder 官方 wiki(下表记作「WT」,取历史模式、满改装、新手乘员)→ 估算。
+
+### 9.1 数据与出处
+
+| 字段 | StuG III Ausf. G | SU-100 | 出处 |
+|---|---|---|---|
+| 火炮 | 7.5 cm StuK 40 L/48 | 100 mm D-10S | Wikipedia |
+| 射界(左 / 右) | 10° / 10°(总 20°) | 8° / 8° | StuG:Wikipedia「limited traverse of 20°」+ WT;SU-100:WT |
+| 方向机 / 高低机 | 10.5 / 3.5 °/s | 4.9 / 2.8 °/s | WT |
+| 俯仰 | −6° / +17° | −3° / +20° | WT |
+| 装填 | 6.5 s | 13.7 s | WT(满级乘员 5 / 10.5 s) |
+| 瞄准镜倍率 | 4.7× / 5× | 3.4× / 4× | WT |
+| 最大速度 | 40 km/h | 48 km/h | Wikipedia(WT 历史模式为 40 / 50) |
+| 全长(含炮)/ 宽 / 高 | 6.85 / 2.95 / 2.16 m | 9.45 / 3.00 / 2.25 m | Wikipedia |
+| 战斗全重 / 发动机 | 23.9 t / 300 PS | 31.6 t / 500 hp | Wikipedia |
+| 装甲(车体 前 / 侧 / 后) | 80 / 30 / 50 mm | 前 75 mm @ 55° → 131;侧 45、后 45 | StuG:WT;SU-100:Wikipedia(「slope of 55 degrees」) |
+| 装甲(战斗室) | 80 / 30 / 30 mm | 与车体首上同一块板,131 / 45 / 45 | StuG:WT;SU-100 同上 |
+| 载弹量 | 54 发 | 33 发 | StuG:Wikipedia + WT;SU-100:WT |
+| 乘员 | 4 人 | 4 人(车长兼无线电员) | Wikipedia |
+
+弹药:
+
+| 弹 | 弹种 | 弹重 kg | 初速 m/s | 装药 | 穿深依据 | 炮口值 / 拟合 Cd |
+|---|---|---|---|---|---|---|
+| Pzgr.39 | APCBC-HE | 6.8 | 750 | 18 g 黑索今 / 蜡 | 135 / 123 / 109 mm @ 100 / 500 / 1000 m(Bird & Livingston 2001,美英 50% 判据,90°) | 138 / 0.43 |
+| Pzgr.40 | APCR | 4.1 | 930 | — | 176 / 154 / 130 mm @ 100 / 500 / 1000 m(同上) | 182 / 0.36 |
+| Sprgr.34 | HE | 4.42(9.75 lb) | 550 | 645 g 阿马托(1.422 lb,按 TNT 计) | 按装药查表 | — |
+| BR-412 | APHE | 15.6 | 895 | **估算 80 g** | 160 / 150 mm @ 500 / 1000 m(苏方 80% 判据) | 171 / 0.30 |
+| OF-412 | HE | 15.8 | 900 | **估算 1.23 kg** | 按装药查表 | — |
+
+- 弹重、初速、装药(除标明估算的)出自 Wikipedia「7.5 cm KwK 40」与「D-10 tank gun」。Sprgr.34 的弹重 9.75 lb 比常见的 5.74 kg 轻,只有这一个来源,照录。
+- **BR-412 装药**没查到:按同类尖头穿甲爆破弹 BR-365K 的装药比例(48 g / 9.2 kg ≈ 0.52%)× 15.6 kg ≈ 81 g,取 80 g。
+- **OF-412 装药**没查到:按 O-365K 的装药比例(741 g / 9.54 kg ≈ 7.8%)× 15.8 kg ≈ 1.23 kg。
+- War Thunder 页面上的穿深(Pzgr.39 145 mm、BR-412 218 mm @ 10 m)是游戏自己的公式,比公开表高,没有采用。
+- `tests/casemate-vehicles.test.ts` 对三条穿深曲线逐点设了 3% 容差。
+
+### 9.2 估算项
+
+| 项 | StuG III G | SU-100 | 方法 |
+|---|---|---|---|
+| 车体长 | 5.5 m | 6.1 m | StuG:含炮全长 6.85 − 炮口伸出约 1.35;SU-100:与项目里的 T-34-85 同底盘 |
+| 车体盒高 | 1.5 m | 1.62 m | 全高 − 战斗室盒高(0.66 / 0.63) |
+| 战斗室盒 | 2.5 × 2.3 × 0.66 m | 2.8 × 2.6 × 0.63 m | 按照片比例;按项目约定居中放置 |
+| barrelLength | 2.85 m | 5.0 m | 按炮口伸出量反推:伸出 + 车体长 / 2 − 战斗室长 / 2 |
+| turnRate | 20°/s | 20°/s | 同 T-34-85 的估算值 |
+| acceleration | 4.3 m/s² | 5.5 m/s² | 按功重比比照 T-34-85(12.3 / 15.8 hp/t) |
+| 装甲倾角 | 按竖直 | 侧、后按竖直 | 没查到倾角;SU-100 首上有倾角出处 |
+| 内构坐标 | 全部 | 全部 | 按剖面布局估算,±0.2 m |
+
+### 9.3 瞄准逻辑的实测
+
+- 平地台架(`tests/casemate.test.ts`、`tests/casemate-vehicles.test.ts`):瞄准点在正侧面 400 m 时,两辆车都自动转车体,最后炮管误差 < 0.5°,火炮不超出射界;瞄准点在射界内时车体不动;按了转向键以玩家为准。
+- 河谷试验场实机(`?debug` 快进):StuG III G 出生后瞄准正左 400 m,2 s 转过 39°,4 s 转过 78°,最后车头 80.4°、火炮在射界左边缘 10°,炮管误差 0.32°。
+
+### 9.4 资料出处
+
+- [Sturmgeschütz III — Wikipedia](https://en.wikipedia.org/wiki/Sturmgesch%C3%BCtz_III)、[7.5 cm KwK 40 — Wikipedia](https://en.wikipedia.org/wiki/7.5_cm_KwK_40)
+- [SU-100 — Wikipedia](https://en.wikipedia.org/wiki/SU-100)、[D-10 tank gun — Wikipedia](https://en.wikipedia.org/wiki/D-10_tank_gun)、[100 mm field gun M1944 (BS-3) — Wikipedia](https://en.wikipedia.org/wiki/100_mm_field_gun_M1944_(BS-3))
+- [StuG III G — War Thunder 官方 wiki](https://wiki.warthunder.com/unit/germ_stug_III_ausf_G)、[SU-100 — War Thunder 官方 wiki](https://wiki.warthunder.com/unit/ussr_su_100_1945)

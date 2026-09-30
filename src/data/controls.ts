@@ -26,6 +26,7 @@ export type ActionId =
   | 'zoomOut'
   | 'rangeUp'
   | 'rangeDown'
+  | 'freeLook'
   | 'repair'
   | 'extinguish'
   | 'cursor'
@@ -69,6 +70,7 @@ export const ACTIONS: readonly ActionDef[] = [
   { id: 'zoomOut', name: '瞄准镜缩小', group: '瞄准', wt: 'gm_zoom_rangeMin', defaults: ['PageDown', null] },
   { id: 'rangeUp', name: '表尺加远', group: '瞄准', hint: '每次 +50 m', wt: 'gm_sight_distance_rangeMax', defaults: ['WheelDown', null] },
   { id: 'rangeDown', name: '表尺减近', group: '瞄准', hint: '每次 −50 m', wt: 'gm_sight_distance_rangeMin', defaults: ['WheelUp', null] },
+  { id: 'freeLook', name: '自由视角(按住)', group: '瞄准', hint: '火炮继续对准按下时的位置,松开后视角复原;开镜时不可用', defaults: ['KeyC', null] },
 
   { id: 'repair', name: '维修 / 取消维修', group: '车辆', wt: 'ID_REPAIR_TANK', defaults: ['KeyF', null] },
   { id: 'extinguish', name: '灭火', group: '车辆', defaults: ['Digit6', null] },

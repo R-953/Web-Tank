@@ -3,6 +3,7 @@ import type { HitReplay } from '../game/Game';
 import { applyGunPose, buildVehicleModel } from '../game/models';
 import { buildShellModel } from '../game/models/shell';
 import type { Segment } from '../game/damage/penetration';
+import { turretRingOffset } from '../game/damage/geometry';
 
 /** 回放窗口尺寸与位置(右上角) */
 export const KILLCAM = { width: 440, height: 270, margin: 16 };
@@ -153,10 +154,10 @@ export class KillCam {
 
   private build(r: HitReplay): void {
     const root = new THREE.Group();
-    const { hull, turret } = r.spec;
+    const { turret } = r.spec;
     const turretPivot = new THREE.Group();
     const gunPivot = new THREE.Group();
-    turretPivot.position.set(0, hull.height / 2, 0);
+    turretPivot.position.copy(turretRingOffset(r.spec));
     gunPivot.position.set(0, turret.height / 2, -turret.length / 2);
     root.add(turretPivot);
     turretPivot.add(gunPivot);

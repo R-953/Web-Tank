@@ -64,6 +64,11 @@ export function pointBoxDistance(p: THREE.Vector3, center: THREE.Vector3, half: 
   return Math.hypot(dx, dy, dz);
 }
 
+/** 炮塔座圈(战斗室盒子底面中心)在车体坐标里的位置:车顶,纵向按 turret.offset */
+export function turretRingOffset(spec: VehicleSpec): THREE.Vector3 {
+  return new THREE.Vector3(0, spec.hull.height / 2, spec.turret.offset ?? 0);
+}
+
 /**
  * 载具的三个坐标系(车体 / 炮塔 / 火炮)之间的变换,取决于当前炮塔角和俯仰角。
  * 与 Vehicle 的节点层级一致:炮塔座圈在车顶中心,炮耳轴在炮塔正面中部。
@@ -75,7 +80,7 @@ export class VehicleFrames {
 
   constructor(readonly spec: VehicleSpec, readonly turretYaw: number, readonly gunPitch: number) {
     const casemate = isCasemate(spec);
-    const turretOffset = new THREE.Vector3(0, spec.hull.height / 2, 0);
+    const turretOffset = turretRingOffset(spec);
     const gunOffset = new THREE.Vector3(0, spec.turret.height / 2, -spec.turret.length / 2);
     const yaw = new THREE.Quaternion().setFromAxisAngle(UP, turretYaw);
     const pitch = new THREE.Quaternion().setFromAxisAngle(RIGHT, gunPitch);
