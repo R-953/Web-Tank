@@ -26,7 +26,8 @@ const CSS = `
 .mm-top > * { pointer-events: auto; }
 .mm-menuwrap { position: relative; }
 .mm-burger { width: 40px; height: 36px; font-size: 18px; padding: 0; }
-.mm-dropdown { position: absolute; left: 0; top: 42px; min-width: 180px; padding: 4px 0; display: none; }
+/* 下拉菜单要盖住下面的车辆信息面板(信息面板在 DOM 里更靠后,不设 z-index 会画在菜单上面) */
+.mm-dropdown { position: absolute; left: 0; top: 42px; min-width: 180px; padding: 4px 0; display: none; z-index: 5; }
 .mm-dropdown.open { display: block; }
 .mm-dropdown button { display: block; width: 100%; text-align: left; font: inherit; color: #e6e8ea; background: none; border: none; padding: 7px 14px; cursor: pointer; }
 .mm-dropdown button:hover { background: rgba(224,180,76,.15); color: #f3d27f; }
