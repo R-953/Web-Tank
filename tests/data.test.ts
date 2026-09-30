@@ -49,9 +49,9 @@ describe('载具数据', () => {
 describe('载具内构', () => {
   it('模块 id 唯一,尺寸为正;乘员岗位与史实一致(一般 5 人,下表列出的车 4 人);关键模块都有', () => {
     const FIVE = ['commander', 'driver', 'gunner', 'loader', 'radio'];
-    // 固定战斗室车没有专职无线电员 / 航向机枪手(StuG III G;SU-100 由车长兼任无线电员)
+    // 固定战斗室车没有专职无线电员 / 航向机枪手:SU-100 由车长兼任无线电员;ISU-122 的第 5 人是闩手(第二装填手)
     const FOUR = ['commander', 'driver', 'gunner', 'loader'];
-    const crewRoles: Record<string, string[]> = { stug_iii_g: FOUR, su_100: FOUR };
+    const crewRoles: Record<string, string[]> = { su_100: FOUR, isu_122: [...FOUR, 'loader'] };
     for (const spec of Object.values(VEHICLES)) {
       const ids = spec.internals.modules.map((m) => m.id);
       expect(new Set(ids).size).toBe(ids.length);
@@ -67,7 +67,7 @@ describe('载具内构', () => {
   });
 
   it('弹药架都有容量和唯一的取弹顺序;总容量与史实载弹量一致', () => {
-    const expected: Record<string, number> = { tiger_i: 92, t34_85: 55, tiger_ii: 86, stug_iii_g: 54, su_100: 33 };
+    const expected: Record<string, number> = { tiger_i: 92, t34_85: 55, tiger_ii: 86, su_100: 33, isu_122: 30 };
     for (const spec of Object.values(VEHICLES)) {
       const racks = spec.internals.modules.filter((m) => m.type === 'ammo');
       for (const r of racks) {

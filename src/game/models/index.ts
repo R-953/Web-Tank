@@ -6,8 +6,8 @@ import { periscope, roundHatch } from './parts';
 import { buildTigerI } from './tigerI';
 import { buildT3485 } from './t34_85';
 import { buildTigerII } from './tigerII';
-import { buildStuG3G } from './stug3g';
 import { buildSU100 } from './su100';
+import { buildISU122 } from './isu122';
 import { isCasemate } from '../casemate';
 
 export type { ModelParts } from './kit';
@@ -30,8 +30,8 @@ const BUILDERS: Record<string, ModelBuilder> = {
   tiger_i: buildTigerI,
   t34_85: buildT3485,
   tiger_ii: buildTigerII,
-  stug_iii_g: buildStuG3G,
   su_100: buildSU100,
+  isu_122: buildISU122,
 };
 
 /**
