@@ -181,14 +181,20 @@ export class MainMenu {
     const rows: [string, string][] = [];
     const armor = (a: { front: number; side: number; rear: number }) => `${a.front} / ${a.side} / ${a.rear} mm`;
     rows.push(['车体装甲', armor(v.armor)]);
-    rows.push(['炮塔装甲', armor(v.turretArmor)]);
+    rows.push([v.turret.traverse ? '战斗室装甲' : '炮塔装甲', armor(v.turretArmor)]);
     const gunRows: [string, string][] = [];
     if (gun) {
       gunRows.push(['主炮', gun.name]);
       if (first) gunRows.push(['首发弹穿深', `${Math.round(first.penetration)} mm(${first.name})`]);
       gunRows.push(['装填', `${gun.reloadTime} s`]);
       gunRows.push(['俯仰', `${v.turret.elevation[0]}° / +${v.turret.elevation[1]}°`]);
-      gunRows.push(['炮塔转速', `${v.turretRotationSpeed}°/s`]);
+      if (v.turret.traverse) {
+        // 固定战斗室:火炮只能在射界内转
+        gunRows.push(['射界', `左 ${v.turret.traverse[0]}° / 右 ${v.turret.traverse[1]}°`]);
+        gunRows.push(['方向机', `${v.turretRotationSpeed}°/s`]);
+      } else {
+        gunRows.push(['炮塔转速', `${v.turretRotationSpeed}°/s`]);
+      }
       gunRows.push(['瞄准镜', v.sight.magnifications.map((m) => `${m}×`).join(' / ')]);
     }
     if (mg) gunRows.push(['同轴机枪', `${mg.name} · ${mg.rateOfFire ?? '?'} 发/分`]);

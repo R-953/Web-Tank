@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { AttachPart, Vec3, VehicleSpec } from '../../data/types';
+import { isCasemate } from '../casemate';
 
 const UP = new THREE.Vector3(0, 1, 0);
 const RIGHT = new THREE.Vector3(1, 0, 0);
@@ -66,22 +67,22 @@ export function pointBoxDistance(p: THREE.Vector3, center: THREE.Vector3, half: 
 /**
  * 载具的三个坐标系(车体 / 炮塔 / 火炮)之间的变换,取决于当前炮塔角和俯仰角。
  * 与 Vehicle 的节点层级一致:炮塔座圈在车顶中心,炮耳轴在炮塔正面中部。
+ * 固定战斗室车辆:「炮塔」(战斗室)不转,水平角加在火炮上(绕炮耳轴先转水平、再俯仰)。
  */
 export class VehicleFrames {
   private readonly toHull: Record<AttachPart, THREE.Matrix4>;
   private readonly fromHull: Record<AttachPart, THREE.Matrix4>;
 
   constructor(readonly spec: VehicleSpec, readonly turretYaw: number, readonly gunPitch: number) {
+    const casemate = isCasemate(spec);
     const turretOffset = new THREE.Vector3(0, spec.hull.height / 2, 0);
     const gunOffset = new THREE.Vector3(0, spec.turret.height / 2, -spec.turret.length / 2);
-    const turret = new THREE.Matrix4().compose(
-      turretOffset,
-      new THREE.Quaternion().setFromAxisAngle(UP, turretYaw),
-      new THREE.Vector3(1, 1, 1),
-    );
+    const yaw = new THREE.Quaternion().setFromAxisAngle(UP, turretYaw);
+    const pitch = new THREE.Quaternion().setFromAxisAngle(RIGHT, gunPitch);
+    const turret = new THREE.Matrix4().compose(turretOffset, casemate ? new THREE.Quaternion() : yaw, new THREE.Vector3(1, 1, 1));
     const gunLocal = new THREE.Matrix4().compose(
       gunOffset,
-      new THREE.Quaternion().setFromAxisAngle(RIGHT, gunPitch),
+      casemate ? yaw.clone().multiply(pitch) : pitch,
       new THREE.Vector3(1, 1, 1),
     );
     const gun = turret.clone().multiply(gunLocal);

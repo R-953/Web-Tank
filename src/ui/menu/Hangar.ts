@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { VehicleSpec } from '../../data/types';
-import { buildVehicleModel } from '../../game/models';
+import { applyGunPose, buildVehicleModel } from '../../game/models';
+import { clampYaw } from '../../game/casemate';
 
 /**
  * 机库背景(3D):水泥地面、钢结构厂房、展示台上的载具,暖色主光 + 冷色补光。
@@ -55,9 +56,8 @@ export class HangarScene {
     root.add(turretPivot);
     turretPivot.add(gunPivot);
     buildVehicleModel(spec, { root, turretPivot, gunPivot });
-    // 炮管微微抬起、炮塔稍微偏一点,更有「展示」的感觉
-    turretPivot.rotation.y = 0.18;
-    gunPivot.rotation.x = 0.05;
+    // 炮管微微抬起、炮塔稍微偏一点,更有「展示」的感觉(固定战斗室只偏到射界以内)
+    applyGunPose(spec, { turretPivot, gunPivot }, clampYaw(spec, 0.18), 0.05);
     root.position.set(0, spec.hull.height / 2 + PLATFORM_H, 0);
     root.traverse((o) => {
       if (o instanceof THREE.Mesh) {
