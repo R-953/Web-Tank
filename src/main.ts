@@ -225,6 +225,7 @@ async function start(): Promise<void> {
     });
     actions.setBindings(s.controls.bindings);
     minimap.setShape(s.game.minimapShape);
+    minimap.setMarkerStyle(s.game.minimapMarkers);
     sound.applySettings(s.sound);
   };
   applySettings(cfg());
@@ -620,7 +621,8 @@ async function start(): Promise<void> {
       { x: pos.x, z: pos.z, heading, view: orbit.yaw },
       g.targets.map((t) => {
         const p = t.physicsPosition();
-        return { x: p.x, z: p.z, team: 'enemy' as const, dead: t.isDead };
+        const f = new THREE.Vector3(0, 0, -1).applyQuaternion(t.physicsQuaternion());
+        return { x: p.x, z: p.z, team: 'enemy' as const, dead: t.isDead, heading: Math.atan2(-f.x, -f.z) };
       }),
     );
 
