@@ -14,6 +14,8 @@
 | [007](007-casemate-vehicles.md) | 两辆代表性固定战斗室车辆:StuG III G、SU-100(数据) | Claude Code | 主程 / 内容 | 待审查(基于 006) |
 | [008](008-freelook-reverse-steer.md) | C 键自由视角;倒车时转向按汽车习惯 | Claude Code | 主程 | 待审查(基于 007) |
 | [009](009-casemate-models.md) | StuG III G、SU-100 专属模型(战斗室可前后偏移) | Claude Code | 主程 / 内容 | 待审查(基于 008) |
+| [010](010-isu122.md) | ISU-122 替换 StuG III G;SU-100 炮盾修正 | Claude Code | 主程 / 内容 | 进行中(基于 009) |
+| [011](011-restart-key-test-timeout.md) | 重开键每帧重开;出生点视线测试偶发超时 | Claude Code | 主程 | 待审查 |
 
 ### 候选车辆(负责人 2026-09-29 提出方向,型号待确认后再开卡)
 
@@ -21,9 +23,9 @@
 
 | 国家 | 类别 | 候选 |
 |---|---|---|
-| 德国 | 突击炮 / 歼击车 | StuG III G(007)、Jagdpanzer IV/70、Jagdpanther |
+| 德国 | 突击炮 / 歼击车 | Jagdpanzer IV/70、Jagdpanther(StuG III G 做过,010 换成了 ISU-122) |
 | 德国 | 中型坦克 | 豹式 G 型(D / A 型视为换皮,不做) |
-| 苏联 | 各口径自行反坦克炮 | SU-76M(76 mm)、SU-85(85 mm)、SU-100(100 mm,007)、ISU-122(122 mm)、ISU-152(152 mm) |
+| 苏联 | 各口径自行反坦克炮 | SU-76M(76 mm)、SU-85(85 mm)、SU-100(100 mm,007)、ISU-122(122 mm,010)、ISU-152(152 mm) |
 | 苏联 | 各重量坦克 | 轻型 T-70、中型 T-34-85(已有)、重型 IS-2(1944) |
 
 状态:待领取 → 进行中 → 待审查 → 已合并。改状态时同时改卡片开头的「状态」一行。
