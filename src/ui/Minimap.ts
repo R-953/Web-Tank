@@ -1,6 +1,10 @@
 import type { GameMap } from '../game/Map';
+import type { VehicleClass } from '../data/types';
 import { SURFACE_ORDER } from '../game/terrain';
 import { SURFACES } from '../data/surfaces';
+import { currentSymbology, drawSymbol } from './symbols';
+
+export type MapLike = Pick<GameMap, 'spec' | 'grid'>;
 
 /** 小地图:地图区域边长(CSS 像素)、坐标标注的边距、离屏幕边缘的距离 */
 export const MINIMAP = { size: 240, label: 14, margin: 16 };
@@ -21,6 +25,7 @@ export interface MinimapMarker {
   dead: boolean;
   /** 车头朝向(弧度,约定同 draw() 的 heading);箭头样式要用,没有时画圆点 */
   heading?: number;
+  vehicleClass?: VehicleClass;
 }
 
 /** 小地图标记的填充色:被击毁 → 灰;敌军 → 红;友军 → 蓝。颜色值和现在的完全一样 */
@@ -29,8 +34,8 @@ export function markerColor(team: 'enemy' | 'ally', dead: boolean): string {
   return team === 'enemy' ? '#ff3b30' : '#3aa0ff';
 }
 
-/** 其他车辆的标记样式:圆点 / 箭头(带朝向) */
-export type MarkerStyle = 'dot' | 'arrow';
+/** 其他车辆的标记样式:圆点 / 箭头(带朝向)/ 军标 */
+export type MarkerStyle = 'dot' | 'arrow' | 'symbol';
 
 /**
  * 箭头样式的三角形顶点(小地图像素):[尖端, 右后, 左后]。
@@ -95,7 +100,7 @@ export function zoomCircle(radius: number, steps: number): number {
  * 生成地形底图(地表颜色 + 山体阴影 + 水面)。
  * jsdom 里 canvas 没有 2D 上下文时返回空 canvas。
  */
-export function renderMapBackground(map: GameMap, pixels: number): HTMLCanvasElement {
+export function renderMapBackground(map: MapLike, pixels: number): HTMLCanvasElement {
   const bg = document.createElement('canvas');
   bg.width = pixels;
   bg.height = pixels;
@@ -136,7 +141,7 @@ export function renderMapBackground(map: GameMap, pixels: number): HTMLCanvasEle
  */
 export class Minimap {
   private readonly canvas: HTMLCanvasElement;
-  private readonly ctx: CanvasRenderingContext2D;
+  private readonly ctx: CanvasRenderingContext2D | null;
   private background: HTMLCanvasElement | null = null;
   private mapSize = 1;
   private shapeValue: 'square' | 'circle' = 'square';
@@ -162,7 +167,7 @@ export class Minimap {
       zIndex: '5',
     });
     parent.appendChild(this.canvas);
-    this.ctx = this.canvas.getContext('2d')!;
+    this.ctx = this.canvas.getContext('2d');
     this.resizeCanvas();
   }
 
@@ -201,7 +206,7 @@ export class Minimap {
   }
 
 
-  setMap(map: GameMap): void {
+  setMap(map: MapLike): void {
     this.background = renderMapBackground(map, MINIMAP.size * BG_SCALE);
     this.mapSize = map.spec.size;
     this.markerValue = null;
@@ -250,6 +255,7 @@ export class Minimap {
     this.lastPlayer = { x: player.x, z: player.z };
     const { size, label } = MINIMAP;
     const c = this.ctx;
+    if (!c) return;
     const circle = this.shapeValue === 'circle';
     c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     c.clearRect(0, 0, size + label, size + label);
@@ -291,6 +297,15 @@ export class Minimap {
 
     for (const m of markers) {
       const [x, y] = toPx(m.x, m.z);
+      if (this.markerStyle === 'symbol' && m.vehicleClass) {
+        drawSymbol(c, m.vehicleClass, x, y, {
+          set: currentSymbology(),
+          affiliation: m.team === 'enemy' ? 'hostile' : 'friend',
+          dead: m.dead,
+          size: 14,
+        });
+        continue;
+      }
       // 箭头样式:活着的车画指向车头的三角;被击毁的照旧画灰点加 ×
       if (this.markerStyle === 'arrow' && !m.dead && m.heading !== undefined) {
         const [tip, right, left] = arrowVertices(x, y, m.heading);
@@ -393,6 +408,7 @@ export class Minimap {
   /** 网格线:每格一条浅线 */
   private drawGrid(v: MapView): void {
     const c = this.ctx;
+    if (!c) return;
     const size = MINIMAP.size;
     const cell = this.mapSize / GRID;
     const half = this.mapSize / 2;
@@ -418,6 +434,7 @@ export class Minimap {
   /** 上边标列号(数字),左边标行号(字母),标在当前可见的格子中间 */
   private drawLabels(v: MapView): void {
     const c = this.ctx;
+    if (!c) return;
     const { size, label } = MINIMAP;
     const cell = this.mapSize / GRID;
     const half = this.mapSize / 2;

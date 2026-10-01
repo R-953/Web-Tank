@@ -30,6 +30,7 @@ export type ActionId =
   | 'repair'
   | 'extinguish'
   | 'cursor'
+  | 'mapScreen'
   | 'minimapShape'
   | 'restart';
 
@@ -76,7 +77,8 @@ export const ACTIONS: readonly ActionDef[] = [
   { id: 'extinguish', name: '灭火', group: '车辆', defaults: ['Digit6', null] },
 
   { id: 'cursor', name: '显示光标(按住,操作小地图)', group: '界面', hint: '此时鼠标不再控制视角和开火', defaults: ['AltLeft', null] },
-  { id: 'minimapShape', name: '小地图:方形 / 圆形', group: '界面', defaults: ['KeyM', null] },
+  { id: 'mapScreen', name: '地图界面', group: '界面', hint: '战斗前调整携弹;战斗中查看大地图', defaults: ['KeyM', null] },
+  { id: 'minimapShape', name: '小地图:方形 / 圆形', group: '界面', defaults: [null, null] },
   { id: 'restart', name: '重新开始本局', group: '界面', hint: '也可以在 Esc 菜单里选', defaults: [null, null] },
 ];
 
