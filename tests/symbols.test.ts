@@ -8,6 +8,7 @@ import {
   currentSymbology,
   SYMBOL_COLORS,
   type Symbology,
+  type Affiliation,
 } from '../src/ui/symbols';
 import { classIcon } from '../src/ui/menu/classIcons';
 import { SettingsStore, defaultSettings, sanitize } from '../src/settings/Settings';
@@ -22,12 +23,12 @@ class MemoryStorage {
   }
 }
 
-describe('战术军标 (Symbology) 核心模块', () => {
+describe('战术军标 (Symbology) 核心模块 - MIL-STD-2525C 与 TM 30-430', () => {
   beforeEach(() => {
     setSymbology('nato');
   });
 
-  it('两套 × 四种类型共 8 个符号互不相同', () => {
+  it('两套 × 四种类型共 8 个基础符号互不相同', () => {
     const sets: Symbology[] = ['nato', 'warsaw'];
     const classes: VehicleClass[] = ['light', 'medium', 'heavy', 'td'];
 
@@ -39,58 +40,60 @@ describe('战术军标 (Symbology) 核心模块', () => {
         const shape = symbolShape(cls, { set });
         expect(shape.parts.length).toBeGreaterThan(0);
 
-        // 以部件路径串作为该类型的几何指纹
         const signature = `${set}:${shape.parts.map((p) => p.d).join('|')}`;
         partSignatures.add(signature);
 
-        // 内联 SVG 也互不相同
         const svg = symbolSvg(cls, { set });
         svgs.add(svg);
       }
     }
 
-    // 两套 × 四类必须有 8 个完全独立的图形
     expect(partSignatures.size).toBe(8);
     expect(svgs.size).toBe(8);
   });
 
-  it('传 / 不传 affiliation 时正确生成 / 忽略识别框', () => {
-    const noFrame = symbolShape('medium', { set: 'nato' });
-    expect(noFrame.frame).toBeUndefined();
+  it('四种类型 × 两套 × 有无 affiliation 的结构断言', () => {
+    const sets: Symbology[] = ['nato', 'warsaw'];
+    const classes: VehicleClass[] = ['light', 'medium', 'heavy', 'td'];
+    const affiliations: (Affiliation | undefined)[] = [undefined, 'friend', 'hostile', 'neutral'];
 
-    const withFrameFriend = symbolShape('medium', { set: 'nato', affiliation: 'friend' });
-    expect(withFrameFriend.frame).toBeDefined();
+    for (const set of sets) {
+      for (const cls of classes) {
+        for (const affiliation of affiliations) {
+          const shape = symbolShape(cls, { set, affiliation });
+          expect(shape.parts.length).toBeGreaterThan(0);
 
-    const withFrameHostile = symbolShape('medium', { set: 'warsaw', affiliation: 'hostile' });
-    expect(withFrameHostile.frame).toBeDefined();
-
-    const withFrameNeutral = symbolShape('medium', { set: 'nato', affiliation: 'neutral' });
-    expect(withFrameNeutral.frame).toBeDefined();
-
-    // 检查 symbolSvg 中是否有 frame path
-    const svgNoFrame = symbolSvg('medium', { set: 'nato' });
-    expect(svgNoFrame).not.toContain('M 3 7 H 29');
-
-    const svgWithFrame = symbolSvg('medium', { set: 'nato', affiliation: 'friend' });
-    expect(svgWithFrame).toContain('M 3 7 H 29');
+          if (set === 'nato') {
+            if (affiliation) {
+              expect(shape.frame).toBeDefined();
+            } else {
+              expect(shape.frame).toBeUndefined();
+            }
+          } else {
+            // 华约任何情况下都没有 frame
+            expect(shape.frame).toBeUndefined();
+          }
+        }
+      }
+    }
   });
 
-  it('友军 / 敌军 / 中立三种框的形状和颜色符合文档', () => {
-    // 友军: 矩形, 蓝色 #00a8f0
+  it('北约地面装备识别框: friend 为圆 (含弧线 A), hostile 为菱形, neutral 为正方形', () => {
+    // 友军为圆 (MIL-STD-2525C Ground Equipment)
     const friend = symbolShape('medium', { set: 'nato', affiliation: 'friend' });
     expect(friend.frame).toBeDefined();
-    expect(friend.frame?.d).toContain('M 3 7 H 29 V 25 H 3 Z');
+    expect(friend.frame?.d).toContain('A');
     expect(friend.frame?.stroke).toBe(SYMBOL_COLORS.friend);
     expect(friend.frame?.stroke).toBe('#00a8f0');
 
-    // 敌军: 菱形, 红色 #ff4d4d
-    const hostile = symbolShape('heavy', { set: 'warsaw', affiliation: 'hostile' });
+    // 敌军为菱形
+    const hostile = symbolShape('heavy', { set: 'nato', affiliation: 'hostile' });
     expect(hostile.frame).toBeDefined();
     expect(hostile.frame?.d).toContain('M 16 2 L 30 16 L 16 30 L 2 16 Z');
     expect(hostile.frame?.stroke).toBe(SYMBOL_COLORS.hostile);
     expect(hostile.frame?.stroke).toBe('#ff4d4d');
 
-    // 中立: 正方形, 绿色 #00c800
+    // 中立为正方形
     const neutral = symbolShape('light', { set: 'nato', affiliation: 'neutral' });
     expect(neutral.frame).toBeDefined();
     expect(neutral.frame?.d).toContain('M 5 5 H 27 V 27 H 5 Z');
@@ -98,11 +101,42 @@ describe('战术军标 (Symbology) 核心模块', () => {
     expect(neutral.frame?.stroke).toBe('#00c800');
   });
 
-  it('不传 affiliation 时使用 currentColor', () => {
-    const shape = symbolShape('medium', { set: 'nato' });
-    for (const part of shape.parts) {
-      expect(part.stroke).toBe('currentColor');
-    }
+  it('华约苏军战术标图: 任何情况下均无 frame, 敌军为双线细线, 友军为单线粗线', () => {
+    // 华约友军: 无 frame, 单道粗线 (线宽 2.4)
+    const friend = symbolShape('medium', { set: 'warsaw', affiliation: 'friend' });
+    expect(friend.frame).toBeUndefined();
+    expect(friend.parts[0].width).toBe(2.4);
+    // 只有一圈外菱形
+    const friendDiamonds = friend.parts.filter((p) => p.d.includes('M 16 9 L 29 16'));
+    expect(friendDiamonds.length).toBe(1);
+
+    // 华约敌军: 无 frame, 双道细线 (线宽 1.2), 外圈 + 内圈共两圈轮廓
+    const hostile = symbolShape('medium', { set: 'warsaw', affiliation: 'hostile' });
+    expect(hostile.frame).toBeUndefined();
+    expect(hostile.parts[0].width).toBe(1.2);
+    const hostileOuter = hostile.parts.find((p) => p.d.includes('M 16 9 L 29 16'));
+    const hostileInner = hostile.parts.find((p) => p.d.includes('M 16 11.8 L 23.7 16'));
+    expect(hostileOuter).toBeDefined();
+    expect(hostileInner).toBeDefined();
+
+    // 华约 td 敌军同样具有两圈轮廓
+    const hostileTd = symbolShape('td', { set: 'warsaw', affiliation: 'hostile' });
+    expect(hostileTd.frame).toBeUndefined();
+    const hostileTdOuter = hostileTd.parts.find((p) => p.d.includes('M 16 3 L 23 16'));
+    const hostileTdInner = hostileTd.parts.find((p) => p.d.includes('M 16 8.3 L 20.2 16'));
+    expect(hostileTdOuter).toBeDefined();
+    expect(hostileTdInner).toBeDefined();
+
+    // 华约中立: 单道细线
+    const neutral = symbolShape('light', { set: 'warsaw', affiliation: 'neutral' });
+    expect(neutral.frame).toBeUndefined();
+    expect(neutral.parts[0].width).toBe(1.2);
+
+    // 华约无 affiliation: 单道中等粗细 (1.8), currentColor
+    const none = symbolShape('light', { set: 'warsaw' });
+    expect(none.frame).toBeUndefined();
+    expect(none.parts[0].width).toBe(1.8);
+    expect(none.parts[0].stroke).toBe('currentColor');
   });
 
   it('dead 变灰且叠加 × 标记', () => {
@@ -116,11 +150,9 @@ describe('战术军标 (Symbology) 核心模块', () => {
     for (const part of dead.parts) {
       expect(part.stroke).toBe(SYMBOL_COLORS.dead);
     }
-    // 叠了 × 标记
     const xPart = dead.parts.find((p) => p.d.includes('M 9 9 L 23 23'));
     expect(xPart).toBeDefined();
 
-    // SVG 渲染检查
     const deadSvg = symbolSvg('medium', { set: 'nato', affiliation: 'friend', dead: true });
     expect(deadSvg).toContain('#888888');
     expect(deadSvg).toContain('aria-label="北约 · 中型坦克 · 友军 · 被击毁"');
@@ -155,7 +187,6 @@ describe('战术军标 (Symbology) 核心模块', () => {
     const warsawSvg = classIcon('medium');
     expect(warsawSvg).toContain('aria-label="华约 · 中型坦克"');
 
-    // 两套符号的实际几何路径也发生变化
     expect(natoSvg).not.toBe(warsawSvg);
 
     setSymbology('nato');

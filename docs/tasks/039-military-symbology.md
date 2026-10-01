@@ -73,6 +73,7 @@ export function currentSymbology(): Symbology;
 
 ## 结果(完成后由执行者填写)
 
+- 主程审查后返工:出处改为 MIL-STD-2525C 与 TM 30-430,符号按原图重画。
 - 改动文件:
   - 新增:
     - `src/ui/symbols.ts`
@@ -87,9 +88,9 @@ export function currentSymbology(): Symbology;
     - `docs/tasks/039-military-symbology.md`
 - 命令与结果:
   - `npm run lint`: 通过 (TypeScript strict 检查无错误)
-  - `npm test`: 通过 (46 个测试套件，478 个测试全部通过)
+  - `npm test`: 通过 (46 个测试套件，479 个测试全部通过)
   - `npm run build`: 通过 (Vite 生产打包成功)
 - 偏差 / 未完成 / 待决定:
   - 偏差: 苏军原版战术标图为红方友军、蓝方敌军，为保证游戏一致性与玩家直觉，北约与华约均统一采用游戏现有的友蓝敌红配色，并在 `docs/design/symbology.md` 中做明确说明。
-  - 待决定: 华约战术标号在带有 `affiliation` 时，目前沿用标准的外框（矩形友军、菱形敌军、正方形中立）以保持跨体系统一识别；如需改为苏军单双线条标图风格，可在后续小地图接线卡中调整。
+  - 待决定: 小地图与全屏战术地图界面的实际渲染替换留待后续任务卡统筹接入。
 

@@ -20,17 +20,16 @@ export interface SymbolPath {
   width?: number;
 }
 
-/** 纯数据:viewBox 0 0 32 32 里的若干路径;frame 只在传了 affiliation 时有 */
+/** 纯数据:viewBox 0 0 32 32 里的若干路径;frame 只有北约且传了 affiliation 时有 */
 export interface SymbolShape {
   frame?: SymbolPath;
   parts: SymbolPath[];
 }
 
-/** APP-6 / MIL-STD-2525 标准色值与游戏统一配色 */
 export const SYMBOL_COLORS = {
-  friend: '#00a8f0', // 友军蓝 (APP-6 标准友军蓝)
-  hostile: '#ff4d4d', // 敌军红 (APP-6 标准敌军红)
-  neutral: '#00c800', // 中立绿 (APP-6 标准中立绿)
+  friend: '#00a8f0', // 友军蓝
+  hostile: '#ff4d4d', // 敌军红
+  neutral: '#00c800', // 中立绿
   dead: '#888888', // 击毁灰
 } as const;
 
@@ -52,6 +51,10 @@ const AFFILIATION_NAMES: Record<Affiliation, string> = {
   neutral: '中立',
 };
 
+/** 华约菱形(TM 30-430):横放的给坦克(宽约为高的 2 倍),竖放的给自行火炮;inner 是敌军双线的内圈 */
+const WARSAW_H = { outer: 'M 16 9 L 29 16 L 16 23 L 3 16 Z', inner: 'M 16 11.8 L 23.7 16 L 16 20.2 L 8.3 16 Z' };
+const WARSAW_V = { outer: 'M 16 3 L 23 16 L 16 29 L 9 16 Z', inner: 'M 16 8.3 L 20.2 16 L 16 23.7 L 11.8 16 Z' };
+
 let activeSymbology: Symbology = 'nato';
 
 /** 当前使用的符号体系(main.ts 读设置后调用 setSymbology;classIcon 用 currentSymbology) */
@@ -72,215 +75,138 @@ export function symbolShape(vehicleClass: VehicleClass, opts: SymbolOptions): Sy
   }
 
   // 1. 颜色决策: 被击毁用灰色, 传了 affiliation 时用对应阵营色, 不传时默认用 currentColor
-  let strokeColor: string;
+  let color: string;
   if (opts.dead) {
-    strokeColor = SYMBOL_COLORS.dead;
+    color = SYMBOL_COLORS.dead;
   } else if (opts.affiliation) {
-    strokeColor = SYMBOL_COLORS[opts.affiliation];
+    color = SYMBOL_COLORS[opts.affiliation];
   } else {
-    strokeColor = 'currentColor';
+    color = 'currentColor';
   }
 
-  // 2. 敌我识别框(只有传了 affiliation 时才有)
   let frame: SymbolPath | undefined;
-  if (opts.affiliation) {
-    switch (opts.affiliation) {
-      case 'friend':
-        // 北约/统一友军: 矩形 (宽 26, 高 18, 居中 (16, 16))
-        frame = {
-          d: 'M 3 7 H 29 V 25 H 3 Z',
-          fill: 'none',
-          stroke: strokeColor,
-          width: 2,
-        };
-        break;
-      case 'hostile':
-        // 北约/统一敌军: 菱形
-        frame = {
-          d: 'M 16 2 L 30 16 L 16 30 L 2 16 Z',
-          fill: 'none',
-          stroke: strokeColor,
-          width: 2,
-        };
-        break;
-      case 'neutral':
-        // 北约/统一中立: 正方形 (边长 22, 居中 (16, 16))
-        frame = {
-          d: 'M 5 5 H 27 V 27 H 5 Z',
-          fill: 'none',
-          stroke: strokeColor,
-          width: 2,
-        };
-        break;
-    }
-  }
-
-  // 3. 内部载具类型路径 (parts)
   const parts: SymbolPath[] = [];
 
   if (opts.set === 'nato') {
     // -------------------------------------------------------------
-    // 北约 (APP-6 / MIL-STD-2525): 椭圆履带底盘 + 内部修饰线 / 反坦克倒 V
+    // 北约: MIL-STD-2525C 地面装备 (Ground Equipment)
     // -------------------------------------------------------------
-    // 基础装甲履带横椭圆 (宽 16, 高 8, 中心 (16, 16))
-    parts.push({
-      d: 'M 12 12 H 20 C 22.2 12 24 13.8 24 16 C 24 18.2 22.2 20 20 20 H 12 C 9.8 20 8 18.2 8 16 C 8 13.8 9.8 12 12 12 Z',
-      fill: 'none',
-      stroke: strokeColor,
-      width: 2,
-    });
+    // 2525C 地面装备识别框: 友军为圆, 敌军为菱形, 中立为正方形 (只有传了 affiliation 时才有)
+    if (opts.affiliation) {
+      switch (opts.affiliation) {
+        case 'friend':
+          // 友军圆框 (半径 12, 居中 (16, 16))
+          frame = {
+            d: 'M 16 4 A 12 12 0 1 0 16 28 A 12 12 0 1 0 16 4 Z',
+            fill: 'none',
+            stroke: color,
+            width: 2,
+          };
+          break;
+        case 'hostile':
+          // 敌军菱形框
+          frame = {
+            d: 'M 16 2 L 30 16 L 16 30 L 2 16 Z',
+            fill: 'none',
+            stroke: color,
+            width: 2,
+          };
+          break;
+        case 'neutral':
+          // 中立正方形框
+          frame = {
+            d: 'M 5 5 H 27 V 27 H 5 Z',
+            fill: 'none',
+            stroke: color,
+            width: 2,
+          };
+          break;
+      }
+    }
 
-    switch (vehicleClass) {
-      case 'light':
-        // 轻型坦克: 单道垂直分划线 (|)
+    // 装备内部图形:
+    // 坦克: 横置长方形, 左右两竖边向上、向下各伸出一截; 内部分别有 1 / 2 / 3 道竖线
+    if (vehicleClass === 'light' || vehicleClass === 'medium' || vehicleClass === 'heavy') {
+      parts.push({
+        d: 'M 9.5 9.5 V 22.5 M 22.5 9.5 V 22.5 M 9.5 12 H 22.5 M 9.5 20 H 22.5',
+        fill: 'none',
+        stroke: color,
+        width: 2,
+      });
+
+      if (vehicleClass === 'light') {
+        // 1 道居中竖线 (S*GPEVATL-)
         parts.push({
           d: 'M 16 12 V 20',
           fill: 'none',
-          stroke: strokeColor,
+          stroke: color,
           width: 2,
         });
-        break;
-      case 'medium':
-        // 中型坦克: 双道垂直分划线 (||)
+      } else if (vehicleClass === 'medium') {
+        // 2 道均匀竖线 (S*GPEVATM-)
         parts.push({
-          d: 'M 13.5 12.5 V 19.5 M 18.5 12.5 V 19.5',
+          d: 'M 13.8 12 V 20 M 18.2 12 V 20',
           fill: 'none',
-          stroke: strokeColor,
+          stroke: color,
           width: 2,
         });
-        break;
-      case 'heavy':
-        // 重型坦克: 三道垂直分划线 (|||)
+      } else {
+        // 3 道均匀竖线 (S*GPEVATH-)
         parts.push({
-          d: 'M 12 12 V 20 M 16 12 V 20 M 20 12 V 20',
+          d: 'M 12.8 12 V 20 M 16 12 V 20 M 19.2 12 V 20',
           fill: 'none',
-          stroke: strokeColor,
+          stroke: color,
           width: 2,
         });
-        break;
-      case 'td':
-        // 坦克歼击车: 履带内嵌反坦克倒 V 楔形 (∧)
-        parts.push({
-          d: 'M 11.5 19 L 16 13.5 L 20.5 19',
-          fill: 'none',
-          stroke: strokeColor,
-          width: 2,
-        });
-        break;
+      }
+    } else if (vehicleClass === 'td') {
+      // 坦克歼击车/突击炮: 2525C S*GPEWDMS- (Direct Fire Gun, Medium, Self-Propelled)
+      // 竖直炮身线(上部有 2 道短横线) + 底部横放小椭圆(履带, 表示自行)
+      parts.push({
+        d: 'M 16 7 V 20 M 13.5 10 H 18.5 M 13.5 13 H 18.5',
+        fill: 'none',
+        stroke: color,
+        width: 2,
+      });
+      parts.push({
+        d: 'M 13 20 H 19 C 20.7 20 21.5 20.9 21.5 22 C 21.5 23.1 20.7 24 19 24 H 13 C 11.3 24 10.5 23.1 10.5 22 C 10.5 20.9 11.3 20 13 20 Z',
+        fill: 'none',
+        stroke: color,
+        width: 1.8,
+      });
     }
   } else {
     // -------------------------------------------------------------
-    // 华约 / 苏军 (苏军条令《Рабочая карта командира》战术标号):
-    // 俯视几何构型: 车体 + 炮塔(或固定战斗室) + 延伸火炮身管
+    // 华约: TM 30-430 (1946) Chapter XII Section II
     // -------------------------------------------------------------
-    switch (vehicleClass) {
-      case 'medium':
-        // 中型坦克 (如 T-34 标准战术标号):
-        // 标准车体 + 居中圆炮塔 + 延伸身管
-        parts.push({
-          d: 'M 12 14 H 20 C 21.7 14 23 15.3 23 17 V 19 C 23 20.7 21.7 22 20 22 H 12 C 10.3 22 9 20.7 9 19 V 17 C 9 15.3 10.3 14 12 14 Z',
-          fill: 'none',
-          stroke: strokeColor,
-          width: 2,
-        });
-        parts.push({
-          d: 'M 16 15 A 3 3 0 1 0 16 21 A 3 3 0 1 0 16 15 Z',
-          fill: strokeColor,
-          stroke: strokeColor,
-          width: 1,
-        });
-        parts.push({
-          d: 'M 16 15 V 7',
-          fill: 'none',
-          stroke: strokeColor,
-          width: 2,
-        });
-        break;
+    // 华约不画识别框: frame 始终为 undefined
+    // 线条粗细与双线约定:
+    // friend: 单道粗线 (线宽 2.4)
+    // hostile: 双道细线 (外圈 + 内缩内圈, 线宽 1.2)
+    // neutral: 单道细线 (线宽 1.2, 本项目补全)
+    // 不传 affiliation: 单道中等粗细 (线宽 1.8, currentColor)
+    const isHostile = opts.affiliation === 'hostile';
+    const lineWidth = opts.affiliation === 'friend' ? 2.4 : isHostile || opts.affiliation === 'neutral' ? 1.2 : 1.8;
+    // 菱形尽量占满 32×32,16 px 时也看得清;内圈按外圈向内缩约 2.5
+    const outline = vehicleClass === 'td' ? WARSAW_V : WARSAW_H;
+    parts.push({ d: outline.outer, fill: 'none', stroke: color, width: lineWidth });
+    if (isHostile) {
+      parts.push({ d: outline.inner, fill: 'none', stroke: color, width: lineWidth });
+    }
 
-      case 'light':
-        // 轻型坦克 (如 PT-76 / T-26):
-        // 紧凑轻质车体 + 空心小炮塔 + 较短身管 + 单道分划
-        parts.push({
-          d: 'M 12 15 H 20 C 21.1 15 22 15.9 22 17 V 19 C 22 20.1 21.1 21 20 21 H 12 C 10.9 21 10 20.1 10 19 V 17 C 10 15.9 10.9 15 12 15 Z',
-          fill: 'none',
-          stroke: strokeColor,
-          width: 1.8,
-        });
-        parts.push({
-          d: 'M 16 15.8 A 2.2 2.2 0 1 0 16 20.2 A 2.2 2.2 0 1 0 16 15.8 Z',
-          fill: 'none',
-          stroke: strokeColor,
-          width: 1.8,
-        });
-        parts.push({
-          d: 'M 16 15.8 V 9.5',
-          fill: 'none',
-          stroke: strokeColor,
-          width: 1.8,
-        });
-        parts.push({
-          d: 'M 16 15 V 21',
-          fill: 'none',
-          stroke: strokeColor,
-          width: 1.5,
-        });
-        break;
-
-      case 'heavy':
-        // 重型坦克 (如 KV / IS 系列):
-        // 双线重装甲底盘 + 大圆炮塔 + 带制退器重炮管
-        parts.push({
-          d: 'M 11 13 H 21 C 22.7 13 24 14.3 24 16 V 20 C 24 21.7 22.7 23 21 23 H 11 C 9.3 23 8 21.7 8 20 V 16 C 8 14.3 9.3 13 11 13 Z',
-          fill: 'none',
-          stroke: strokeColor,
-          width: 2,
-        });
-        parts.push({
-          d: 'M 8.5 16 H 23.5 M 8.5 20 H 23.5',
-          fill: 'none',
-          stroke: strokeColor,
-          width: 1.2,
-        });
-        parts.push({
-          d: 'M 16 14.2 A 3.8 3.8 0 1 0 16 21.8 A 3.8 3.8 0 1 0 16 14.2 Z',
-          fill: strokeColor,
-          stroke: strokeColor,
-          width: 1,
-        });
-        parts.push({
-          d: 'M 16 14.2 V 5.5 M 14 5.5 H 18',
-          fill: 'none',
-          stroke: strokeColor,
-          width: 2.2,
-        });
-        break;
-
-      case 'td':
-        // 坦克歼击车 / 突击炮 (САУ / ПТ-САУ 如 SU-85 / SU-100):
-        // 无旋转炮塔, 固定式梯形战斗室(рубка) + 前伸反坦克火炮与制退器
-        parts.push({
-          d: 'M 11 14 H 21 C 22.7 14 24 15.3 24 17 V 20 C 24 21.7 22.7 23 21 23 H 11 C 9.3 23 8 21.7 8 20 V 17 C 8 15.3 9.3 14 11 14 Z',
-          fill: 'none',
-          stroke: strokeColor,
-          width: 1.8,
-        });
-        parts.push({
-          d: 'M 11 21 L 13 15 H 19 L 21 21 Z',
-          fill: 'none',
-          stroke: strokeColor,
-          width: 2,
-        });
-        parts.push({
-          d: 'M 16 15 V 5.5 M 14 5.5 H 18',
-          fill: 'none',
-          stroke: strokeColor,
-          width: 2,
-        });
-        break;
+    if (vehicleClass === 'medium') {
+      // Medium tank: 一道竖线连接上下两顶点
+      parts.push({ d: 'M 16 9 V 23', fill: 'none', stroke: color, width: lineWidth });
+    } else if (vehicleClass === 'heavy') {
+      // Heavy tank: 中心一个实心圆点
+      parts.push({ d: 'M 16 13.8 A 2.2 2.2 0 1 0 16 18.2 A 2.2 2.2 0 1 0 16 13.8 Z', fill: color, stroke: color, width: 1 });
+    } else if (vehicleClass === 'td') {
+      // Self-propelled gun: 内部三道竖线,中间最长;用细线,免得粗线时三道糊成一条
+      parts.push({ d: 'M 16 7 V 25 M 13.6 13 V 19 M 18.4 13 V 19', fill: 'none', stroke: color, width: 1.2 });
     }
   }
 
-  // 4. 被击毁叠加 ×
+  // 4. 被击毁: 叠加 × (灰色)
   if (opts.dead) {
     parts.push({
       d: 'M 9 9 L 23 23 M 23 9 L 9 23',
