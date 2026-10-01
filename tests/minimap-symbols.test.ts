@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { VehicleSpec, Loadout } from '../src/data/types';
 import { VEHICLES } from '../src/data/vehicles';
+import { RIVER_VALLEY } from '../src/data/maps';
 import { defaultProfile, recruitCrew, assignVehicle, type Profile, type ProfileVehicle } from '../src/settings/Profile';
 import { defaultSettings, sanitize } from '../src/settings/Settings';
 import { Minimap, renderMapBackground, type MapLike, type MinimapMarker } from '../src/ui/Minimap';
@@ -17,12 +18,7 @@ const profileVehicles: ProfileVehicle[] = vehicleList.map((v) => ({
 function createMockMapLike(size = 3000, name = '试验场'): MapLike {
   const resolution = 4;
   return {
-    spec: {
-      id: 'test_map',
-      name,
-      size,
-      waterLevel: 0,
-    } as any,
+    spec: { ...RIVER_VALLEY, name, size },
     grid: {
       resolution,
       cellSize: size / (resolution - 1),
@@ -87,9 +83,9 @@ describe('小地图军标 (044-mapscreen-key-and-symbols)', () => {
   });
 
   it('Minimap.draw 在 markerStyle=symbol 且 marker 有 vehicleClass 时调用 drawSymbol(size: 14)', () => {
-    const minimap = new Minimap(container);
     const mockCtx = createMockContext();
-    (minimap as any).ctx = mockCtx;
+    const getContextSpy = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(() => mockCtx);
+    const minimap = new Minimap(container);
 
     const drawSymbolSpy = vi.spyOn(SymbolsModule, 'drawSymbol').mockImplementation(() => {});
 
@@ -136,6 +132,7 @@ describe('小地图军标 (044-mapscreen-key-and-symbols)', () => {
     expect(mockCtx.arc).toHaveBeenCalled();
 
     drawSymbolSpy.mockRestore();
+    getContextSpy.mockRestore();
   });
 });
 

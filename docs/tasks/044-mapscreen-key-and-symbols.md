@@ -1,7 +1,7 @@
 # 044-mapscreen-key-and-symbols:M 键操作、小地图和地图界面换成军标
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待领取
+- 状态:已合并
 - 分支:`task/044-mapscreen-key-and-symbols`
 - 规模:M
 - 和 045 并行,改的文件不重叠;两张都合并后主程做 046(main.ts 接线)
@@ -78,3 +78,10 @@ open(map: MapLike, mode: 'spawn' | 'battle'): void;
   - `npm run build`: 通过 (tsc && vite build 正常打包输出)
 - 偏差 / 未完成 / 待决定:
   - 无偏差，全部按照任务卡与接口约定完成。
+
+### 主程审查(Claude Code)
+
+- 代码逐条对过卡片;lint / 527 个测试通过。`main.ts` 还没接线,浏览器里用临时页面(没提交)加载真实的 `Minimap`、`MapScreen` 和河谷地图看过:小地图 14 px、地图界面 18 px 的军标都分得清友 / 敌 / 阵亡,北约 / 华约两套;下拉框切换后立刻重画。
+- 修了一处:测试里两处 `as any`(规格对象、改 Minimap 私有 ctx)换成真实的 `RIVER_VALLEY` 规格和 `getContext` 桩,不再绕过类型检查。
+- `tests/settings.test.ts` 把「缺省是圆点」改成「缺省是军标」是卡上要求的默认值变化,断言只增不减,通过。
+- 给 046 的备忘:地图界面的遮罩是半透明的,下面的小地图会透出来,打开地图界面时要把小地图藏起来。
