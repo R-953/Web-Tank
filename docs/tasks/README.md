@@ -55,6 +55,7 @@
 | [030](030-crew-lineup-profile.md) | 车组与编组的存档 | Antigravity(3.8 Flash High) | 主程 / 内容 | 进行中 |
 | [031](031-tech-tree-ui.md) | 科技树界面(独立组件) | Antigravity(3.8 Flash High) | 界面 | 进行中 |
 | [032](032-dispatch-fixes.md) | 调度脚本:改动行数统计、DEP0190 警告 | Copilot CLI(主程审查) | 杂务 | 进行中 |
+| [033](033-lineup-bar.md) | 机库底部的编组栏,接上科技树 | Antigravity(3.8 Flash High) | 界面 | 待领取(等 028–031 合并) |
 
 ### 候选车辆(负责人 2026-09-29 提出方向,型号待确认后再开卡)
 
