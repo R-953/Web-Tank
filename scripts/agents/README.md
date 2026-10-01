@@ -11,7 +11,7 @@ node scripts/agents/dispatch.mjs grade scripts/agents/jobs/<作业>.json [--only
 - `grade`:只评分,不启动 agent(审查时重跑检查用)。
 - `--dry-run`:只打印会建哪些 worktree、允许改哪些文件、会运行什么命令,提示词写到输出目录。
 
-输出在仓库上一级的 `agent-runs/<作业名>-<run|grade>-<时间>/`:每个任务的提示词、agent 原始输出,以及 `report.md` / `report.json`。
+输出在 `Archive/agent-runs/<作业名>-<run|grade>-<时间>/`:每个任务的提示词、agent 原始输出,以及 `report.md` / `report.json`。
 
 ## 作业文件
 
@@ -28,7 +28,7 @@ node scripts/agents/dispatch.mjs grade scripts/agents/jobs/<作业>.json [--only
       "agent": "antigravity",
       "model": "gemini-3.1-pro-high",
       "card": "docs/tasks/013-sherman-hull.md",
-      "worktree": "Main-013",
+      "worktree": "013",
       "branch": "task/013-sherman-hull",
       "commit": "model: 谢尔曼 M4A3 车体"
     }
@@ -44,7 +44,7 @@ node scripts/agents/dispatch.mjs grade scripts/agents/jobs/<作业>.json [--only
 | `card` | 任务卡路径(相对仓库根目录),全文会放进提示词 |
 | `allow` | 可选,允许改的文件(通配符)。不写就从任务卡「允许修改的文件」一节里以「新增 / 修改 / 删除」开头的条目读取,任务卡本身总是允许改 |
 | `hidden` | 可选,隐藏测试文件(`*.hidden.ts`)。评分时临时拷进 worktree 的 `tests/__hidden__/` 运行,跑完删掉,agent 看不到 |
-| `worktree` / `branch` | 可选,默认 `../Main-<id>`、`agent/<id>` |
+| `worktree` / `branch` | 可选,默认 `.worktrees/<id>`、`agent/<id>` |
 | `base` | 可选,这个任务从哪个提交拉分支(默认取作业文件顶层的 `base`)。任务卡还没合并进 main 时,填卡所在的分支 |
 | `commit` | 提交信息(格式见 AGENTS.md) |
 | `maxPerAgent` | 同一种 agent 同时最多跑几个;不同 agent 之间总是并行 |

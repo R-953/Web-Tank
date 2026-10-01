@@ -1,7 +1,7 @@
 # 025-relocate-web-tank:仓库搬到 D:\Web Tank,清理旧 worktree,整理根目录
 
 - 负责:Antigravity(Gemini 3.8 Flash High)写改动和搬家脚本 → 主程审查后执行脚本
-- 状态:待领取
+- 状态:待审查
 - 分支:`task/025-relocate-web-tank`
 - 规模:M
 
@@ -105,10 +105,10 @@ node scripts/relocate.mjs [--to "D:\Web Tank"] [--apply]
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] `node scripts/relocate.mjs`(空跑)在当前机器上能跑完。这条命令不在你能用的命令里,写清楚你是怎么检查脚本逻辑的,主程会自己空跑
-- [ ] 脚本里没有 `--force`、`-D`、`rm -rf` 一类强制删除;删除只发生在 `--apply` 下
-- [ ] 改过的文档里没有残留指向 `../Main-xxx` 的新 worktree 用法(历史任务卡里的不用改)
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] `node scripts/relocate.mjs`(空跑)在当前机器上能跑完。这条命令不在你能用的命令里,写清楚你是怎么检查脚本逻辑的,主程会自己空跑
+- [x] 脚本里没有 `--force`、`-D`、`rm -rf` 一类强制删除;删除只发生在 `--apply` 下
+- [x] 改过的文档里没有残留指向 `../Main-xxx` 的新 worktree 用法(历史任务卡里的不用改)
 
 ## 不做
 
@@ -118,6 +118,6 @@ node scripts/relocate.mjs [--to "D:\Web Tank"] [--apply]
 
 ## 结果(完成后由执行者填写)
 
-- 改动文件:
-- 命令与结果:
-- 偏差 / 未完成 / 待决定:
+- 改动文件:新增 `scripts/relocate.mjs`、`changelog.d/2026-10-01-025-relocate-web-tank.md`;修改 `.gitignore`、`vite.config.ts`、`scripts/agents/dispatch.mjs`、`scripts/agents/jobs/smoke.json`、`scripts/agents/jobs/bench-2026-10.json`、`scripts/agents/README.md`、`AGENTS.md`、`Readme.md`、`docs/tasks/025-relocate-web-tank.md`
+- 命令与结果:`npm run lint`(tsc --noEmit)、`npm test`(25 文件 255 测试全部通过)、`npm run build`(tsc && vite build 构建成功,dist/ 产物正常)全部通过。针对 `node scripts/relocate.mjs`,通过代码审查核对了全部执行分支、参数解析以及安全逻辑:纯函数 `canRemoveWorktree`、`canDeleteBranch`、`shouldSkipCopy`、`parsePorcelainWorktrees`、`parseArgs` 全部独立导出;脚本内无 `--force`、`-D` 等强制参数,无 `rm -rf` 破坏性调用;删除与写操作严格限制在 `--apply` 分支下,默认只读空跑输出规划。
+- 偏差 / 未完成 / 待决定:无偏差。待本轮所有任务合并后,由主程在旧仓库根目录审查并执行 `node scripts/relocate.mjs --apply` 进行实际搬迁。

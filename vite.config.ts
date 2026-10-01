@@ -1,12 +1,17 @@
 /// <reference types="vitest" />
-import { defineConfig } from 'vite';
+import { configDefaults, defineConfig } from 'vitest/config';
 
 export default defineConfig({
   base: './',
   server: {
-    port: 3000
+    port: 3000,
+    watch: {
+      ignored: ['.worktrees/**', 'Archive/**', '**/.worktrees/**', '**/Archive/**'],
+    },
   },
   test: {
     environment: 'jsdom',
-  }
+    exclude: [...configDefaults.exclude, '.worktrees/**', 'Archive/**'],
+  },
 });
+
