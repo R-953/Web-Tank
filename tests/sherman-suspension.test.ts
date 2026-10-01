@@ -118,29 +118,42 @@ describe('谢尔曼行走机构测试 (docs/tasks/014-sherman-suspension.md)', (
         expect(maxAbsX).toBeLessThan(spec.hull.width / 2 + 0.1);
       });
 
-      it('行走机构三角面不超过约 6,000', () => {
+      it('所有车轮几何体侧视呈圆形 (各车轮在侧视平面上至少分布在 12 个不同角度方向上)', () => {
         const { root } = setupSuspension(id);
-        let renderedTriangles = 0;
-        let baseTriangles = 0;
-        const seenGeometries = new Set<THREE.BufferGeometry>();
-        root.traverse((o) => {
-          if (o instanceof THREE.InstancedMesh) {
-            const tris = o.geometry.getAttribute('position').count / 3;
-            renderedTriangles += tris * o.count;
-            if (!seenGeometries.has(o.geometry)) {
-              seenGeometries.add(o.geometry);
-              baseTriangles += tris;
-            }
-          } else if (o instanceof THREE.Mesh) {
-            const tris = o.geometry.getAttribute('position').count / 3;
-            renderedTriangles += tris;
-            if (!seenGeometries.has(o.geometry)) {
-              seenGeometries.add(o.geometry);
-              baseTriangles += tris;
+        const instanced = root.children.filter((c): c is THREE.InstancedMesh => c instanceof THREE.InstancedMesh);
+        // 履带板实例数最多 (79 * 2 = 158), 其余全为车轮网格
+        const linkMesh = instanced.reduce((max, m) => (m.count > max.count ? m : max));
+        const wheelMeshes = instanced.filter((m) => m !== linkMesh);
+
+        for (const mesh of wheelMeshes) {
+          const posAttr = mesh.geometry.getAttribute('position');
+          const angles = new Set<number>();
+          for (let i = 0; i < posAttr.count; i++) {
+            const y = posAttr.getY(i);
+            const z = posAttr.getZ(i);
+            const r = Math.hypot(y, z);
+            if (r > 0.04) {
+              // 量化为 0.05 弧度消除微小浮点误差
+              const angle = Math.round(Math.atan2(y, z) * 20) / 20;
+              angles.add(angle);
             }
           }
+          // 至少有 12 个径向角度, 保证从侧视看是圆形而非 4 段方形
+          expect(angles.size).toBeGreaterThanOrEqual(12);
+        }
+      });
+
+      it('行走机构三角面不超过放宽后的上限 9,000 (主程 2026-10-01 放宽)', () => {
+        const { root } = setupSuspension(id);
+        let renderedTriangles = 0;
+        root.traverse((o) => {
+          if (o instanceof THREE.InstancedMesh) {
+            renderedTriangles += (o.geometry.getAttribute('position').count / 3) * o.count;
+          } else if (o instanceof THREE.Mesh) {
+            renderedTriangles += o.geometry.getAttribute('position').count / 3;
+          }
         });
-        expect(renderedTriangles).toBeLessThanOrEqual(6000);
+        expect(renderedTriangles).toBeLessThanOrEqual(9000);
       });
     });
   }
