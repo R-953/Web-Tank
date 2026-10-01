@@ -126,3 +126,78 @@ export function h<K extends keyof HTMLElementTagNameMap>(
   parent?.appendChild(e);
   return e;
 }
+
+/* 科技树样式 */
+const TECH_TREE_CSS = `
+/* 科技树全屏覆盖层 */
+.tt-root { position: fixed; inset: 0; z-index: 35; display: flex; flex-direction: column; background: rgba(14, 18, 22, .96); font: 13px/1.45 system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; color: #e6e8ea; user-select: none; }
+.tt-topbar { height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; border-bottom: 1px solid rgba(255,255,255,.1); background: rgba(20, 25, 30, .95); }
+.tt-top-left { display: flex; align-items: center; gap: 16px; }
+.tt-title { font-size: 18px; font-weight: 700; color: #f3d27f; letter-spacing: 1px; }
+.tt-nation-tabs { display: flex; gap: 6px; }
+.tt-nation-tab.on { border-color: #e0b44c; color: #f3d27f; background: rgba(224,180,76,.15); }
+.tt-close { width: 34px; height: 34px; font-size: 18px; padding: 0; display: flex; align-items: center; justify-content: center; }
+
+/* 年份刻度栏(固定在顶部) */
+.tt-years-bar { height: 34px; display: flex; border-bottom: 1px solid rgba(255,255,255,.1); background: rgba(24, 30, 37, .92); overflow: hidden; }
+.tt-years-spacer { width: 220px; min-width: 220px; border-right: 1px solid rgba(255,255,255,.08); display: flex; align-items: center; padding-left: 14px; font-size: 12px; color: rgba(255,255,255,.45); }
+.tt-years-track { flex: 1; display: grid; align-items: center; }
+.tt-year-tick { text-align: center; font-weight: 600; font-size: 12px; color: #cfd3d6; border-left: 1px solid rgba(255,255,255,.06); height: 100%; display: flex; align-items: center; justify-content: center; }
+
+/* 国家垂直滚动区(scroll-snap) */
+.tt-scroll { flex: 1; overflow-y: auto; overflow-x: auto; scroll-snap-type: y mandatory; position: relative; }
+.tt-nation { height: 100%; min-height: 100%; scroll-snap-align: start; scroll-snap-stop: always; display: flex; border-bottom: 2px solid rgba(255,255,255,.1); box-sizing: border-box; background: rgba(18, 22, 27, .85); }
+.tt-nation-sidebar { width: 100px; min-width: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(24, 30, 38, .85); border-right: 1px solid rgba(255,255,255,.1); padding: 12px 6px; }
+.tt-nation-name { font-size: 20px; font-weight: 700; letter-spacing: 2px; color: #e6e8ea; text-shadow: 0 2px 4px rgba(0,0,0,.6); }
+
+/* 类别线与网格 */
+.tt-lanes { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+.tt-lane { display: flex; min-height: 80px; flex: 1; border-bottom: 1px solid rgba(255,255,255,.06); align-items: stretch; }
+.tt-lane-header { width: 120px; min-width: 120px; display: flex; align-items: center; justify-content: center; padding: 0 10px; font-size: 13px; font-weight: 600; color: #cfd3d6; background: rgba(22, 28, 34, .5); border-right: 1px solid rgba(255,255,255,.08); text-align: center; }
+.tt-lane-grid { flex: 1; display: grid; align-items: center; }
+.tt-grid-col { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; height: 100%; border-left: 1px dashed rgba(255,255,255,.05); padding: 6px; box-sizing: border-box; }
+
+/* 单车卡片 */
+.tt-card { position: relative; width: 145px; box-sizing: border-box; }
+.tt-vehicle-card { padding: 8px 10px; background: rgba(36, 44, 53, .9); border: 1px solid rgba(255,255,255,.14); border-radius: 4px; cursor: pointer; transition: all .15s ease; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+.tt-vehicle-card:hover { background: #36404a; border-color: rgba(255,255,255,.35); transform: translateY(-1px); }
+.tt-vehicle-card:active { transform: translateY(1px); }
+.tt-vehicle-card.tt-current { border-color: #e0b44c; box-shadow: 0 0 10px rgba(224,180,76,.35), inset 0 0 0 1px #e0b44c; background: rgba(65, 55, 30, .9); }
+.tt-vehicle-card.tt-current .tt-vehicle-name { color: #f3d27f; font-weight: 700; }
+.tt-vehicle-name { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tt-vehicle-year { font-size: 11px; opacity: .65; margin-top: 2px; }
+
+/* 标记:已编组 */
+.tt-badge-lineup { position: absolute; right: 6px; top: 6px; font-size: 10px; padding: 1px 5px; border-radius: 2px; background: rgba(76, 175, 80, .2); border: 1px solid #4caf50; color: #a5d6a7; font-weight: 600; }
+
+/* 多车组卡片 */
+.tt-group-card { z-index: 5; }
+.tt-group-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: rgba(36, 44, 53, .95); border: 1px solid rgba(255,255,255,.18); border-radius: 4px; cursor: pointer; transition: all .15s ease; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+.tt-group-header:hover { border-color: rgba(255,255,255,.35); background: #36404a; }
+.tt-group-card.open { z-index: 30; }
+.tt-group-card.open .tt-group-header { border-radius: 4px 4px 0 0; border-color: #e0b44c; }
+.tt-group-title { font-weight: 700; font-size: 12px; color: #e6e8ea; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 78px; }
+.tt-group-count { font-size: 11px; color: #e0b44c; font-weight: 700; background: rgba(224,180,76,.15); padding: 1px 5px; border-radius: 2px; margin-left: auto; }
+.tt-group-arrow { font-size: 10px; opacity: .6; margin-left: 4px; }
+.tt-group-card.tt-has-current .tt-group-header { border-color: rgba(224,180,76,.6); }
+
+/* 展开的车组列表 */
+.tt-group-list { position: absolute; left: 0; top: 100%; width: 100%; display: flex; flex-direction: column; gap: 4px; padding: 6px; background: rgba(22, 27, 32, .98); border: 1px solid #e0b44c; border-top: none; border-radius: 0 0 4px 4px; box-shadow: 0 8px 24px rgba(0,0,0,.5); z-index: 30; box-sizing: border-box; }
+.tt-vehicle-item { padding: 6px 8px; border-radius: 3px; cursor: pointer; background: #252c33; border: 1px solid rgba(255,255,255,.08); position: relative; }
+.tt-vehicle-item:hover { background: #36404a; border-color: rgba(255,255,255,.25); }
+.tt-vehicle-item.tt-current { border-color: #e0b44c; background: rgba(65, 55, 30, .9); }
+.tt-vehicle-item.tt-current .tt-vehicle-name { color: #f3d27f; font-weight: 700; }
+.tt-vehicle-item .tt-badge-lineup { top: 4px; right: 4px; }
+`;
+
+let ttInjected = false;
+
+export function injectTechTreeStyles(): void {
+  injectMenuStyles();
+  if (ttInjected || typeof document === 'undefined') return;
+  ttInjected = true;
+  const style = document.createElement('style');
+  style.textContent = TECH_TREE_CSS;
+  document.head.appendChild(style);
+}
+
