@@ -1,7 +1,7 @@
 # 038-class-icons:载具类型图标(轻型 / 中型 / 重型 / 坦克歼击车)
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:已完成
+- 状态:已合并
 - 分支:`task/038-class-icons`(从 `task/037-crew-wiring` 拉出,需在 033、034、037 之后合并)
 - 规模:S
 

@@ -1,7 +1,7 @@
 # 043-vite-watch-worktree:在 worktree 里跑 dev server 时改代码不刷新
 
 - 负责:GitHub Copilot CLI(主程审查)
-- 状态:进行中
+- 状态:已合并
 - 分支:`task/043-vite-watch-worktree`
 - 规模:S
 
