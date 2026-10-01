@@ -23,6 +23,12 @@ export interface MinimapMarker {
   heading?: number;
 }
 
+/** 小地图标记的填充色:被击毁 → 灰;敌军 → 红;友军 → 蓝。颜色值和现在的完全一样 */
+export function markerColor(team: 'enemy' | 'ally', dead: boolean): string {
+  if (dead) return '#5a5a5a';
+  return team === 'enemy' ? '#ff3b30' : '#3aa0ff';
+}
+
 /** 其他车辆的标记样式:圆点 / 箭头(带朝向) */
 export type MarkerStyle = 'dot' | 'arrow';
 
@@ -276,7 +282,6 @@ export class Minimap {
 
     for (const m of markers) {
       const [x, y] = toPx(m.x, m.z);
-      const color = m.team === 'enemy' ? '#ff3b30' : '#3aa0ff';
       // 箭头样式:活着的车画指向车头的三角;被击毁的照旧画灰点加 ×
       if (this.markerStyle === 'arrow' && !m.dead && m.heading !== undefined) {
         const [tip, right, left] = arrowVertices(x, y, m.heading);
@@ -285,7 +290,7 @@ export class Minimap {
         c.lineTo(right[0], right[1]);
         c.lineTo(left[0], left[1]);
         c.closePath();
-        c.fillStyle = color;
+        c.fillStyle = markerColor(m.team, m.dead);
         c.fill();
         c.lineWidth = 1;
         c.strokeStyle = 'rgba(0,0,0,.8)';
@@ -294,7 +299,7 @@ export class Minimap {
       }
       c.beginPath();
       c.arc(x, y, m.dead ? 3 : 3.8, 0, Math.PI * 2);
-      c.fillStyle = m.dead ? '#5a5a5a' : color;
+      c.fillStyle = markerColor(m.team, m.dead);
       c.fill();
       c.lineWidth = 1;
       c.strokeStyle = 'rgba(0,0,0,.8)';

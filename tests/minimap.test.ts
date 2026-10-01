@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { arrowVertices, clampView, gridLabel, viewToWorld, worldToView, zoomCircle, zoomSquare } from '../src/ui/Minimap';
+import { arrowVertices, clampView, gridLabel, markerColor, viewToWorld, worldToView, zoomCircle, zoomSquare } from '../src/ui/Minimap';
+
+describe('小地图标记颜色', () => {
+  it('敌军红色、友军蓝色,被击毁的双方都是灰色', () => {
+    expect(markerColor('enemy', false)).toBe('#ff3b30');
+    expect(markerColor('ally', false)).toBe('#3aa0ff');
+    expect(markerColor('enemy', true)).toBe('#5a5a5a');
+    expect(markerColor('ally', true)).toBe('#5a5a5a');
+  });
+});
 
 describe('小地图网格标注', () => {
   it('西北角 A1、东南角 J10、中心 F6;超出地图按最近的边格算', () => {
