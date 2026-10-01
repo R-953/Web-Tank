@@ -153,6 +153,9 @@ export class MainMenu {
         onPickVehicle: (nation, crewIndex) => {
           this.openTechTree(nation, crewIndex);
         },
+        onOpenTechTree: (nation) => {
+          this.openTechTree(nation);
+        },
         onUiSound: opts.onUiSound,
       });
     } else {
@@ -218,7 +221,7 @@ export class MainMenu {
     this.opts.onVehicleChange(spec);
   }
 
-  private openTechTree(nation: string, crewIndex: number): void {
+  private openTechTree(nation: string, crewIndex?: number): void {
     if (!this.opts.profile) return;
     if (this.techTree) {
       this.techTree.dispose();
@@ -256,8 +259,10 @@ export class MainMenu {
           const curP = this.opts.profile.get();
           const curLineupId = curP.nations[nation]?.activeLineup;
           if (curLineupId) {
+            const curLineup = curP.nations[nation]?.lineups.find((l) => l.id === curLineupId);
+            const targetCrewIndex = crewIndex ?? curLineup?.selected ?? 0;
             const prevActive = activeVehicleId(curP);
-            const nextP = assignVehicle(curP, nation, curLineupId, crewIndex, vehicleId, toProfileVehicles(this.opts.vehicles));
+            const nextP = assignVehicle(curP, nation, curLineupId, targetCrewIndex, vehicleId, toProfileVehicles(this.opts.vehicles));
             this.opts.profile.set(nextP);
             const newActive = activeVehicleId(nextP);
             if (newActive !== prevActive) {
