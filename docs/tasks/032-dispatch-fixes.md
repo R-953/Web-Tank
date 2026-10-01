@@ -43,6 +43,6 @@
 
 ## 结果(完成后由执行者填写)
 
-- 改动文件:
-- 命令与结果:
-- 偏差 / 未完成 / 待决定:
+- 改动文件:`scripts/agents/dispatch.mjs`、`tests/dispatch.test.ts`、`changelog.d/2026-10-02-032-dispatch-fixes.md`、`docs/tasks/032-dispatch-fixes.md`。
+- 命令与结果:`npm run lint` 通过;`npm test` 全部通过(37 个测试文件、369 个测试);`npm run build` 通过。
+- 偏差 / 未完成 / 待决定:受允许执行的命令限制,未单独运行两个 `node scripts/agents/dispatch.mjs` CLI 验收命令;导入安全已由测试覆盖。
