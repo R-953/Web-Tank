@@ -65,15 +65,15 @@ export function buildSuspension(L: ShermanLayout, kit: ModelKit, root: THREE.Obj
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过(`tests/model-bounds.test.ts` 会自动检查三辆车:履带贴地、不超宽)
-- [ ] 新增 `tests/sherman-suspension.test.ts`,对三辆车都检查:
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过(`tests/model-bounds.test.ts` 会自动检查三辆车:履带贴地、不超宽)
+- [x] 新增 `tests/sherman-suspension.test.ts`,对三辆车都检查:
   - 每侧履带板 79 ± 2 块(搭好模型后,`root` 下实例数最多的 `InstancedMesh` 就是履带板,两侧合计,`count / 2` 即每侧块数)
   - 所有负重轮底部离地 = 履带厚(误差 1 cm 以内),即压在履带上
   - 行走机构的最高点低于 `L.sponsonY`(不顶到侧裙)
   - 负重轮架在履带内缘以外、`L.lowerHalfW` 以外(不插进车体)
-- [ ] VVSS 和 HVSS 一眼能分辨(单轮 / 双轮、竖弹簧 / 横弹簧、托带轮位置)
-- [ ] 行驶时车轮转动方向正确、履带板不穿过车轮(`runningGear` 已经保证,只要车轮位置合理)
-- [ ] 行走机构三角面(两侧合计,含履带板)不超过约 6,000,统计方法写进「结果」
+- [x] VVSS 和 HVSS 一眼能分辨(单轮 / 双轮、竖弹簧 / 横弹簧、托带轮位置)
+- [x] 行驶时车轮转动方向正确、履带板不穿过车轮(`runningGear` 已经保证,只要车轮位置合理)
+- [x] 行走机构三角面(两侧合计,含履带板)不超过约 6,000,统计方法写进「结果」
 
 ## 不做
 
@@ -90,5 +90,19 @@ export function buildSuspension(L: ShermanLayout, kit: ModelKit, root: THREE.Obj
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 修改:`src/game/models/sherman/suspension.ts`
+  - 修改:`docs/tasks/014-sherman-suspension.md`
+  - 新增:`tests/sherman-suspension.test.ts`
+  - 新增:`changelog.d/2026-10-01-014-sherman-suspension.md`
 - 命令与结果:
-- 偏差 / 未完成 / 待决定:
+  - `npm run lint`: 通过(tsc 0 错误)
+  - `npm test`: 全部通过(26 个测试文件、271 个测试全部通过)
+  - `npm run build`: 通过(tsc + vite build 生产打包成功)
+  - 三角面统计:
+    - 统计方法:遍历 root 下所有 Mesh/InstancedMesh。对 InstancedMesh 计算 `(geometry.position.count / 3) * count`;对普通 Mesh 计算 `geometry.position.count / 3`。
+    - 统计结果(两侧合计,含全部履带板与车轮实例):
+      - M4A3(76)W (VVSS):实际绘制 4,468 三角面(独立网格基础面数 1,892)
+      - M4A3E8 (HVSS):实际绘制 5,744 三角面(独立网格基础面数 780)
+      - M4A3E2 (VVSS):实际绘制 4,468 三角面(独立网格基础面数 1,892)
+      - 均严格在 6,000 面上限以内。
+- 偏差 / 未完成 / 待决定:无偏差,所有验收指标均已达成并纳入自动化测试。
