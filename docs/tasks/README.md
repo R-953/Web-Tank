@@ -30,6 +30,7 @@
 | [023](023-death-killcam.md) | 玩家被击毁时的回放 | Antigravity | 界面 | 进行中 |
 | [024](024-hangar-camera-walls.md) | 机库镜头拉远时穿墙 | Antigravity | 界面 | 进行中 |
 | [025](025-relocate-web-tank.md) | 仓库搬到 D:\Web Tank,清理旧 worktree,整理根目录 | Antigravity → 主程执行 | 杂务 | 进行中 |
+| [026](026-sherman-paint.md) | 谢尔曼按真实涂装改颜色、加白星标识 | Antigravity | 内容 | 进行中 |
 
 ### 候选车辆(负责人 2026-09-29 提出方向,型号待确认后再开卡)
 
