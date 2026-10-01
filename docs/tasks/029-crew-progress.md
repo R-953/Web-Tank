@@ -1,7 +1,7 @@
 # 029-crew-progress:车组成长曲线与技能插值(纯逻辑)
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:进行中
+- 状态:已完成
 - 分支:`task/029-crew-progress`
 - 规模:S
 
@@ -23,7 +23,7 @@ import type { VehicleSpec } from '../../data/types';
 /** 成长常数 T:挂机 T 时长升到满级的 50%(负责人定为两周),毫秒 */
 export const CREW_HALF_TIME_MS: number; // = 14 天
 /** 显示给玩家的满级等级 */
-export const CREW_MAX_LEVEL: number; // = 100
+export const CREW_MAX_LEVEL: number; // = 150
 
 /**
  * 成长进度 f ∈ [0, 1):f(t) = t / (t + T)。
@@ -53,12 +53,12 @@ export function applyCrewSkill(spec: VehicleSpec, ace: AceValues | undefined, sk
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] `tests/crew-progress.test.ts` 覆盖:
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] `tests/crew-progress.test.ts` 覆盖:
   - 负责人的规则:从 0 开始,2 周 → 50%,6 周 → 75%,14 周 → 87.5%(误差 < 1e-9)
   - 分段补算等于一次补算:`progressAfter(progressAfter(0, a), b)` ≈ `progressAfter(0, a + b)`
   - 负时间、0 时间原样返回;f0 超出范围被夹住;永远 < 1
-  - `crewLevel`:0 → 0,0.5 → 50,0.999 → 99
+  - `crewLevel`:0 → 0,0.5 → 75,0.999 → 149;满级 150 为渐近线最高显示 149
   - `applyCrewSkill`:skill 0 / 0.5 / 1 的三个数值;机枪不变;不改入参;ace 缺省原样
 
 ## 不做
@@ -69,5 +69,13 @@ export function applyCrewSkill(spec: VehicleSpec, ace: AceValues | undefined, sk
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 新增: `src/game/crew/progress.ts`
+  - 新增: `tests/crew-progress.test.ts`
+  - 新增: `changelog.d/2026-10-02-029-crew-progress.md`
+  - 修改: `docs/tasks/029-crew-progress.md`
 - 命令与结果:
+  - `npm run lint`: 全部通过
+  - `npm test`: 全部通过 (37 个测试文件, 376 个测试全部 pass)
+  - `npm run build`: 全部通过 (tsc 与 vite build 成功打包)
 - 偏差 / 未完成 / 待决定:
+  - 偏差: 负责人 2026-10-01 调整设计,地面载具满级与 War Thunder 一致改为 150 级(CREW_MAX_LEVEL = 150),满级为渐近线最高显示 149 级。
