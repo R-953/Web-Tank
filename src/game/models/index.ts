@@ -8,6 +8,7 @@ import { buildT3485 } from './t34_85';
 import { buildTigerII } from './tigerII';
 import { buildSU100 } from './su100';
 import { buildISU122 } from './isu122';
+import { buildM4A3E2, buildM4A3E8, buildM4A3_76W } from './sherman';
 import { isCasemate } from '../casemate';
 
 export type { ModelParts } from './kit';
@@ -32,6 +33,9 @@ const BUILDERS: Record<string, ModelBuilder> = {
   tiger_ii: buildTigerII,
   su_100: buildSU100,
   isu_122: buildISU122,
+  m4a3_76w: buildM4A3_76W,
+  m4a3e8: buildM4A3E8,
+  m4a3e2: buildM4A3E2,
 };
 
 /**

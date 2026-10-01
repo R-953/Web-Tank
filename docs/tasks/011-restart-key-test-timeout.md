@@ -1,7 +1,7 @@
 # 011-restart-key-test-timeout:重开键每帧重开;出生点视线测试偶发超时
 
 - 负责:Claude Code(主程)
-- 状态:待审查
+- 状态:已合并
 - 分支:`task/011-restart-key-test-timeout`
 - 规模:XS
 

@@ -1,7 +1,7 @@
 # 009-casemate-models:StuG III G、SU-100 专属模型
 
 - 负责:Claude Code(主程;两个模型文件由子 agent 编写,主程审查)
-- 状态:待审查(分支基于 task/008,006 → 007 → 008 → 009 依次合并)
+- 状态:已合并
 - 分支:`task/009-casemate-models`
 - 规模:M
 

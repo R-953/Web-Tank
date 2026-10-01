@@ -67,7 +67,7 @@ describe('载具内构', () => {
   });
 
   it('弹药架都有容量和唯一的取弹顺序;总容量与史实载弹量一致', () => {
-    const expected: Record<string, number> = { tiger_i: 92, t34_85: 55, tiger_ii: 86, su_100: 33, isu_122: 30 };
+    const expected: Record<string, number> = { tiger_i: 92, t34_85: 55, tiger_ii: 86, su_100: 33, isu_122: 30, m4a3_76w: 71, m4a3e8: 71, m4a3e2: 104 };
     for (const spec of Object.values(VEHICLES)) {
       const racks = spec.internals.modules.filter((m) => m.type === 'ammo');
       for (const r of racks) {

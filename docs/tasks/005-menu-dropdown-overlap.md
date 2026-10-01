@@ -1,7 +1,7 @@
 # 005-menu-dropdown-overlap:主界面 ☰ 下拉菜单被车辆信息面板盖住
 
 - 负责:Claude Code(主程)
-- 状态:待审查
+- 状态:已合并
 - 分支:`task/005-menu-dropdown-overlap`
 - 规模:S(1 行 CSS)
 

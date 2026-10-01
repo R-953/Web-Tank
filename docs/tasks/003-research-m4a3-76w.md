@@ -1,7 +1,7 @@
 # 003-research-m4a3-76w:M4A3(76)W 数据调研(只出数据和出处)
 
 - 负责:Claude Code(原定 Gemini CLI;2026-09-29 负责人决定本轮由 Claude Code 代做)
-- 状态:待审查
+- 状态:已合并
 - 分支:`task/003-research-m4a3-76w`
 - 规模:M(只写文档,不写代码)
 

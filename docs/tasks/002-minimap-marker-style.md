@@ -1,7 +1,7 @@
 # 002-minimap-marker-style:小地图标记样式——圆点 / 箭头
 
 - 负责:Claude Code(原定 GitHub Copilot;2026-09-29 负责人决定本轮由 Claude Code 代做)
-- 状态:待审查
+- 状态:已合并
 - 分支:`task/002-minimap-marker-style`
 - 规模:S
 
