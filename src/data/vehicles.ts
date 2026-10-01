@@ -120,8 +120,8 @@ export const TIGER_I: VehicleSpec = {
 export const T34_85: VehicleSpec = {
   id: 't34_85',
   name: 'T-34-85',
-  // 首上 45@60° → 90;侧面下部 45 垂直(上部 45@40° ≈ 59);后部 45@45° ≈ 64
-  armor: { front: 90, side: 45, rear: 64 },
+  // 首上 45@60° → 90;首下 45@53° ≈ 75(分界高度 0.71m);侧面下部 45 垂直(上部 45@40° ≈ 59);后部 45@45° ≈ 64
+  armor: { front: 90, side: 45, rear: 64, lowerFront: { thickness: 75, height: 0.71 } },
   // 炮塔正面 90,侧面 75,后部 52
   turretArmor: { front: 90, side: 75, rear: 52 },
   maxSpeed: 53,
@@ -194,8 +194,8 @@ export const T34_85: VehicleSpec = {
 export const TIGER_II: VehicleSpec = {
   id: 'tiger_ii',
   name: '虎王(亨舍尔炮塔)',
-  // 首上 150@50° ≈ 233(首下 100@50° ≈ 156 的弱点未建模);侧面下部 80 垂直(上部 80@25° ≈ 88);后部 80@30° ≈ 92
-  armor: { front: 233, side: 80, rear: 92 },
+  // 首上 150@50° ≈ 233;首下 100@50° ≈ 156(分界高度 0.9m);侧面下部 80 垂直(上部 80@25° ≈ 88);后部 80@30° ≈ 92
+  armor: { front: 233, side: 80, rear: 92, lowerFront: { thickness: 156, height: 0.9 } },
   // 炮塔正面 180@10° ≈ 183;侧面 80@21° ≈ 86;后部 80@20° ≈ 85
   turretArmor: { front: 183, side: 86, rear: 85 },
   maxSpeed: 41.5,
@@ -475,8 +475,8 @@ function shermanInternals(o: {
 export const M4A3_76W: VehicleSpec = {
   id: 'm4a3_76w',
   name: 'M4A3(76)W',
-  // 首上 63.5@47° → 93(首下铸造传动罩 108@0°–50.8@56°,未单独建模);侧面 38.1 垂直;后部 38.1@10–22° ≈ 40
-  armor: { front: 93, side: 38, rear: 40 },
+  // 首上 63.5@47° → 93(首下铸造传动罩 108,分界高度 1.0m);侧面 38.1 垂直;后部 38.1@10–22° ≈ 40
+  armor: { front: 93, side: 38, rear: 40, lowerFront: { thickness: 108, height: 1.0 } },
   // 炮盾 88.9 垂直(炮盾外的正面 63.5@40–45° ≈ 83–90);侧面 63.5@0–13° ≈ 64;后部 63.5 垂直
   turretArmor: { front: 89, side: 64, rear: 64 },
   maxSpeed: 42, // 26 mph 持续公路速度
@@ -506,7 +506,7 @@ export const M4A3_76W: VehicleSpec = {
 export const M4A3E8: VehicleSpec = {
   id: 'm4a3e8',
   name: 'M4A3E8',
-  armor: { front: 93, side: 38, rear: 40 },
+  armor: { front: 93, side: 38, rear: 40, lowerFront: { thickness: 108, height: 1.0 } },
   turretArmor: { front: 89, side: 64, rear: 64 },
   maxSpeed: 42,
   turretRotationSpeed: 24,
@@ -536,8 +536,8 @@ export const M4A3E8: VehicleSpec = {
 export const M4A3E2: VehicleSpec = {
   id: 'm4a3e2',
   name: 'M4A3E2',
-  // 首上 101.6@47° → 149(首下 140→114 @0°–56°,未单独建模);上部侧面 76.2 垂直(下部 38.1,藏在行走机构后面);后部 38.1@10–22° ≈ 40
-  armor: { front: 149, side: 76, rear: 40 },
+  // 首上 101.6@47° → 149(首下加厚传动罩 140,分界高度 1.0m);上部侧面 76.2 垂直(下部 38.1,藏在行走机构后面);后部 38.1@10–22° ≈ 40
+  armor: { front: 149, side: 76, rear: 40, lowerFront: { thickness: 140, height: 1.0 } },
   // 炮盾 177.8 垂直;炮塔正面 152.4@12° ≈ 156(炮盾覆盖大部分,取炮盾值);侧面 152.4@6° ≈ 153;后部 152.4@2° ≈ 152
   turretArmor: { front: 178, side: 153, rear: 152 },
   maxSpeed: 35, // 22 mph 持续公路速度(改了最终传动比)

@@ -17,6 +17,11 @@ export interface ArmorSpec {
   front: number;
   side: number;
   rear: number;
+  /**
+   * 首下:命中点高度低于「车体碰撞盒底面 + height」时用 thickness(水平来弹的视线厚度,mm),
+   * 否则用 front。不设 = 整个正面都用 front。
+   */
+  lowerFront?: { thickness: number; height: number };
 }
 
 /**

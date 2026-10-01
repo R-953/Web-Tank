@@ -98,6 +98,28 @@ describe('历史对局常识', () => {
   it('虎王 88 L/71 在 2000 m 仍能正面击穿虎式', () => {
     expect(hit('tiger_ii', 'pzgr39_43', 2000, 'tiger_i', 0).penetrated).toBe(true);
   });
+
+  it('BR-471(ISU-122)在 500 m 打虎王首上打不穿、在 300 m 打首下能打穿(首上仍打不穿)', () => {
+    const w = shellOf('isu_122', 'br471');
+    const [s] = flyShell(w, [500]);
+    const target = VEHICLES.tiger_ii;
+    const bottomY = -target.hull.height / 2;
+    // 500 m: 打首上打不穿, 打首下也打不穿(穿深 149.5 mm < 首下 156 mm)
+    const upper500 = resolveHit({ ...w, penetration: s.penetration }, target.armor, fromAngle(0), front, undefined, 0.2, bottomY);
+    expect(upper500.armor).toBe(233);
+    expect(upper500.penetrated).toBe(false);
+    const lower500 = resolveHit({ ...w, penetration: s.penetration }, target.armor, fromAngle(0), front, undefined, -0.5, bottomY);
+    expect(lower500.armor).toBe(156);
+    expect(lower500.penetrated).toBe(false);
+
+    // 300 m (穿深约 157.8 mm >= 156 mm): 打首下能打穿, 打首上仍打不穿
+    const [s300] = flyShell(w, [300]);
+    const upper300 = resolveHit({ ...w, penetration: s300.penetration }, target.armor, fromAngle(0), front, undefined, 0.2, bottomY);
+    expect(upper300.penetrated).toBe(false);
+    const lower300 = resolveHit({ ...w, penetration: s300.penetration }, target.armor, fromAngle(0), front, undefined, -0.5, bottomY);
+    expect(lower300.armor).toBe(156);
+    expect(lower300.penetrated).toBe(true);
+  });
 });
 
 describe('机动(发动机功率、滚动阻力、附着力)', () => {

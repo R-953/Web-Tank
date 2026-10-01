@@ -68,6 +68,24 @@ export function armorForFace(armor: ArmorSpec, face: ArmorFace): number {
   }
 }
 
+/**
+ * 车体正面装甲厚度:若设置了 lowerFront 且命中点高度低于「车体碰撞盒底面 + height」,
+ * 使用首下厚度 lowerFront.thickness;否则使用首上 front。
+ * 不设 lowerFront 或高度未提供时,退回 front。
+ *
+ * @param armor 车体装甲配置
+ * @param hitLocalY 命中点在车体本地坐标下的 Y 坐标
+ * @param hullBottomY 车体碰撞盒底面 Y 坐标(在车体中心对齐的原点下一般为 -hull.height / 2;默认 0)
+ */
+export function frontArmorAt(armor: ArmorSpec, hitLocalY?: number, hullBottomY = 0): number {
+  if (armor.lowerFront && hitLocalY !== undefined) {
+    return hitLocalY < hullBottomY + armor.lowerFront.height
+      ? armor.lowerFront.thickness
+      : armor.front;
+  }
+  return armor.front;
+}
+
 /** 入射角,度。0° = 垂直命中装甲面 */
 export function impactAngleDeg(dir: V3, normal: V3): number {
   const dl = Math.hypot(dir.x, dir.y, dir.z);
@@ -112,6 +130,8 @@ export interface HitResolution {
  * @param localDir    弹道方向(载具或炮塔本地坐标)
  * @param localNormal 命中面外法线(同一本地坐标)
  * @param rng         跳弹掷骰;不传时取中位结果(概率 ≥ 50% 才跳弹),便于确定性测试
+ * @param hitLocalY   命中点在车体本地坐标下的 Y 坐标(可选,用于首上/首下判定)
+ * @param hullBottomY 车体碰撞盒底面 Y 坐标(可选,用于首上/首下判定)
  */
 export function resolveHit(
   shell: Pick<ShellSpec, 'penetration'> & { type?: ShellType },
@@ -119,10 +139,14 @@ export function resolveHit(
   localDir: V3,
   localNormal: V3,
   rng?: () => number,
+  hitLocalY?: number,
+  hullBottomY?: number,
 ): HitResolution {
   const rule = SHELL_TYPES[shell.type ?? 'APCBC'];
   const face = classifyFace(localNormal);
-  const thickness = armorForFace(armor, face);
+  const thickness = face === 'front'
+    ? frontArmorAt(armor, hitLocalY, hullBottomY)
+    : armorForFace(armor, face);
   const angleDeg = impactAngleDeg(localDir, localNormal);
   const eff = effectiveArmor(thickness, angleDeg, rule);
   const chance = ricochetChance(angleDeg, rule.ricochet);
