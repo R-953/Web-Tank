@@ -15,7 +15,7 @@
   - 进入战斗先打开地图界面(`mode: 'spawn'`)调携弹,点「出战」才开局;战斗中按 M 打开(`mode: 'battle'`,改的携弹下次出战 / 重开生效);机库去掉右侧携弹面板。
   - 小地图和地图界面的标记换成 039 的军标(带敌我识别框);设置和地图界面里的「北约 / 华约」同步。
   - 041 的信息卡挂到编组栏、科技树(悬停显示,双击关闭)。
-  - 修 `vite.config.ts`:`server.watch.ignored` 只忽略项目根目录下的 `.worktrees`,不要连 worktree 自己也忽略(在 worktree 里跑 dev server 时改代码不刷新)。
+  - (已派 Copilot 043)修 `vite.config.ts`:在 worktree 里跑 dev server 时改代码不刷新。
 - **已定的细节:** 每个国家默认 1 个初级车组,招募上限 8 个车位;同一编组一辆车只分给一个车组;地面载具满级 150 级(经验上限、溢出、模式折算等引入空中载具时再定);第一期换到别的车族要先训练(即时、免费);在线时间(页面开着,包括停在机库)不算挂机成长,在线游玩的成长以后按战斗经验另算。029、030 已按这些返工。
 - **排队:**
   - 10 月 3 日 Copilot 权益生效后,重测 Copilot 可用的模型;OpenAI 工单解决后,把 Codex CLI 加进调度脚本。
@@ -68,6 +68,7 @@
 | [040](040-hangar-bar-layout.md) | 机库底部按 War Thunder 的布局重排 | Antigravity(3.8 Flash High) | 界面 | 进行中 |
 | [041](041-vehicle-info-card.md) | 鼠标悬停的载具信息卡片 | Antigravity(3.8 Flash High) | 界面 | 进行中 |
 | [042](042-map-screen.md) | 地图界面(编组 + 携弹 + 大地图),独立组件 | Antigravity(3.8 Flash High) | 界面 | 进行中 |
+| [043](043-vite-watch-worktree.md) | worktree 里跑 dev server 时改代码不刷新 | Copilot CLI(主程审查) | 杂务 | 进行中 |
 
 ### 候选车辆(负责人 2026-09-29 提出方向,型号待确认后再开卡)
 
