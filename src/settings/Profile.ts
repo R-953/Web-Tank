@@ -188,13 +188,29 @@ export function sanitizeProfile(raw: unknown, vehicles: readonly ProfileVehicle[
       // 3. 清洗 lineups
       const rawLineups = Array.isArray(rnObj.lineups) ? rnObj.lineups : [];
       const cleanLineups: Lineup[] = [];
+      const reservedLineupIds = new Set(
+        rawLineups.flatMap((lineup) => {
+          if (typeof lineup !== 'object' || lineup === null) return [];
+          const id = (lineup as Record<string, unknown>).id;
+          return typeof id === 'string' && id.trim() ? [id] : [];
+        }),
+      );
+      const usedLineupIds = new Set<string>();
 
       for (let idx = 0; idx < rawLineups.length; idx++) {
         const rl = rawLineups[idx];
         if (typeof rl !== 'object' || rl === null) continue;
         const rlObj = rl as Record<string, unknown>;
 
-        const id = typeof rlObj.id === 'string' && rlObj.id.trim() ? rlObj.id : `lineup-${cleanLineups.length + 1}`;
+        let id = typeof rlObj.id === 'string' && rlObj.id.trim() ? rlObj.id : `lineup-${cleanLineups.length + 1}`;
+        if (usedLineupIds.has(id)) {
+          let n = 1;
+          while (usedLineupIds.has(`lineup-${n}`) || reservedLineupIds.has(`lineup-${n}`)) {
+            n++;
+          }
+          id = `lineup-${n}`;
+        }
+        usedLineupIds.add(id);
         const name = typeof rlObj.name === 'string' && rlObj.name.trim() ? rlObj.name : `编组 ${cleanLineups.length + 1}`;
 
         const rawSlots = Array.isArray(rlObj.slots) ? rlObj.slots : [];

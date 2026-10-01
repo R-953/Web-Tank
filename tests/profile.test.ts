@@ -504,6 +504,56 @@ describe('sanitizeProfile: 坏数据清洗与防护', () => {
     // activeLineup 指向有效编组
     expect(ussr.activeLineup).toBe('l1');
   });
+
+  it('同一国家的两个编组 id 重复时使用首个未占用的 lineup-N，保留内容和 activeLineup', () => {
+    const raw = {
+      nations: {
+        ussr: {
+          crews: [{ progress: 0, trained: [] }],
+          lineups: [
+            { id: 'duplicate', name: '主力', slots: ['t_34_85'], selected: 0 },
+            { id: 'duplicate', name: '备用', slots: ['su_100'], selected: 0 },
+            { id: 'lineup-1', name: '已有编号', slots: ['isu_122'], selected: 0 },
+          ],
+          activeLineup: 'duplicate',
+        },
+      },
+    };
+
+    const clean = sanitizeProfile(raw, mockVehicles, 2000);
+    const ussr = clean.nations.ussr;
+
+    expect(ussr.lineups.map((lineup) => lineup.id)).toEqual(['duplicate', 'lineup-2', 'lineup-1']);
+    expect(ussr.lineups.map(({ name, slots }) => ({ name, slots }))).toEqual([
+      { name: '主力', slots: ['t_34_85'] },
+      { name: '备用', slots: ['su_100'] },
+      { name: '已有编号', slots: ['isu_122'] },
+    ]);
+    expect(ussr.activeLineup).toBe('duplicate');
+  });
+
+  it('同一国家三个编组 id 相同时全部去重', () => {
+    const raw = {
+      nations: {
+        ussr: {
+          crews: [{ progress: 0, trained: [] }],
+          lineups: [
+            { id: 'duplicate', name: '第一', slots: ['t_34_85'], selected: 0 },
+            { id: 'duplicate', name: '第二', slots: ['su_100'], selected: 0 },
+            { id: 'duplicate', name: '第三', slots: ['isu_122'], selected: 0 },
+          ],
+          activeLineup: 'duplicate',
+        },
+      },
+    };
+
+    const clean = sanitizeProfile(raw, mockVehicles, 2000);
+    const ussr = clean.nations.ussr;
+
+    expect(ussr.lineups.map((lineup) => lineup.id)).toEqual(['duplicate', 'lineup-1', 'lineup-2']);
+    expect(new Set(ussr.lineups.map((lineup) => lineup.id)).size).toBe(3);
+    expect(ussr.activeLineup).toBe('duplicate');
+  });
 });
 
 describe('ProfileStore: 本地持久化与存取往返', () => {
