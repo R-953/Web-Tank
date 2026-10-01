@@ -16,6 +16,9 @@ import { SHELL_SHORT } from './data/shells';
 import { SURFACES } from './data/surfaces';
 import type { Loadout, VehicleSpec } from './data/types';
 import { SettingsStore, type GameSettings } from './settings/Settings';
+import { ProfileStore, advanceTime, assignVehicle, setActiveNation, type Profile, type ProfileVehicle } from './settings/Profile';
+import { progressAfter } from './game/crew/progress';
+import { activeCrewSkill } from './game/crew/skill';
 import { SoundManager, type ImpactKind, type SoundSource } from './audio/Sound';
 import { Hud, type HudState } from './ui/Hud';
 import { SightOverlay, azimuthFromYaw } from './ui/SightOverlay';
@@ -67,6 +70,38 @@ function loadLastSelection(): { vehicleId: string; mapId: string } {
     /* 忽略 */
   }
   return { vehicleId: 'tiger_i', mapId: RIVER_VALLEY.id };
+}
+
+/** 页面开着的时候多久把「最后在线时刻」记一次,ms(在线时间不算挂机成长,见设计稿 3.2) */
+const ONLINE_HEARTBEAT_MS = 30_000;
+
+/**
+ * 车组与编组存档。打开页面时补算上次关闭以来的离线成长;页面开着时定期把 lastSeen 记成当前时刻,
+ * 这样下次打开只补算关掉以后的时间。第一次用新存档时,沿用旧版「上次选的车」决定当前国家和第一个车组的车。
+ */
+function openProfileStore(vehicles: readonly ProfileVehicle[], lastVehicleId: string): ProfileStore {
+  let fresh = true;
+  try {
+    fresh = localStorage.getItem('webtank.profile.v1') === null;
+  } catch {
+    /* 无痕模式等:当作新存档 */
+  }
+  const store = new ProfileStore(vehicles);
+  let p: Profile = store.get();
+  const last = vehicles.find((v) => v.id === lastVehicleId);
+  if (fresh && last) {
+    p = setActiveNation(p, last.nation);
+    p = assignVehicle(p, last.nation, p.nations[last.nation].activeLineup, 0, last.id, vehicles);
+  }
+  store.set(advanceTime(p, Date.now(), progressAfter));
+
+  const touch = () => store.set({ ...store.get(), lastSeen: Date.now() });
+  window.setInterval(touch, ONLINE_HEARTBEAT_MS);
+  window.addEventListener('pagehide', touch);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') touch();
+  });
+  return store;
 }
 
 async function start(): Promise<void> {
@@ -159,13 +194,20 @@ async function start(): Promise<void> {
     }
   };
 
+  const lastSelection = loadLastSelection();
+  const profileVehicles: ProfileVehicle[] = Object.values(VEHICLES)
+    .filter((v) => v.nation)
+    .map((v) => ({ id: v.id, nation: v.nation!, family: v.family ?? v.id }));
+  const profiles = openProfileStore(profileVehicles, lastSelection.vehicleId);
+
   const menu = new MainMenu({
     parent: document.body,
     settings,
     settingsPanel,
     vehicles: Object.values(VEHICLES),
     maps: [RIVER_VALLEY, ...Object.values(MAPS).filter((m) => m.id !== RIVER_VALLEY.id)],
-    initial: loadLastSelection(),
+    initial: lastSelection,
+    profile: { get: () => profiles.get(), set: (p) => profiles.set(p) },
     loadLoadout: loadSavedLoadout,
     saveLoadout,
     onVehicleChange: (spec) => hangar.setVehicle(spec),
@@ -244,6 +286,7 @@ async function start(): Promise<void> {
       map: sel.map,
       vehicles: VEHICLES,
       playerVehicleId: sel.vehicle.id,
+      playerCrewSkill: activeCrewSkill(profiles.get(), profileVehicles),
       playerLoadout: sel.loadout,
       aiPreset: cfg().game.aiPreset,
       vegetation: { density: g.vegetation, grassDistance: g.grassDistance },
