@@ -184,12 +184,12 @@ export class SettingsPanel {
         { id: 'circle', name: '圆形' },
       ],
       (v) => this.update((d) => (d.game.minimapShape = v), true),
-      '战斗中也可以按 M 切换',
     );
     this.segmented(
       '小地图标记',
       s.game.minimapMarkers,
       [
+        { id: 'symbol', name: '军标' },
         { id: 'dot', name: '圆点' },
         { id: 'arrow', name: '箭头' },
       ],

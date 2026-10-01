@@ -17,8 +17,8 @@ export interface GameSettings {
     /** 击毁目标后播放右上角回放 */
     killCam: boolean;
     minimapShape: 'square' | 'circle';
-    /** 小地图上其他车辆的标记:圆点 / 箭头(尖端指向车头) */
-    minimapMarkers: 'dot' | 'arrow';
+    /** 小地图上其他车辆的标记:圆点 / 箭头(尖端指向车头)/ 军标 */
+    minimapMarkers: 'dot' | 'arrow' | 'symbol';
     /** 地图符号规范:北约 / 华约 */
     symbology: Symbology;
     /** 显示操作提示条 */
@@ -62,7 +62,7 @@ export const GRAPHICS_PRESETS: Readonly<Record<GraphicsPreset, Omit<GameSettings
 
 export function defaultSettings(): GameSettings {
   return {
-    game: { aiPreset: 'training', killCam: true, minimapShape: 'square', minimapMarkers: 'dot', symbology: 'nato', showHints: true, showFps: false },
+    game: { aiPreset: 'training', killCam: true, minimapShape: 'square', minimapMarkers: 'symbol', symbology: 'nato', showHints: true, showFps: false },
     graphics: { preset: 'medium', ...GRAPHICS_PRESETS.medium, antialias: true },
     sound: { ...DEFAULT_SOUND_SETTINGS },
     controls: { mouseSensitivity: 1, sightSensitivity: 1, scaleWithZoom: true, invertY: false, bindings: defaultBindings() },
@@ -84,18 +84,28 @@ export function sanitize(raw: unknown): GameSettings {
   const c = r.controls ?? {};
   const bindings = defaultBindings();
   const rb = (c.bindings ?? {}) as Record<string, unknown>;
+  const hasMapScreen = 'mapScreen' in rb && rb.mapScreen !== undefined;
   for (const a of ACTIONS) {
     const v = rb[a.id];
     if (Array.isArray(v)) {
       bindings[a.id] = [typeof v[0] === 'string' ? v[0] : null, typeof v[1] === 'string' ? v[1] : null];
     }
   }
+  // 老存档迁移: bindings 里没有 mapScreen, 而 minimapShape 里有 KeyM 时,
+  // 把 minimapShape 里的 KeyM 换成 null, 让 mapScreen 用默认的 M。
+  if (!hasMapScreen) {
+    const shape = bindings.minimapShape;
+    bindings.minimapShape = [
+      shape[0] === 'KeyM' ? null : shape[0],
+      shape[1] === 'KeyM' ? null : shape[1],
+    ];
+  }
   return {
     game: {
       aiPreset: pick(g.aiPreset, ['training', 'guard'] as const, d.game.aiPreset),
       killCam: bool(g.killCam, d.game.killCam),
       minimapShape: pick(g.minimapShape, ['square', 'circle'] as const, d.game.minimapShape),
-      minimapMarkers: pick(g.minimapMarkers, ['dot', 'arrow'] as const, d.game.minimapMarkers),
+      minimapMarkers: pick(g.minimapMarkers, ['dot', 'arrow', 'symbol'] as const, d.game.minimapMarkers),
       symbology: pick(g.symbology, ['nato', 'warsaw'] as const, d.game.symbology),
       showHints: bool(g.showHints, d.game.showHints),
       showFps: bool(g.showFps, d.game.showFps),

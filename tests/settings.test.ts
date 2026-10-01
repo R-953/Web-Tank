@@ -31,12 +31,14 @@ describe('设置:修正与保存', () => {
     expect(s.controls.sightSensitivity).toBe(1);
   });
 
-  it('小地图标记:缺省和旧存档(没有这个字段)是圆点;非法值回到圆点;箭头能保存再读回', () => {
-    expect(defaultSettings().game.minimapMarkers).toBe('dot');
-    expect(sanitize({ game: { minimapShape: 'circle', showFps: true } }).game.minimapMarkers).toBe('dot');
-    expect(sanitize({ game: { minimapMarkers: 'star' } }).game.minimapMarkers).toBe('dot');
-    expect(sanitize({ game: { minimapMarkers: 1 } }).game.minimapMarkers).toBe('dot');
+  it('小地图标记:缺省和旧存档(没有这个字段)是军标;非法值回到军标;圆点和箭头能保存再读回', () => {
+    expect(defaultSettings().game.minimapMarkers).toBe('symbol');
+    expect(sanitize({ game: { minimapShape: 'circle', showFps: true } }).game.minimapMarkers).toBe('symbol');
+    expect(sanitize({ game: { minimapMarkers: 'star' } }).game.minimapMarkers).toBe('symbol');
+    expect(sanitize({ game: { minimapMarkers: 1 } }).game.minimapMarkers).toBe('symbol');
+    expect(sanitize({ game: { minimapMarkers: 'dot' } }).game.minimapMarkers).toBe('dot');
     expect(sanitize({ game: { minimapMarkers: 'arrow' } }).game.minimapMarkers).toBe('arrow');
+    expect(sanitize({ game: { minimapMarkers: 'symbol' } }).game.minimapMarkers).toBe('symbol');
     const storage = new MemoryStorage();
     new SettingsStore(storage).update((d) => (d.game.minimapMarkers = 'arrow'));
     expect(new SettingsStore(storage).value.game.minimapMarkers).toBe('arrow');

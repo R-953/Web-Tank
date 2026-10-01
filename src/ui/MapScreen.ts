@@ -1,8 +1,8 @@
-import type { GameMap } from '../game/Map';
 import type { Loadout, VehicleSpec } from '../data/types';
 import type { Profile } from '../settings/Profile';
 import { crewLevel } from '../game/crew/progress';
-import { renderMapBackground, type MinimapMarker } from './Minimap';
+import { renderMapBackground, type MapLike, type MinimapMarker } from './Minimap';
+import { drawSymbol } from './symbols';
 import { AmmoPanel } from './menu/AmmoPanel';
 import { classIcon } from './menu/classIcons';
 import { h, injectMapScreenStyles } from './menu/styles';
@@ -27,6 +27,7 @@ export interface MapScreenOptions {
   onSymbologyChange(set: 'nato' | 'warsaw'): void;
   onConfirm(): void;
   onUiSound?(): void;
+  onSelectCrew?(index: number): void;
 }
 
 export interface MapScreenFrame {
@@ -49,7 +50,8 @@ export class MapScreen {
   private readonly symbologySelect: HTMLSelectElement;
   private readonly confirmBtn: HTMLButtonElement;
 
-  private map: GameMap | null = null;
+  private map: MapLike | null = null;
+  private mode: 'spawn' | 'battle' = 'spawn';
   private background: HTMLCanvasElement | null = null;
   private selectedSlotIndex = 0;
   private lastFrame: MapScreenFrame = { markers: [] };
@@ -111,6 +113,7 @@ export class MapScreen {
       const val = this.symbologySelect.value as 'nato' | 'warsaw';
       this.symbology = val;
       this.opts.onSymbologyChange(val);
+      this.draw(this.lastFrame);
     });
 
     // 右下按钮
@@ -122,12 +125,13 @@ export class MapScreen {
     });
   }
 
-  open(map: GameMap, mode: 'spawn' | 'battle'): void {
+  open(map: MapLike, mode: 'spawn' | 'battle'): void {
     if (this.map !== map) {
       this.background = null;
       this.lastBgPixels = 0;
     }
     this.map = map;
+    this.mode = mode;
     this.confirmBtn.textContent = mode === 'spawn' ? '出战' : '返回战斗';
     this.mapInfoEl.textContent = `地图: ${map.spec.name} · 尺寸: ${map.spec.size >= 1000 ? `${map.spec.size / 1000} km` : `${map.spec.size} m`} (${map.spec.size} × ${map.spec.size} m)`;
     this.symbology = this.opts.symbology;
@@ -248,6 +252,13 @@ export class MapScreen {
       const [px, py] = toPx(m.x, m.z);
       if (frame.drawMarker) {
         frame.drawMarker(ctx, m, px, py);
+      } else if (m.vehicleClass) {
+        drawSymbol(ctx, m.vehicleClass, px, py, {
+          set: this.symbology,
+          affiliation: m.team === 'enemy' ? 'hostile' : 'friend',
+          dead: m.dead,
+          size: 18,
+        });
       } else {
         const color = m.team === 'enemy' ? '#ff3b30' : '#3aa0ff';
         ctx.beginPath();
@@ -373,17 +384,20 @@ export class MapScreen {
       if (veh) {
         card.addEventListener('click', () => {
           this.opts.onUiSound?.();
-          this.selectedSlotIndex = i;
           this.ammoPanel.setVehicle(veh, this.opts.loadLoadout(veh));
-          // 更新高亮
-          const cards = this.topBar.querySelectorAll('.ms-card');
-          cards.forEach((c, idx) => {
-            if (idx === i) {
-              c.classList.add('sel', 'active');
-            } else {
-              c.classList.remove('sel', 'active');
-            }
-          });
+          if (this.mode === 'spawn') {
+            this.selectedSlotIndex = i;
+            this.opts.onSelectCrew?.(i);
+            // 更新高亮
+            const cards = this.topBar.querySelectorAll('.ms-card');
+            cards.forEach((c, idx) => {
+              if (idx === i) {
+                c.classList.add('sel', 'active');
+              } else {
+                c.classList.remove('sel', 'active');
+              }
+            });
+          }
         });
       }
     }
