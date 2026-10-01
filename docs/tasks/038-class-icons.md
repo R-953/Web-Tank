@@ -1,7 +1,7 @@
 # 038-class-icons:载具类型图标(轻型 / 中型 / 重型 / 坦克歼击车)
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:进行中
+- 状态:已完成
 - 分支:`task/038-class-icons`(从 `task/037-crew-wiring` 拉出,需在 033、034、037 之后合并)
 - 规模:S
 
@@ -46,10 +46,10 @@ export function classIcon(vehicleClass: VehicleClass, size?: number): string;
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] `tests/class-icons.test.ts`:四种类型生成的 SVG 互不相同;都含 `currentColor`、`role="img"`、正确的中文 `aria-label`;`size` 参数生效
-- [ ] jsdom 里:科技树车辆卡片、编组栏格子、机库信息面板都能找到对应类型的图标(按 `aria-label` 查)
-- [ ] 不改 `main.ts`
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] `tests/class-icons.test.ts`:四种类型生成的 SVG 互不相同;都含 `currentColor`、`role="img"`、正确的中文 `aria-label`;`size` 参数生效
+- [x] jsdom 里:科技树车辆卡片、编组栏格子、机库信息面板都能找到对应类型的图标(按 `aria-label` 查)
+- [x] 不改 `main.ts`
 
 ## 不做
 
@@ -59,5 +59,17 @@ export function classIcon(vehicleClass: VehicleClass, size?: number): string;
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 新增 `src/ui/menu/classIcons.ts`
+  - 修改 `src/ui/menu/TechTree.ts`
+  - 修改 `src/ui/menu/LineupBar.ts`
+  - 修改 `src/ui/menu/MainMenu.ts`
+  - 修改 `src/ui/menu/styles.ts`
+  - 新增 `tests/class-icons.test.ts`
+  - 新增 `changelog.d/2026-10-02-038-class-icons.md`
+  - 修改 `docs/tasks/038-class-icons.md`
 - 命令与结果:
-- 偏差 / 未完成 / 待决定:
+  - `npm run lint`: 通过 (0 errors)
+  - `npm test`: 全部通过 (45 test files, 465 tests)
+  - `npm run build`: 构建成功
+- 偏差 / 未完成 / 待决定: 无
+

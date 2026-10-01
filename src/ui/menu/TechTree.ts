@@ -14,6 +14,7 @@ import {
   type TechTreeEntry,
   type TechTreeLayout,
 } from './techTreeLayout';
+import { classIcon } from './classIcons';
 import { h, injectTechTreeStyles } from './styles';
 
 export interface TechTreeOptions {
@@ -108,7 +109,8 @@ export class TechTree {
         laneEl.dataset.class = lane.vehicleClass;
 
         // 类别名称
-        h('div', 'tt-lane-header', laneEl, CLASS_NAMES[lane.vehicleClass] ?? lane.vehicleClass);
+        const laneHeader = h('div', 'tt-lane-header', laneEl);
+        laneHeader.innerHTML = `${classIcon(lane.vehicleClass)}${CLASS_NAMES[lane.vehicleClass] ?? lane.vehicleClass}`;
 
         // 网格区域:对应全局年份刻度
         const gridEl = h('div', 'tt-lane-grid', laneEl);
@@ -173,7 +175,8 @@ export class TechTree {
       h('span', 'tt-badge-lineup', card, '已编组');
     }
 
-    h('div', 'tt-vehicle-name', card, entry.name);
+    const nameEl = h('div', 'tt-vehicle-name', card);
+    nameEl.innerHTML = `${classIcon(entry.vehicleClass)}${entry.name}`;
     h('div', 'tt-vehicle-year', card, `${entry.serviceYear} 年`);
 
     card.addEventListener('click', (e) => {
@@ -203,7 +206,9 @@ export class TechTree {
     }
 
     const header = h('div', 'tt-group-header', groupCard);
-    h('div', 'tt-group-title', header, group.title);
+    const titleEl = h('div', 'tt-group-title', header);
+    const groupClass = group.members[0]?.vehicleClass;
+    titleEl.innerHTML = `${groupClass ? classIcon(groupClass) : ''}${group.title}`;
     h('div', 'tt-group-count', header, `×${group.members.length}`);
     const arrow = h('div', 'tt-group-arrow', header, '▼');
 
@@ -223,7 +228,8 @@ export class TechTree {
         h('span', 'tt-badge-lineup', item, '已编组');
       }
 
-      h('div', 'tt-vehicle-name', item, member.name);
+      const nameEl = h('div', 'tt-vehicle-name', item);
+      nameEl.innerHTML = `${classIcon(member.vehicleClass)}${member.name}`;
       h('div', 'tt-vehicle-year', item, `${member.serviceYear} 年`);
 
       item.addEventListener('click', (e) => {

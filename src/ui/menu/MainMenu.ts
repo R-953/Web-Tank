@@ -6,6 +6,7 @@ import type { Profile, ProfileVehicle } from '../../settings/Profile';
 import { activeVehicleId, assignVehicle } from '../../settings/Profile';
 import type { SettingsPanel, SettingsTab } from './SettingsPanel';
 import { h, injectMenuStyles } from './styles';
+import { classIcon } from './classIcons';
 import { LineupBar } from './LineupBar';
 import { TechTree } from './TechTree';
 import type { TechTreeEntry } from './techTreeLayout';
@@ -285,7 +286,9 @@ export class MainMenu {
     this.slots.innerHTML = '';
     for (const v of this.opts.vehicles) {
       const card = h('div', `mm-slot${v.id === this.vehicle.id ? ' sel' : ''}`, this.slots);
-      h('div', 'name', card, v.name);
+      const nameEl = h('div', 'name', card);
+      const iconHtml = v.vehicleClass ? classIcon(v.vehicleClass) : '';
+      nameEl.innerHTML = `${iconHtml}${v.name}`;
       card.insertAdjacentHTML('beforeend', silhouette(v));
       const gun = v.weapons[0];
       const cal = gun?.ammo[0]?.caliber;
@@ -328,7 +331,8 @@ export class MainMenu {
       ['乘员', `${v.internals.crew.length} 人`],
     ];
     const table = (list: [string, string][]) => `<table>${list.map(([k, val]) => `<tr><td>${k}</td><td>${val}</td></tr>`).join('')}</table>`;
-    this.info.innerHTML = `<h2>${v.name}</h2>
+    const infoIconHtml = v.vehicleClass ? classIcon(v.vehicleClass) : '';
+    this.info.innerHTML = `<h2>${infoIconHtml}${v.name}</h2>
       <div class="sec">防护(前 / 侧 / 后)</div>${table(rows)}
       <div class="sec">火力</div>${table(gunRows)}
       <div class="sec">机动</div>${table(mob)}`;

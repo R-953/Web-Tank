@@ -377,4 +377,35 @@ export function injectLineupBarStyles(): void {
   document.head.appendChild(style);
 }
 
+/* 载具类型图标样式 */
+const CLASS_ICON_CSS = `
+.vehicle-class-icon {
+  display: inline-block;
+  vertical-align: -2px;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+.mm-slot .name .vehicle-class-icon,
+.mm-slot svg.vehicle-class-icon {
+  display: inline-block;
+  margin: 0 4px 0 0;
+  vertical-align: -2px;
+}
+.tt-lane-header .vehicle-class-icon {
+  margin-right: 6px;
+}
+`;
+
+let classIconInjected = false;
+
+export function injectClassIconStyles(): void {
+  injectMenuStyles();
+  if (classIconInjected || typeof document === 'undefined') return;
+  classIconInjected = true;
+  const style = document.createElement('style');
+  style.textContent = CLASS_ICON_CSS;
+  document.head.appendChild(style);
+}
+
+
 
