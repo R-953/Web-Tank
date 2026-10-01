@@ -69,7 +69,7 @@ export function classIcon(vehicleClass: VehicleClass, size?: number): string;
   - 修改 `docs/tasks/038-class-icons.md`
 - 命令与结果:
   - `npm run lint`: 通过 (0 errors)
-  - `npm test`: 全部通过 (45 test files, 465 tests)
+  - `npm test`: 全部通过 (45 test files, 466 tests)
   - `npm run build`: 构建成功
 - 偏差 / 未完成 / 待决定: 无
 

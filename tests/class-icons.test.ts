@@ -129,6 +129,33 @@ describe('jsdom 集成测试: 科技树、编组栏、机库信息面板', () =>
     tt.dispose();
   });
 
+  it('科技树卡片布局: 卡片有 title = 完整车名，「已编组」标记和年份在同一个父元素中', () => {
+    const longName = '虎式 Ausf. E(1944 后期型)';
+    const entries = [
+      { id: 'tiger_late', name: longName, nation: 'germany', vehicleClass: 'heavy' as const, serviceYear: 1944, family: 'tiger' },
+    ];
+
+    const tt = new TechTree(container, {
+      entries,
+      currentId: 'tiger_late',
+      inLineup: new Set(['tiger_late']),
+      onPick: vi.fn(),
+      onClose: vi.fn(),
+    });
+
+    const card = container.querySelector<HTMLElement>('.tt-vehicle-card[data-vehicle-id="tiger_late"]');
+    expect(card).not.toBeNull();
+    expect(card?.title).toBe(longName);
+
+    const yearEl = card?.querySelector('.tt-vehicle-year');
+    const badgeEl = card?.querySelector('.tt-badge-lineup');
+    expect(yearEl).not.toBeNull();
+    expect(badgeEl).not.toBeNull();
+    expect(badgeEl?.parentElement).toBe(yearEl?.parentElement);
+
+    tt.dispose();
+  });
+
   it('编组栏: 车组格子里载具名前能按 aria-label 找到对应类型的图标', () => {
     let profile = defaultProfile(profileVehicles, 1000);
     // 默认德国第一个格子是 tiger_i (heavy)
