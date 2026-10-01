@@ -6,11 +6,16 @@
 
 > 每个对话之间不共享上下文。新开的会话先读这一节,再看下面的看板和 Changelog「路线与进度」;主程每轮收尾时更新这一节。
 
-最后更新:2026-10-01(第八轮第二波)
+最后更新:2026-10-02(第九轮第一波)
 
-- **刚完成:** 第八轮第一波 028(载具国家 / 类别 / 年份 / 车族与王牌乘员数值)、029(成长曲线与技能插值)、030(车组与编组存档)、031(科技树组件)、032(Copilot:调度脚本小修)全部合并。设计稿见 [docs/design/tech-tree-and-crew.md](../design/tech-tree-and-crew.md)。
-- **进行中(第八轮第二波,并行):** 033 机库编组栏 + 接科技树(Antigravity);034 开局按车组等级改数值(Antigravity);035 小地图标记颜色补测试、036 存档编组 id 去重(Copilot)。
-- **下一步(主程,033、034 合并后):** `main.ts` 接线——用 `ProfileStore` 取代 `webtank.selection`(首次进入时按旧选择定当前国家)并传给 `MainMenu` 的 `profile`;打开页面时用 `advanceTime(p, now, progressAfter)` 补算离线成长,页面开着时每 30 秒和隐藏 / 关闭时把 `lastSeen` 记成当前时刻(在线时间不算挂机);开局传 `playerCrewSkill: activeCrewSkill(...)`。然后实机试玩、收尾第八轮。
+- **刚完成:** 第八轮:科技树、编组栏、车组成长与技能、存档全部合并并接进游戏(028–037);038 类型图标待合并(#47)。
+- **进行中(第九轮第一波,并行,都从 038 的分支拉出):** 039 北约 / 华约军标符号(调研 + 模块 + 设置项);040 机库底部按 WT 布局重排;041 悬停载具信息卡片(独立组件);042 地图界面(独立组件,含携弹面板和地形底图的抽取)。负责人 10-02 的要求和 WT 参考截图的要点都写在各卡里。
+- **下一步(第九轮第二波,等第一波合并;主程或授权卡):**
+  - 新增操作「地图界面」,默认 M;原来 M 的「小地图方形 / 圆形」改为没有默认键(设置里可绑)。
+  - 进入战斗先打开地图界面(`mode: 'spawn'`)调携弹,点「出战」才开局;战斗中按 M 打开(`mode: 'battle'`,改的携弹下次出战 / 重开生效);机库去掉右侧携弹面板。
+  - 小地图和地图界面的标记换成 039 的军标(带敌我识别框);设置和地图界面里的「北约 / 华约」同步。
+  - 041 的信息卡挂到编组栏、科技树(悬停显示,双击关闭)。
+  - 修 `vite.config.ts`:`server.watch.ignored` 只忽略项目根目录下的 `.worktrees`,不要连 worktree 自己也忽略(在 worktree 里跑 dev server 时改代码不刷新)。
 - **已定的细节:** 每个国家默认 1 个初级车组,招募上限 8 个车位;同一编组一辆车只分给一个车组;地面载具满级 150 级(经验上限、溢出、模式折算等引入空中载具时再定);第一期换到别的车族要先训练(即时、免费);在线时间(页面开着,包括停在机库)不算挂机成长,在线游玩的成长以后按战斗经验另算。029、030 已按这些返工。
 - **排队:**
   - 10 月 3 日 Copilot 权益生效后,重测 Copilot 可用的模型;OpenAI 工单解决后,把 Codex CLI 加进调度脚本。
@@ -53,10 +58,16 @@
 | [030](030-crew-lineup-profile.md) | 车组与编组的存档 | Antigravity(3.8 Flash High) | 主程 / 内容 | 已合并 |
 | [031](031-tech-tree-ui.md) | 科技树界面(独立组件) | Antigravity(3.8 Flash High) | 界面 | 已合并 |
 | [032](032-dispatch-fixes.md) | 调度脚本:改动行数统计、DEP0190 警告 | Copilot CLI(主程审查) | 杂务 | 已合并 |
-| [033](033-lineup-bar.md) | 机库底部的编组栏,接上科技树 | Antigravity(3.8 Flash High) | 界面 | 进行中 |
-| [034](034-crew-skill-in-battle.md) | 开局按车组等级改玩家载具的装填和转速 | Antigravity(3.8 Flash High,主程审查) | 主程 / 内容 | 进行中 |
-| [035](035-minimap-marker-color.md) | 小地图标记颜色抽成纯函数并补测试 | Copilot CLI(主程审查) | 测试 | 进行中 |
-| [036](036-profile-dedupe-lineup-ids.md) | 存档清洗时给重复的编组 id 去重 | Copilot CLI(主程审查) | 小任务 | 进行中 |
+| [033](033-lineup-bar.md) | 机库底部的编组栏,接上科技树 | Antigravity(3.8 Flash High) | 界面 | 已合并 |
+| [034](034-crew-skill-in-battle.md) | 开局按车组等级改玩家载具的装填和转速 | Antigravity(3.8 Flash High,主程审查) | 主程 / 内容 | 已合并 |
+| [035](035-minimap-marker-color.md) | 小地图标记颜色抽成纯函数并补测试 | Copilot CLI(主程审查) | 测试 | 已合并 |
+| [036](036-profile-dedupe-lineup-ids.md) | 存档清洗时给重复的编组 id 去重 | Copilot CLI(主程审查) | 小任务 | 已合并 |
+| [037](037-crew-wiring.md) | main.ts 接上车组与编组存档、离线成长、开局车组技能 | Claude Code | 主程 | 已合并 |
+| [038](038-class-icons.md) | 载具类型图标(039 会换成北约 / 华约军标) | Antigravity(3.8 Flash High) | 界面 | 待合并 |
+| [039](039-military-symbology.md) | 北约 / 华约军标符号(调研 + 模块 + 设置项) | Antigravity(3.8 Flash High) | 内容 / 界面 | 进行中 |
+| [040](040-hangar-bar-layout.md) | 机库底部按 War Thunder 的布局重排 | Antigravity(3.8 Flash High) | 界面 | 进行中 |
+| [041](041-vehicle-info-card.md) | 鼠标悬停的载具信息卡片 | Antigravity(3.8 Flash High) | 界面 | 进行中 |
+| [042](042-map-screen.md) | 地图界面(编组 + 携弹 + 大地图),独立组件 | Antigravity(3.8 Flash High) | 界面 | 进行中 |
 
 ### 候选车辆(负责人 2026-09-29 提出方向,型号待确认后再开卡)
 

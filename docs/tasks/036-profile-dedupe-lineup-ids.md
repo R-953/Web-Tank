@@ -1,7 +1,7 @@
 # 036-profile-dedupe-lineup-ids:存档清洗时给重复的编组 id 去重
 
 - 负责:GitHub Copilot CLI(主程审查)
-- 状态:进行中
+- 状态:已合并
 - 分支:`task/036-profile-dedupe-lineup-ids`
 - 规模:S
 

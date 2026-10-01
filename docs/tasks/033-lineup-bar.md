@@ -1,7 +1,7 @@
 # 033-lineup-bar:机库底部的编组栏,接上科技树
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待审查
+- 状态:已合并
 - 分支:`task/033-lineup-bar`
 - 规模:M
 
