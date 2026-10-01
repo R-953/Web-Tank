@@ -231,4 +231,44 @@ describe('TechTree UI Component', () => {
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     expect(onClose).not.toHaveBeenCalled();
   });
+
+  it('鼠标悬停在载具卡片上与移开时触发 onHoverVehicle', () => {
+    const onHoverVehicle = vi.fn();
+    const tree = new TechTree(container, {
+      entries: sampleEntries,
+      onPick: vi.fn(),
+      onClose: vi.fn(),
+      onHoverVehicle,
+    });
+
+    // 1. 单车卡片 (tiger_i)
+    const tigerCard = container.querySelector<HTMLElement>('.tt-vehicle-card[data-vehicle-id="tiger_i"]')!;
+    expect(tigerCard).not.toBeNull();
+
+    tigerCard.dispatchEvent(new MouseEvent('mouseenter'));
+    expect(onHoverVehicle).toHaveBeenCalledTimes(1);
+    expect(onHoverVehicle).toHaveBeenLastCalledWith('tiger_i', expect.any(Object));
+
+    tigerCard.dispatchEvent(new MouseEvent('mouseleave'));
+    expect(onHoverVehicle).toHaveBeenCalledTimes(2);
+    expect(onHoverVehicle).toHaveBeenLastCalledWith(null, null);
+
+    // 2. 展开多车组并悬停在组内载具上 (m4a3e8)
+    const groupCard = container.querySelector<HTMLElement>('.tt-group-card[data-family="m4a3"]')!;
+    const header = groupCard.querySelector<HTMLElement>('.tt-group-header')!;
+    header.click();
+
+    const e8Item = groupCard.querySelector<HTMLElement>('.tt-vehicle-item[data-vehicle-id="m4a3e8"]')!;
+    expect(e8Item).not.toBeNull();
+
+    e8Item.dispatchEvent(new MouseEvent('mouseenter'));
+    expect(onHoverVehicle).toHaveBeenCalledTimes(3);
+    expect(onHoverVehicle).toHaveBeenLastCalledWith('m4a3e8', expect.any(Object));
+
+    e8Item.dispatchEvent(new MouseEvent('mouseleave'));
+    expect(onHoverVehicle).toHaveBeenCalledTimes(4);
+    expect(onHoverVehicle).toHaveBeenLastCalledWith(null, null);
+
+    tree.dispose();
+  });
 });
