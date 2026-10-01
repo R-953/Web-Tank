@@ -580,7 +580,10 @@ export class Game {
       const localDir = hit.dir.clone().applyQuaternion(inv);
       const plates = part === 'turret' ? vehicle.spec.turretArmor : vehicle.spec.armor;
       const shellAtImpact = { ...shell, penetration: stopped ? 0 : Math.max(0, p.penetration - penLoss) };
-      armor = resolveHit(shellAtImpact, plates, localDir, localNormal, this.rng);
+      // 车体正面按命中点高度分首上 / 首下(碰撞盒以车体原点为中心,底面在 -height / 2)
+      armor = part === 'hull'
+        ? resolveHit(shellAtImpact, plates, localDir, localNormal, this.rng, entry.y, -vehicle.spec.hull.height / 2)
+        : resolveHit(shellAtImpact, plates, localDir, localNormal, this.rng);
       if (armor.penetrated) {
         penetration = simulatePenetration(damage, frames, {
           entry,
