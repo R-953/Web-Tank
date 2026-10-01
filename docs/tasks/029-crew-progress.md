@@ -1,7 +1,7 @@
 # 029-crew-progress:车组成长曲线与技能插值(纯逻辑)
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:进行中
+- 状态:已完成
 - 分支:`task/029-crew-progress`
 - 规模:S
 
@@ -53,8 +53,8 @@ export function applyCrewSkill(spec: VehicleSpec, ace: AceValues | undefined, sk
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] `tests/crew-progress.test.ts` 覆盖:
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] `tests/crew-progress.test.ts` 覆盖:
   - 负责人的规则:从 0 开始,2 周 → 50%,6 周 → 75%,14 周 → 87.5%(误差 < 1e-9)
   - 分段补算等于一次补算:`progressAfter(progressAfter(0, a), b)` ≈ `progressAfter(0, a + b)`
   - 负时间、0 时间原样返回;f0 超出范围被夹住;永远 < 1
@@ -69,5 +69,13 @@ export function applyCrewSkill(spec: VehicleSpec, ace: AceValues | undefined, sk
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 新增: `src/game/crew/progress.ts`
+  - 新增: `tests/crew-progress.test.ts`
+  - 新增: `changelog.d/2026-10-02-029-crew-progress.md`
+  - 修改: `docs/tasks/029-crew-progress.md`
 - 命令与结果:
+  - `npm run lint`: 全部通过
+  - `npm test`: 全部通过 (37 个测试文件, 375 个测试全部 pass)
+  - `npm run build`: 全部通过 (tsc 与 vite build 成功打包)
 - 偏差 / 未完成 / 待决定:
+  - 无偏差,完全按任务卡接口与规则实现。
