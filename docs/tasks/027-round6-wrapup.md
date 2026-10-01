@@ -1,7 +1,7 @@
 # 027-round6-wrapup:第六轮收尾——日志汇总、看板状态、跨会话进度
 
 - 负责:Antigravity(3.8 Flash High;Changelog.md、AGENTS.md 本归主程维护,本卡授权,主程审查)
-- 状态:进行中
+- 状态:已合并
 - 分支:`task/027-round6-wrapup`
 - 规模:M(主要是文档)
 

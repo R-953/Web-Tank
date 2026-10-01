@@ -6,12 +6,14 @@
 
 > 每个对话之间不共享上下文。新开的会话先读这一节,再看下面的看板和 Changelog「路线与进度」;主程每轮收尾时更新这一节。
 
-最后更新:2026-10-01(第六轮收尾)
+最后更新:2026-10-01(第八轮开工)
 
-- **刚完成:** 第六轮 013–026 全部合并(谢尔曼三车模型与涂装、美式分划、固定半径转向、湿式弹药架、第三人称放大、方位角与距离读数、击毁回放、机库镜头);仓库搬到 `D:\Web Tank`,旧 worktree 和已合并分支已清理,GitHub 开了「合并后自动删除分支」。
-- **进行中:** 020 车体正面分首上 / 首下(Antigravity 做,主程接 `Game.ts`)。
-- **下一步:** 科技树、编组与成员组。负责人 10-01 已答复设计稿里的待确认问题,稿子已按答复改好([docs/design/tech-tree-and-crew.md](../design/tech-tree-and-crew.md)),主程拆卡后派给 Antigravity。
-- **已出结果:** Antigravity 上 Claude Opus 4.6 的 B2 补测 7/7,外观和 3.8 Flash 相当、token 最省,结论见 [docs/research/model-bench-2026-10.md](../research/model-bench-2026-10.md)。
+- **刚完成:** 第七轮 020(车体正面分首上 / 首下)、027(第六轮收尾)合并;Opus 4.6 的 B2 补测 7/7([docs/research/model-bench-2026-10.md](../research/model-bench-2026-10.md))。负责人同意了科技树与成员组设计稿的全部细节([docs/design/tech-tree-and-crew.md](../design/tech-tree-and-crew.md))。
+- **进行中(第八轮第一波,互不依赖,并行):** 028 载具国家 / 类别 / 年份 / 车族与王牌乘员数值;029 车组成长曲线与技能插值;030 车组与编组存档;031 科技树界面(独立组件)。
+- **下一步(第八轮第二波,等第一波合并):**
+  - 机库底部车辆栏改成编组栏(显示当前国家的车组格子,空格留白;切换 / 新建 / 改名 / 删除编组;点格子选车组;从科技树分车),开卡派 Antigravity。
+  - 主程接线:`main.ts` 用 `ProfileStore` 取代 `webtank.selection`(首次进入时按旧选择定当前国家),进机库时用 029 的 `progressAfter` 做离线补算,页面隐藏 / 关闭时记 `lastSeen`;开局用 `applyCrewSkill(spec, spec.crewAce, 进度 × 熟练度)` 得到实际数值(`Game` 需要能接收改过的 `VehicleSpec`)。
+- **主程默认(负责人已同意):** 初始车组数 = 该国载具数;同一编组一辆车只分给一个车组;满级等级 100;第一期换到别的车族要先训练(即时、免费);只有离线时间算成长。
 - **排队:**
   - 10 月 3 日 Copilot 权益生效后,重测 Copilot 可用的模型;OpenAI 工单解决后,把 Codex CLI 加进调度脚本。
   - 候选车辆(见下文)型号确认后开卡。
@@ -40,14 +42,18 @@
 | [017](017-us-reticle.md) | 美式瞄准镜分划 | Antigravity | 界面 | 已合并 |
 | [018](018-fixed-radius-steering.md) | 受控差速器的固定半径转向(谢尔曼不能原地转) | Antigravity(主程审查) | 主程 / 内容 | 已合并 |
 | [019](019-wet-stowage.md) | 湿式弹药架降低殉爆和起火 | Antigravity(主程审查) | 主程 / 内容 | 已合并 |
-| [020](020-lower-front-armor.md) | 车体正面分首上 / 首下(虎王首下弱点等) | Antigravity(3.8 Flash High,主程审查) | 主程 / 内容 | 进行中 |
+| [020](020-lower-front-armor.md) | 车体正面分首上 / 首下(虎王首下弱点等) | Antigravity(3.8 Flash High,主程审查) | 主程 / 内容 | 已合并 |
 | [021](021-third-person-zoom.md) | 第三人称按 Z 放大视角 | Antigravity | 界面 | 已合并 |
 | [022](022-sight-azimuth-range.md) | 瞄准镜顶部改为方位角,距离读数移到准星右下 | Antigravity | 界面 | 已合并 |
 | [023](023-death-killcam.md) | 玩家被击毁时的回放 | Antigravity | 界面 | 已合并 |
 | [024](024-hangar-camera-walls.md) | 机库镜头拉远时穿墙 | Antigravity | 界面 | 已合并 |
 | [025](025-relocate-web-tank.md) | 仓库搬到 D:\Web Tank,清理旧 worktree,整理根目录 | Antigravity → 主程执行 | 杂务 | 已合并 |
 | [026](026-sherman-paint.md) | 谢尔曼按真实涂装改颜色、加白星标识 | Antigravity | 内容 | 已合并 |
-| [027](027-round6-wrapup.md) | 第六轮收尾——日志汇总、看板状态、跨会话进度 | Antigravity(3.8 Flash High;主程审查) | 主程 | 进行中 |
+| [027](027-round6-wrapup.md) | 第六轮收尾——日志汇总、看板状态、跨会话进度 | Antigravity(3.8 Flash High;主程审查) | 主程 | 已合并 |
+| [028](028-vehicle-meta-crew-ace.md) | 载具国家 / 类别 / 年份 / 车族,王牌乘员数值 | Antigravity(3.8 Flash High) | 内容 | 进行中 |
+| [029](029-crew-progress.md) | 车组成长曲线与技能插值(纯逻辑) | Antigravity(3.8 Flash High) | 主程 / 内容 | 进行中 |
+| [030](030-crew-lineup-profile.md) | 车组与编组的存档 | Antigravity(3.8 Flash High) | 主程 / 内容 | 进行中 |
+| [031](031-tech-tree-ui.md) | 科技树界面(独立组件) | Antigravity(3.8 Flash High) | 界面 | 进行中 |
 
 ### 候选车辆(负责人 2026-09-29 提出方向,型号待确认后再开卡)
 

@@ -1,0 +1,13 @@
+{
+  "name": "round8",
+  "base": "origin/docs/round8-cards",
+  "permissions": "scoped",
+  "timeoutMin": 60,
+  "maxPerAgent": 4,
+  "jobs": [
+    { "id": "028", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/028-vehicle-meta-crew-ace.md", "branch": "task/028-vehicle-meta-crew-ace", "commit": "data: 载具国家 / 类别 / 年份 / 车族,王牌乘员数值" },
+    { "id": "029", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/029-crew-progress.md", "branch": "task/029-crew-progress", "commit": "feat: 车组成长曲线与技能插值" },
+    { "id": "030", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/030-crew-lineup-profile.md", "branch": "task/030-crew-lineup-profile", "commit": "feat: 车组与编组的存档" },
+    { "id": "031", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/031-tech-tree-ui.md", "branch": "task/031-tech-tree-ui", "commit": "ui: 科技树界面(独立组件)" }
+  ]
+}

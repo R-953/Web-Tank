@@ -1,7 +1,7 @@
 # 020-lower-front-armor:车体正面分上下两块(首上 / 首下)
 
 - 负责:Antigravity(3.8 Flash High;接口和伤害判定原定主程做,2026-10-01 改为整卡派出,主程审查)
-- 状态:进行中
+- 状态:已合并
 - 分支:`task/020-lower-front-armor`
 - 规模:M
 
