@@ -345,13 +345,13 @@ async function main() {
   const base = spec.base ?? 'origin/main';
   const perm = spec.permissions ?? 'scoped';
   const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '');
-  const outDir = join(REPO, '..', 'agent-runs', `${spec.name ?? 'run'}-${cmd}-${stamp}`);
+  const outDir = join(REPO, 'Archive', 'agent-runs', `${spec.name ?? 'run'}-${cmd}-${stamp}`);
   mkdirSync(outDir, { recursive: true });
   if (cmd === 'run' && !dry) git(REPO, 'fetch', '--quiet', 'origin');
 
   const jobs = spec.jobs
     .filter((j) => !only || only.includes(j.id))
-    .map((j) => ({ ...j, branch: j.branch ?? `agent/${j.id}`, wt: resolve(REPO, '..', j.worktree ?? `Main-${j.id}`) }));
+    .map((j) => ({ ...j, branch: j.branch ?? `agent/${j.id}`, wt: resolve(REPO, '.worktrees', j.worktree ?? j.id) }));
   for (const j of jobs) {
     if (!AGENTS[j.agent]) throw new Error(`${j.id}:未知 agent「${j.agent}」(可选 ${Object.keys(AGENTS).join(' / ')})`);
     if (cmd === 'run' && !AGENTS[j.agent].check()) throw new Error(`${j.id}:找不到 ${j.agent} 的命令行`);

@@ -90,6 +90,8 @@ npm run build    # 生产构建,输出到 dist/
   /research    数据调研(带出处)与工具评估
   /perf        性能测量记录
 /changelog.d   每个任务一条开发日志,每轮汇总进 Changelog.md
+/.worktrees    并行任务的 worktree(不进 git)
+/Archive       本机归档(不进 git)
 Readme.md      本文件:项目说明与约定
 AGENTS.md      所有 Coding Agent 的干活守则
 Changelog.md   开发日志:每轮的改动、决策与待确认事项

@@ -26,12 +26,12 @@
 - 数值要有公开出处,写进代码注释或 `docs/physics-validation.md`。公开资料查不到或查不准时,直接用 [War Thunder 官方 wiki](https://wiki.warthunder.com/) 的设定,并注明「War Thunder 值」。两者都没有时,已有的值保持不变,不要自己编;新数据才允许估算,标明「估算」并写出估算方法(与 Readme「编码与测试规范」一致)。
 - 代码注释和界面文字用简体中文,风格与现有代码一致。TypeScript 严格模式,不要用 `any` 绕过类型检查。
 - 新功能要带测试。纯逻辑写单元测试,不依赖 DOM 和渲染。不删除、不放宽已有测试,除非任务卡要求。
-- 不提交生成物:`dist/`、`node_modules/`、`Claude outputs/`。
+- 不提交生成物:`dist/`、`node_modules/`、`Archive/`、`.worktrees/`。
 
 ## 分支与提交
 
 - 一个任务一个分支,命名 `task/<编号>-<英文短名>`,从最新的 `main` 拉出。
-- 多个 agent 同时工作时,各用各的 git worktree。例如:`git worktree add ../Main-gemini -b task/012-minimap-icons origin/main`
+- 多个 agent 同时工作时,各用各的 git worktree。例如:`git worktree add .worktrees/<编号> -b task/<编号>-<英文短名> origin/main`
 - 不直接推 `main`,不 force push。通过 Pull Request 合并,CI(lint / test / build)必须是绿的。
 - 提交信息格式:`<类型>: <中文说明>`,类型用 feat / fix / data / model / ui / test / docs / refactor。
 
