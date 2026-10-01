@@ -479,3 +479,20 @@
 - [Cartridge, 75mm APC-T, M61, M61A1 — bulletpicker.com](https://www.bulletpicker.com/cartridge_-75mm-apc-t_-m61.html)(引 TM 9-1904、TM 9-1300-203)
 - [M4A3E2 — War Thunder 官方 wiki](https://wiki.warthunder.com/unit/us_m4a3e2_sherman_jumbo):装填 6.5 s、高低机 2.8°/s、倍率 4.3–5×、M61 装药与引信、同轴机枪 3,000 发
 - 其余(S2–S6、G1)见 `docs/research/m4a3-76w.md` 第 1 节
+- Steven Zaloga《Armored Thunderbolt: The U.S. Army Sherman in World War II》(Stackpole Books, 2008), p.118:1945 年美军对干式与湿式谢尔曼被击穿后起火率的统计调查
+
+### 11.5 湿式弹药架(wetFactor 系数与出处)
+
+- **背景**:早期谢尔曼采用干式弹药架(放在车体侧裙上方赞森区域),被击穿后极易引燃发射药发生猛烈起火和殉爆。1944 年起生产的型号引入「湿式弹药架」(Wet Stowage,型号后缀「W」),将主要弹药转移到战斗室地板下,弹药箱四周布置充满水和防冻液(水/乙二醇混合物)的水套,炮塔内的 6 发待发弹架同样带有水套(003 第 9.2 节)。
+- **史料统计与出处**:
+  - Wikipedia「M4 Sherman」(Armor / Ammunition stowage 一节)引 1945 年美军战损统计调查(Steven Zaloga《Armored Thunderbolt: The U.S. Army Sherman in World War II》2008, p.118):
+    - 干式弹药架谢尔曼被击穿后起火率为 **60–80%**(中位数 70%);
+    - 湿式弹药架谢尔曼被击穿后起火率降至 **10–15%**(中位数 12.5%)。
+- **折减系数定值**:
+  - 湿式与干式起火/殉爆概率比值:取中位数 12.5% / 70% ≈ 0.1786,定为 `DAMAGE.ammo.wetFactor = 0.18`。
+- **伤害模型实现**:
+  - `ModuleSpec` 增加可选字段 `wet?: boolean`。
+  - 弹药架被打坏时,殉爆判定概率 `p = DAMAGE.ammo.detonationChance * fill * (m.spec.wet ? DAMAGE.ammo.wetFactor : 1)`。
+  - 车辆起火且灼烧达到 `cookOffDelay` 后,弹药架每秒殉爆判定概率 `p = f.cookOffChance * fill * dt * (m.spec.wet ? DAMAGE.ammo.wetFactor : 1)`。
+  - 三辆谢尔曼(M4A3(76)W、M4A3E8、M4A3E2)的弹药架均设为 `wet: true`。
+
