@@ -95,6 +95,8 @@ export interface HullSpec {
   height: number;
   /** 车体转向速度,度/秒 */
   turnRate: number;
+  /** 固定转向半径,m(受控差速器等):设了以后角速度 ≤ |车速| / turnRadius,静止时不能原地转;不设 = 能原地转 */
+  turnRadius?: number;
   /**
    * 起步最大牵引加速度,m/s²(受履带附着力 / 低挡扭矩限制)。高速段由发动机功率限制,
    * 功率由 maxSpeed 和滚动阻力反推(见 Vehicle.longitudinalSpeed);爬坡能力 ≈ asin((acceleration − 0.05g) / g)。
