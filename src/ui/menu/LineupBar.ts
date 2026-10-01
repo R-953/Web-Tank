@@ -37,9 +37,9 @@ export interface LineupBarOptions {
 }
 
 /** 载具侧视剪影(按车体 / 炮塔尺寸画的示意图, 与 MainMenu 保持一致) */
-export function silhouette(v: VehicleSpec): string {
-  const W = 150;
-  const H = 34;
+export function silhouette(v: VehicleSpec, width = 150): string {
+  const W = width;
+  const H = Math.round((W * 34) / 150);
   const len = v.hull.length + Math.max(0, v.turret.barrelLength - v.hull.length / 2 + v.turret.length / 2);
   const k = Math.min((W - 6) / len, (H - 4) / (v.hull.height + v.turret.height));
   const x0 = 3 + Math.max(0, v.turret.barrelLength - v.hull.length / 2 + v.turret.length / 2) * k;
@@ -216,16 +216,8 @@ export class LineupBar {
       if (vehId !== null) {
         const veh = this.opts.vehicles.find((v) => v.id === vehId);
 
-        // 卡片主体: 左边载具剪影, 右上载具名, 右下类型符号 + Lv N
-        const body = h('div', 'mm-lineup-slot-body', slot);
-
-        const silWrap = h('div', 'mm-lineup-slot-sil', body);
-        if (veh) {
-          silWrap.innerHTML = silhouette(veh);
-        }
-
-        const infoCol = h('div', 'mm-lineup-slot-info', body);
-        const topRow = h('div', 'mm-lineup-slot-top', infoCol);
+        // 顶部: 车名一行占满卡片宽度, 右上角小 ▾ 按钮
+        const topRow = h('div', 'mm-lineup-slot-top', slot);
         const nameEl = h('div', 'mm-lineup-slot-name', topRow, veh?.name ?? vehId);
         nameEl.title = veh?.name ?? vehId;
 
@@ -233,7 +225,14 @@ export class LineupBar {
         const menuBtn = h('button', 'mm-lineup-slot-menu-btn', topRow, '▾');
         menuBtn.title = '菜单';
 
-        const metaRow = h('div', 'mm-lineup-slot-meta', infoCol);
+        // 中间: 剪影在左(约 100px), 类型符号 + Lv 在右下
+        const midRow = h('div', 'mm-lineup-slot-mid', slot);
+        const silWrap = h('div', 'mm-lineup-slot-sil', midRow);
+        if (veh) {
+          silWrap.innerHTML = silhouette(veh, 100);
+        }
+
+        const metaRow = h('div', 'mm-lineup-slot-meta', midRow);
         const iconHtml = veh?.vehicleClass ? classIcon(veh.vehicleClass) : '';
         metaRow.innerHTML = `${iconHtml}<span class="mm-lineup-slot-level">Lv ${lvl}</span>`;
 
@@ -282,9 +281,11 @@ export class LineupBar {
         });
       } else {
         // 空车组是空白卡片, 中间一个淡色「+」
-        const body = h('div', 'mm-lineup-slot-body empty', slot);
-        h('div', 'mm-lineup-slot-add-btn mm-lineup-slot-plus', body, '+');
-        h('div', 'mm-lineup-slot-empty-hint', body, '未分车');
+        const topRow = h('div', 'mm-lineup-slot-top', slot);
+        h('div', 'mm-lineup-slot-name mm-dim', topRow, '未分车');
+
+        const midRow = h('div', 'mm-lineup-slot-mid empty', slot);
+        h('div', 'mm-lineup-slot-add-btn mm-lineup-slot-plus', midRow, '+');
 
         // 底栏: 左边「👤 N」, 右边留空
         const footer = h('div', 'mm-lineup-slot-footer', slot);

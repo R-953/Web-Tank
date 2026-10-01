@@ -38,13 +38,13 @@ const CSS = `
 .mm-title { font-size: 20px; font-weight: 700; letter-spacing: 1px; opacity: .9; padding-top: 4px; }
 
 /* 左侧车辆信息 / 右侧携弹 */
-.mm-info { position: absolute; left: 14px; top: 80px; width: 250px; padding: 10px 12px; max-height: calc(100vh - 250px); overflow: auto; }
+.mm-info { position: absolute; left: 14px; top: 80px; width: 250px; padding: 10px 12px; max-height: calc(100vh - 270px); overflow: auto; }
 .mm-info h2, .mm-ammo h2 { margin: 0 0 6px; font-size: 15px; }
 .mm-info table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .mm-info td { padding: 2px 0; vertical-align: top; }
 .mm-info td:first-child { opacity: .7; padding-right: 8px; white-space: nowrap; }
 .mm-info .sec { margin-top: 8px; font-size: 12px; color: #e0b44c; }
-.mm-ammo { position: absolute; right: 14px; top: 80px; width: 290px; padding: 10px 12px; max-height: calc(100vh - 250px); overflow: auto; }
+.mm-ammo { position: absolute; right: 14px; top: 80px; width: 290px; padding: 10px 12px; max-height: calc(100vh - 270px); overflow: auto; }
 .mm-ammo table { width: 100%; border-collapse: collapse; }
 .mm-ammo td { padding: 3px 2px; }
 .mm-ammo td.n { width: 34px; text-align: center; font-variant-numeric: tabular-nums; }
@@ -205,17 +205,16 @@ export function injectTechTreeStyles(): void {
 const LINEUP_BAR_CSS = `
 .mm-lineup-bar {
   position: absolute;
-  left: 50%;
-  bottom: 24px;
-  transform: translateX(-50%);
+  left: 12px;
+  right: 12px;
+  bottom: 8px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 8px 10px;
-  min-width: 480px;
-  max-width: min(1200px, 96vw);
+  gap: 4px;
+  padding: 6px 10px 8px;
   box-sizing: border-box;
   z-index: 10;
+  align-items: flex-start;
 }
 .mm-lineup-top-bar {
   display: flex;
@@ -286,15 +285,17 @@ const LINEUP_BAR_CSS = `
   display: flex;
   gap: 6px;
   overflow-x: auto;
-  max-width: 100%;
+  width: 100%;
   padding-bottom: 2px;
   align-items: stretch;
+  justify-content: flex-start;
+  box-sizing: border-box;
 }
 .mm-lineup-slot {
-  flex: 1 1 125px;
-  min-width: 105px;
-  max-width: 155px;
-  min-height: 82px;
+  flex: 0 0 170px;
+  width: 170px;
+  min-width: 170px;
+  min-height: 72px;
   background: rgba(30, 36, 42, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 4px;
@@ -318,47 +319,14 @@ const LINEUP_BAR_CSS = `
   border-color: rgba(255, 255, 255, 0.2);
   background: rgba(20, 24, 28, 0.6);
 }
-.mm-lineup-slot-body {
-  flex: 1;
-  display: flex;
-  padding: 4px 6px;
-  gap: 4px;
-  align-items: center;
-  position: relative;
-}
-.mm-lineup-slot-body.empty {
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 2px;
-}
-.mm-lineup-slot-sil {
-  flex: 1 1 50%;
-  max-width: 58%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.mm-lineup-slot-sil svg {
-  width: 100%;
-  height: auto;
-  max-height: 32px;
-  display: block;
-}
-.mm-lineup-slot-info {
-  flex: 1 1 50%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 100%;
-  min-width: 0;
-}
 .mm-lineup-slot-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 2px;
+  padding: 4px 6px 0;
+  gap: 4px;
   width: 100%;
+  box-sizing: border-box;
 }
 .mm-lineup-slot-name {
   font-weight: 700;
@@ -377,9 +345,37 @@ const LINEUP_BAR_CSS = `
   cursor: pointer;
   padding: 0 2px;
   line-height: 1;
+  flex-shrink: 0;
 }
 .mm-lineup-slot-menu-btn:hover {
   color: #f3d27f;
+}
+.mm-lineup-slot-mid {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 2px 6px 3px;
+  flex: 1;
+  gap: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.mm-lineup-slot-mid.empty {
+  justify-content: center;
+  align-items: center;
+}
+.mm-lineup-slot-sil {
+  width: 100px;
+  max-width: 100px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  flex-shrink: 0;
+}
+.mm-lineup-slot-sil svg {
+  width: 100px;
+  height: 23px;
+  display: block;
 }
 .mm-lineup-slot-meta {
   font-size: 11px;
@@ -388,6 +384,7 @@ const LINEUP_BAR_CSS = `
   justify-content: flex-end;
   gap: 2px;
   white-space: nowrap;
+  margin-bottom: 1px;
 }
 .mm-lineup-slot-level {
   color: #e0b44c;
@@ -407,6 +404,8 @@ const LINEUP_BAR_CSS = `
   padding: 0 6px;
   font-size: 10px;
   color: rgba(230, 232, 234, 0.75);
+  width: 100%;
+  box-sizing: border-box;
 }
 .mm-lineup-slot-crew-num {
   font-variant-numeric: tabular-nums;
@@ -417,15 +416,11 @@ const LINEUP_BAR_CSS = `
   color: rgba(224, 180, 76, 0.6);
   line-height: 1;
 }
-.mm-lineup-slot-empty-hint {
-  font-size: 10px;
-  opacity: 0.5;
-}
 .mm-lineup-recruit-card {
-  flex: 0 1 115px;
-  min-width: 95px;
-  max-width: 135px;
-  min-height: 82px;
+  flex: 0 0 120px;
+  width: 120px;
+  min-width: 120px;
+  min-height: 72px;
   background: rgba(26, 32, 38, 0.75);
   border: 1px dashed rgba(255, 255, 255, 0.2);
   border-radius: 4px;
@@ -466,6 +461,7 @@ const LINEUP_BAR_CSS = `
   gap: 6px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding-top: 4px;
+  width: 100%;
 }
 .mm-lineup-gear-wrap {
   position: relative;
@@ -540,6 +536,7 @@ const LINEUP_BAR_CSS = `
   padding: 2px 8px;
   font-size: 12px;
 }
+
 
 `;
 

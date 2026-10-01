@@ -33,10 +33,11 @@ describe('flags SVG generator', () => {
     expect(ussrSvg).toContain('#cc1111');
     expect(ussrSvg).toContain('#ffcc00');
 
-    // 德国使用国防军铁十字 (Balkenkreuz), 白底黑十字, 不含任何纳粹标志
+    // 德国使用国防军铁十字 (Balkenkreuz), 中灰底, 白十字上叠黑十字, 不含任何纳粹标志
     const gerSvg = nationFlag('germany');
     expect(gerSvg).toContain('<svg');
-    expect(gerSvg).toContain('#e8eaed');
+    expect(gerSvg).toContain('#6b6f6a');
+    expect(gerSvg).toContain('#ffffff');
     expect(gerSvg).toContain('#1b1d20');
 
     expect(nationFlag('japan')).toBe('');

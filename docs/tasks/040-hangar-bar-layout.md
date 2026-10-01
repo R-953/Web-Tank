@@ -66,19 +66,18 @@ export function nationFlag(nation: string, width?: number): string; // 内联 SV
 - 悬停信息卡本身(041)、携弹面板挪位(042)、军标符号(039)
 - WT 截图里卡片上方的备用车数、银狮价格、战斗权重(本游戏没有这些机制)
 
-## 结果(完成后由执行者填写)
-
-- 改动文件:
-  - 新增: `src/ui/menu/flags.ts`
-  - 修改: `src/ui/menu/LineupBar.ts`
-  - 修改: `src/ui/menu/MainMenu.ts`
-  - 修改: `src/ui/menu/styles.ts`
-  - 修改: `tests/lineup-bar.test.ts`
-  - 新增: `changelog.d/2026-10-02-040-hangar-bar-layout.md`
-  - 修改: `docs/tasks/040-hangar-bar-layout.md`
-- 命令与结果:
-  - `npm run lint`: 通过 (0 错误)
-  - `npm test`: 全部通过 (45 test files, 469 tests)
-  - `npm run build`: 全部通过 (dist 构建成功)
-- 偏差 / 未完成 / 待决定:
-  - 无。严格按任务卡与接口定义完成全部功能和测试用例, 未修改 main.ts 或 package.json。
+- 结果(完成后由执行者填写):
+  - 改动文件:
+    - 新增: `src/ui/menu/flags.ts`
+    - 修改: `src/ui/menu/LineupBar.ts`
+    - 修改: `src/ui/menu/MainMenu.ts`
+    - 修改: `src/ui/menu/styles.ts`
+    - 修改: `tests/lineup-bar.test.ts`
+    - 新增: `changelog.d/2026-10-02-040-hangar-bar-layout.md`
+    - 修改: `docs/tasks/040-hangar-bar-layout.md`
+  - 命令与结果:
+    - `npm run lint`: 通过 (0 错误)
+    - `npm test`: 全部通过 (45 test files, 469 tests)
+    - `npm run build`: 全部通过 (dist 构建成功)
+  - 偏差 / 未完成 / 待决定:
+    - 无。主程审查后返工:国旗、卡片排版、停靠方式。严格按要求完成, 未修改 main.ts 或 package.json。
