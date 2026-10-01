@@ -1,7 +1,7 @@
 # 041-vehicle-info-card:鼠标悬停的载具信息卡片
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:进行中
+- 状态:待审查
 - 分支:`task/041-vehicle-info-card`
 - 规模:M
 
@@ -51,11 +51,11 @@ export class VehicleCard {
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] `tests/vehicle-card.test.ts`:
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] `tests/vehicle-card.test.ts`:
   - `vehicleCardData`:谢尔曼 M4A3E8 在 skill 0 / 1 时装填分别是 7.6 / 5.9 s,并带「满级 5.9 s」;有首下的车多一行首下;固定半径转向的车显示半径;没有 `crewAce` 的情况不报错
   - jsdom:`show` 后可见、内容含载具名;双击后隐藏;`hideSoon` 期间鼠标进入卡片则不隐藏
-- [ ] 文字用简体中文,单位和现有界面一致
+- [x] 文字用简体中文,单位和现有界面一致
 
 ## 不做
 
@@ -65,5 +65,15 @@ export class VehicleCard {
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 新增: `src/ui/menu/VehicleCard.ts`
+  - 新增: `tests/vehicle-card.test.ts`
+  - 新增: `changelog.d/2026-10-02-041-vehicle-info-card.md`
+  - 修改: `src/ui/menu/styles.ts`
+  - 修改: `docs/tasks/041-vehicle-info-card.md`
 - 命令与结果:
+  - `npm run lint`: 通过 (tsc --noEmit 无错误)
+  - `npm test`: 通过 (46 个测试套件, 479 个测试全部通过)
+  - `npm run build`: 通过 (tsc 与 vite 生产构建打包成功)
 - 偏差 / 未完成 / 待决定:
+  - 无偏差, 全部要求均已按规范完成; 组件为独立实现, 挂载由主程后续接线。
+
