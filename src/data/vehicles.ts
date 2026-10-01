@@ -20,8 +20,16 @@ function pair(id: string, type: ModuleSpec['type'], part: ModuleSpec['part'], ce
 }
 
 /** 弹药架 */
-function rack(id: string, part: ModuleSpec['part'], center: [number, number, number], size: [number, number, number], capacity: number, drawOrder: number): ModuleSpec {
-  return { id, type: 'ammo', part, center, size, capacity, drawOrder };
+function rack(
+  id: string,
+  part: ModuleSpec['part'],
+  center: [number, number, number],
+  size: [number, number, number],
+  capacity: number,
+  drawOrder: number,
+  wet?: boolean,
+): ModuleSpec {
+  return { id, type: 'ammo', part, center, size, capacity, drawOrder, ...(wet ? { wet: true } : {}) };
 }
 
 const crew = (role: CrewSpec['role'], part: CrewSpec['part'], x: number, y: number, z: number): CrewSpec => ({
@@ -442,9 +450,10 @@ function shermanInternals(o: {
       { id: 'engine', type: 'engine', part: 'hull', center: [0, 0.05, 2.0], size: [1.2, 1.0, 1.5] },
       { id: 'transmission', type: 'transmission', part: 'hull', center: [0, -0.2, -2.7], size: [1.6, 0.6, 0.7] },
       ...pair('fuel', 'fuel', 'hull', [1.0, 0.4, 1.8], [0.35, 0.6, 1.4]),
+      // 炮塔里的待发弹架没有水套(湿式改进只针对车体底板的弹药箱),按干式算——估算,待核实
       rack('ammo_ready', 'turret', [-0.6, 0.0, 0.5], [0.4, 0.4, 0.5], o.ready, 1),
-      rack('ammo_floor_l', 'hull', [-0.45, -0.2, -0.6], [0.6, 0.5, o.floorLength[0]], o.floor[0], 2),
-      rack('ammo_floor_r', 'hull', [0.45, -0.2, -0.6], [0.6, 0.5, o.floorLength[1]], o.floor[1], 3),
+      rack('ammo_floor_l', 'hull', [-0.45, -0.2, -0.6], [0.6, 0.5, o.floorLength[0]], o.floor[0], 2, true),
+      rack('ammo_floor_r', 'hull', [0.45, -0.2, -0.6], [0.6, 0.5, o.floorLength[1]], o.floor[1], 3, true),
       // 履带盒底边贴地(车体盒高 1.93 → 地面 y = −0.965),从前主动轮到后诱导轮约 5.6 m
       ...pair('track', 'track', 'hull', [o.track.x, -0.59, 0], [o.track.width, 0.75, 5.6]),
       { id: 'traverse', type: 'traverse', part: 'turret', center: [0.3, -0.2, -0.2], size: [0.3, 0.3, 0.3] },

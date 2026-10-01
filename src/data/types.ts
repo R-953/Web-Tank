@@ -171,6 +171,8 @@ export interface ModuleSpec {
    * 所以把最危险的弹药架排在前面,少带弹就能把它清空。
    */
   drawOrder?: number;
+  /** 湿式弹药架(带水套):殉爆、着火殉爆概率乘 DAMAGE.ammo.wetFactor */
+  wet?: boolean;
 }
 
 export interface CrewSpec {
