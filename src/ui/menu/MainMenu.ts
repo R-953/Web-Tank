@@ -9,7 +9,8 @@ import { classIcon } from './classIcons';
 import { LineupBar } from './LineupBar';
 import { TechTree } from './TechTree';
 import type { TechTreeEntry } from './techTreeLayout';
-import { AmmoPanel } from './AmmoPanel';
+import { VehicleCard } from './VehicleCard';
+import { crewSkillFor } from '../../game/crew/skill';
 
 function toProfileVehicles(vehicles: readonly VehicleSpec[]): ProfileVehicle[] {
   return vehicles.map((v) => ({
@@ -58,7 +59,7 @@ export class MainMenu {
   private readonly dropdown: HTMLDivElement;
   private readonly about: HTMLDivElement;
   private readonly info: HTMLDivElement;
-  private readonly ammoPanel: AmmoPanel;
+  readonly vehicleCard: VehicleCard;
   private readonly slots?: HTMLDivElement;
   private readonly lineupBar?: LineupBar;
   private techTree: TechTree | null = null;
@@ -136,15 +137,9 @@ export class MainMenu {
     });
     h('div', 'mm-title', top, 'Web Tank');
 
-    // --- 左:载具信息;右:携弹;底:载具栏 / 编组栏
+    // --- 左:载具信息;底:载具栏 / 编组栏;信息卡
     this.info = h('div', 'mm-panel mm-info', this.root);
-    this.ammoPanel = new AmmoPanel(this.root, {
-      onChange: (spec, loadout) => {
-        this.loadout = loadout;
-        this.opts.saveLoadout(spec, loadout);
-      },
-      onUiSound: opts.onUiSound,
-    });
+    this.vehicleCard = new VehicleCard(this.root);
     if (opts.profile) {
       this.lineupBar = new LineupBar(this.root, {
         vehicles: opts.vehicles,
@@ -161,6 +156,34 @@ export class MainMenu {
         },
         onOpenTechTree: (nation) => {
           this.openTechTree(nation);
+        },
+        onHoverVehicle: (vehicleId, rect) => {
+          if (vehicleId && rect) {
+            const spec = opts.vehicles.find((v) => v.id === vehicleId);
+            if (spec) {
+              const p = opts.profile!.get();
+              const nation = p.activeNation;
+              const currentLineupId = p.nations[nation]?.activeLineup;
+              const lineup = p.nations[nation]?.lineups.find((l) => l.id === currentLineupId);
+              const crewIndex = lineup?.slots.findIndex((s) => s === vehicleId) ?? -1;
+              const skill = crewSkillFor(p, toProfileVehicles(opts.vehicles), nation, crewIndex, vehicleId);
+              this.vehicleCard.show(spec, skill, rect);
+            }
+          } else {
+            this.vehicleCard.hideSoon();
+          }
+        },
+        onShowInfo: (vehicleId, rect) => {
+          const spec = opts.vehicles.find((v) => v.id === vehicleId);
+          if (spec) {
+            const p = opts.profile!.get();
+            const nation = p.activeNation;
+            const currentLineupId = p.nations[nation]?.activeLineup;
+            const lineup = p.nations[nation]?.lineups.find((l) => l.id === currentLineupId);
+            const crewIndex = lineup?.slots.findIndex((s) => s === vehicleId) ?? -1;
+            const skill = crewSkillFor(p, toProfileVehicles(opts.vehicles), nation, crewIndex, vehicleId);
+            this.vehicleCard.show(spec, skill, rect);
+          }
         },
         onUiSound: opts.onUiSound,
       });
@@ -180,22 +203,16 @@ export class MainMenu {
     closeAbout.addEventListener('click', () => this.about.classList.remove('open'));
 
     this.renderInfo();
-    this.ammoPanel.setVehicle(this.vehicle, this.loadout);
   }
 
   get visible(): boolean {
     return !this.root.classList.contains('hidden');
   }
 
-  get ammo(): HTMLElement {
-    return this.ammoPanel.root;
-  }
-
   show(): void {
     this.root.classList.remove('hidden');
     // 回到机库时刷新携弹(可能在别处改过)
     this.loadout = clampLoadout(this.vehicle, this.opts.loadLoadout(this.vehicle));
-    this.ammoPanel.setVehicle(this.vehicle, this.loadout);
     this.lineupBar?.refresh();
   }
 
@@ -203,6 +220,7 @@ export class MainMenu {
     this.root.classList.add('hidden');
     this.dropdown.classList.remove('open');
     this.about.classList.remove('open');
+    this.vehicleCard.hide();
     if (this.techTree) {
       this.techTree.dispose();
       this.techTree = null;
@@ -227,12 +245,12 @@ export class MainMenu {
       this.renderSlots();
     }
     this.renderInfo();
-    this.ammoPanel.setVehicle(spec, this.loadout);
     this.opts.onVehicleChange(spec);
   }
 
   private openTechTree(nation: string, crewIndex?: number): void {
     if (!this.opts.profile) return;
+    this.vehicleCard.hide();
     if (this.techTree) {
       this.techTree.dispose();
       this.techTree = null;
@@ -263,7 +281,23 @@ export class MainMenu {
       entries,
       currentId: this.vehicle.id,
       inLineup,
+      onHoverVehicle: (vehicleId, rect) => {
+        if (vehicleId && rect) {
+          const spec = this.opts.vehicles.find((v) => v.id === vehicleId);
+          if (spec && this.opts.profile) {
+            const curP = this.opts.profile.get();
+            const curNationProfile = curP.nations[nation];
+            const curLineup = curNationProfile?.lineups.find((l) => l.id === curNationProfile.activeLineup);
+            const selectedCrewIndex = curLineup?.selected ?? 0;
+            const skill = crewSkillFor(curP, toProfileVehicles(this.opts.vehicles), nation, selectedCrewIndex, vehicleId);
+            this.vehicleCard.show(spec, skill, rect);
+          }
+        } else {
+          this.vehicleCard.hideSoon();
+        }
+      },
       onPick: (vehicleId) => {
+        this.vehicleCard.hide();
         if (!this.opts.profile) return;
         try {
           const curP = this.opts.profile.get();
@@ -290,6 +324,7 @@ export class MainMenu {
         this.lineupBar?.refresh();
       },
       onClose: () => {
+        this.vehicleCard.hide();
         this.techTree?.dispose();
         this.techTree = null;
       },
@@ -353,7 +388,15 @@ export class MainMenu {
       <div class="sec">机动</div>${table(mob)}`;
   }
 
-
+  dispose(): void {
+    if (this.techTree) {
+      this.techTree.dispose();
+      this.techTree = null;
+    }
+    this.lineupBar?.dispose();
+    this.vehicleCard.dispose();
+    this.root.remove();
+  }
 }
 
 /** 载具侧视剪影(按车体 / 炮塔尺寸画的示意图) */

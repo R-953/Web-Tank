@@ -571,4 +571,128 @@ describe('MainMenu 与 LineupBar / TechTree 集成', () => {
     expect(menuContainer.querySelector('.tt-root')).toBeNull();
     expect(menu.visible).toBe(false);
   });
+
+  it('机库里没有携弹面板; 编组栏卡片 mouseenter 后信息卡可见、dblclick 后隐藏', () => {
+    const menu = new MainMenu({
+      parent: menuContainer,
+      settings: dummySettings,
+      settingsPanel: dummySettingsPanel,
+      vehicles: vehicleList,
+      maps: dummyMaps,
+      initial: { vehicleId: 'tiger_i', mapId: 'poland' },
+      loadLoadout: () => ({ pzgr39: 20 }),
+      saveLoadout: vi.fn(),
+      onVehicleChange: vi.fn(),
+      onStart: vi.fn(),
+      profile: {
+        get: () => currentProfile,
+        set: (p) => {
+          currentProfile = p;
+        },
+      },
+    });
+
+    // 1. 机库里没有携弹面板
+    expect(menuContainer.querySelector('.mm-ammo')).toBeNull();
+
+    // 2. 信息卡初始存在但处于隐藏状态
+    const cardEl = menuContainer.querySelector<HTMLElement>('.vc-card')!;
+    expect(cardEl).not.toBeNull();
+    expect(cardEl.classList.contains('hidden')).toBe(true);
+
+    // 3. 编组栏卡片 mouseenter: 信息卡显示
+    const slots = menuContainer.querySelectorAll<HTMLElement>('.mm-lineup-slot');
+    expect(slots.length).toBeGreaterThan(0);
+    const firstSlot = slots[0];
+
+    firstSlot.dispatchEvent(new MouseEvent('mouseenter'));
+    expect(cardEl.classList.contains('hidden')).toBe(false);
+    expect(cardEl.textContent).toContain('虎式');
+
+    // 4. 双击信息卡后隐藏
+    cardEl.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    expect(cardEl.classList.contains('hidden')).toBe(true);
+
+    // 5. 编组栏右键菜单「载具信息」触发显示
+    firstSlot.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
+    const infoMenuBtn = menuContainer.querySelector<HTMLButtonElement>('.mm-lineup-menu-info')!;
+    expect(infoMenuBtn).not.toBeNull();
+    infoMenuBtn.click();
+
+    expect(cardEl.classList.contains('hidden')).toBe(false);
+
+    // 6. 销毁 MainMenu 时移除卡片
+    menu.dispose();
+    expect(menuContainer.querySelector('.vc-card')).toBeNull();
+  });
+
+  it('科技树卡片悬停显示信息卡, 打开/关闭科技树及隐藏主界面时卡片隐藏', () => {
+    vi.useFakeTimers();
+    try {
+      const menu = new MainMenu({
+        parent: menuContainer,
+        settings: dummySettings,
+        settingsPanel: dummySettingsPanel,
+        vehicles: vehicleList,
+        maps: dummyMaps,
+        initial: { vehicleId: 'tiger_i', mapId: 'poland' },
+        loadLoadout: () => ({ pzgr39: 20 }),
+        saveLoadout: vi.fn(),
+        onVehicleChange: vi.fn(),
+        onStart: vi.fn(),
+        profile: {
+          get: () => currentProfile,
+          set: (p) => {
+            currentProfile = p;
+          },
+        },
+      });
+
+      const cardEl = menuContainer.querySelector<HTMLElement>('.vc-card')!;
+      expect(cardEl).not.toBeNull();
+
+      // 先在编组栏悬停显示
+      const slots = menuContainer.querySelectorAll<HTMLElement>('.mm-lineup-slot');
+      slots[0].dispatchEvent(new MouseEvent('mouseenter'));
+      expect(cardEl.classList.contains('hidden')).toBe(false);
+
+      // 打开科技树时卡片隐藏
+      const ttHandle = menuContainer.querySelector<HTMLElement>('.mm-lineup-techtree-btn')!;
+      ttHandle.click();
+      expect(cardEl.classList.contains('hidden')).toBe(true);
+
+      // 在科技树中悬停载具卡片 (tiger_ii)
+      const ttRoot = menuContainer.querySelector<HTMLElement>('.tt-root')!;
+      const tiger2Card = ttRoot.querySelector<HTMLElement>('[data-vehicle-id="tiger_ii"]')!;
+      expect(tiger2Card).not.toBeNull();
+
+      tiger2Card.dispatchEvent(new MouseEvent('mouseenter'));
+      expect(cardEl.classList.contains('hidden')).toBe(false);
+      expect(cardEl.textContent).toContain('虎王');
+
+      // 移开后 hideSoon (150ms)
+      tiger2Card.dispatchEvent(new MouseEvent('mouseleave'));
+      expect(cardEl.classList.contains('hidden')).toBe(false);
+      vi.advanceTimersByTime(200);
+      expect(cardEl.classList.contains('hidden')).toBe(true);
+
+      // 再次悬停并点击关闭科技树
+      tiger2Card.dispatchEvent(new MouseEvent('mouseenter'));
+      expect(cardEl.classList.contains('hidden')).toBe(false);
+
+      const closeBtn = ttRoot.querySelector<HTMLElement>('.tt-close')!;
+      closeBtn.click();
+      expect(cardEl.classList.contains('hidden')).toBe(true);
+
+      // 隐藏主菜单也隐藏卡片
+      slots[0].dispatchEvent(new MouseEvent('mouseenter'));
+      expect(cardEl.classList.contains('hidden')).toBe(false);
+      menu.hide();
+      expect(cardEl.classList.contains('hidden')).toBe(true);
+
+      menu.dispose();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

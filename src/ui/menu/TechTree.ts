@@ -25,6 +25,8 @@ export interface TechTreeOptions {
   inLineup?: ReadonlySet<string>;
   onPick(vehicleId: string): void;
   onClose(): void;
+  /** 鼠标移到载具卡片上 / 移开时调用 */
+  onHoverVehicle?(vehicleId: string | null, rect: DOMRect | null): void;
 }
 
 export class TechTree {
@@ -184,6 +186,13 @@ export class TechTree {
       h('span', 'tt-badge-lineup', meta, '已编组');
     }
 
+    card.addEventListener('mouseenter', () => {
+      this.opts.onHoverVehicle?.(entry.id, card.getBoundingClientRect());
+    });
+    card.addEventListener('mouseleave', () => {
+      this.opts.onHoverVehicle?.(null, null);
+    });
+
     card.addEventListener('click', (e) => {
       e.stopPropagation();
       this.opts.onPick(entry.id);
@@ -242,6 +251,13 @@ export class TechTree {
       if (isLineup) {
         h('span', 'tt-badge-lineup', meta, '已编组');
       }
+
+      item.addEventListener('mouseenter', () => {
+        this.opts.onHoverVehicle?.(member.id, item.getBoundingClientRect());
+      });
+      item.addEventListener('mouseleave', () => {
+        this.opts.onHoverVehicle?.(null, null);
+      });
 
       item.addEventListener('click', (e) => {
         e.stopPropagation();
