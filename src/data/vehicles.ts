@@ -479,8 +479,8 @@ export const M4A3_76W: VehicleSpec = {
   // 俯仰 −12° / +25°;炮口伸出车首 47 in = 1.19 m → barrelLength = 1.19 − 2.5/2 + 6.29/2 ≈ 3.09(真实身管 52 倍径 3.96 m)
   // 高低机 2.8°/s 为 War Thunder 值(历史满改、新手乘员)
   turret: { length: 2.5, width: 2.2, height: 0.72, barrelLength: 3.09, elevation: [-12, 25], elevationSpeed: 2.8 },
-  // M71D 望远镜:倍率用 War Thunder 值 4.3–5×;美式分划要给 SightSpec.reticle 加 'us'(改核心类型,待定),暂用苏式
-  sight: { magnifications: [4.3, 5], reticle: 'soviet' },
+  // M71D 望远镜:倍率用 War Thunder 值 4.3–5×
+  sight: { magnifications: [4.3, 5], reticle: 'us' },
   // 共 71 发:炮塔待发弹架 6 发(最先取空),传动轴两侧湿式弹药箱 35 + 30 发;T48 / T51 履带宽 0.42,履带中心距 2.11
   internals: shermanInternals({
     ready: 6,
@@ -507,7 +507,7 @@ export const M4A3E8: VehicleSpec = {
   hull: { length: 6.27, width: 3.0, height: 1.93, turnRate: 15, acceleration: 4.7 },
   // 炮口伸出车首 50 in = 1.27 m(比 VVSS 型多出的 3 in 是制退器)→ barrelLength = 1.27 − 2.5/2 + 6.27/2 ≈ 3.16
   turret: { length: 2.5, width: 2.2, height: 0.72, barrelLength: 3.16, elevation: [-12, 25], elevationSpeed: 2.8 },
-  sight: { magnifications: [4.3, 5], reticle: 'soviet' },
+  sight: { magnifications: [4.3, 5], reticle: 'us' },
   // 共 71 发,布局同 M4A3(76)W;T66 履带宽 0.58,履带中心距 2.26
   internals: shermanInternals({
     ready: 6,
@@ -558,7 +558,7 @@ export const M4A3E2: VehicleSpec = {
   // 高低机 2.8°/s 为 War Thunder 值
   turret: { length: 2.5, width: 2.35, height: 0.72, barrelLength: 1.89, elevation: [-10, 25], elevationSpeed: 2.8 },
   // M71G 望远镜:倍率用 War Thunder 值 4.3–5×
-  sight: { magnifications: [4.3, 5], reticle: 'soviet' },
+  sight: { magnifications: [4.3, 5], reticle: 'us' },
   // 共 104 发:炮塔待发弹架 4 发,车底 10 个湿式弹药箱 100 发(按同厂 M4A3(75)W 的布局,两侧各算 50 发)
   // T48 履带加宽端联器(鸭嘴)后宽 0.51,履带中心距 2.11;鸭嘴装在外侧,履带盒中心外移 0.045
   internals: shermanInternals({
