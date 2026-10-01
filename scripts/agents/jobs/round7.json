@@ -1,0 +1,11 @@
+{
+  "name": "round7",
+  "base": "origin/docs/round7-cards",
+  "permissions": "scoped",
+  "timeoutMin": 60,
+  "maxPerAgent": 4,
+  "jobs": [
+    { "id": "020", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/020-lower-front-armor.md", "branch": "task/020-lower-front-armor", "commit": "data: 车体正面分首上 / 首下" },
+    { "id": "027", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/027-round6-wrapup.md", "branch": "task/027-round6-wrapup", "commit": "docs: 第六轮收尾——日志汇总、看板状态、跨会话进度" }
+  ]
+}

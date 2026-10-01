@@ -1,0 +1,10 @@
+{
+  "name": "bench-opus-b2",
+  "base": "origin/main",
+  "permissions": "scoped",
+  "timeoutMin": 30,
+  "maxPerAgent": 1,
+  "jobs": [
+    { "id": "b2-opus46-r2", "agent": "antigravity", "model": "claude-opus-4-6-thinking", "card": "scripts/agents/bench/b2-m2hb.md", "hidden": ["scripts/agents/bench/hidden/b2.hidden.ts"], "worktree": "bench/b2-opus46-r2", "branch": "bench/b2-opus46-r2", "commit": "model: M2HB 重机枪零件(模型测试 B2)" }
+  ]
+}
