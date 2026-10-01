@@ -1,6 +1,5 @@
 import type { Loadout, MapSpec, VehicleSpec } from '../../data/types';
-import { SHELL_SHORT, SHELL_TYPES } from '../../data/shells';
-import { ammoCapacity, clampLoadout, loadoutTotal } from '../../game/Loadout';
+import { clampLoadout } from '../../game/Loadout';
 import type { SettingsStore } from '../../settings/Settings';
 import type { Profile, ProfileVehicle } from '../../settings/Profile';
 import { activeVehicleId, assignVehicle } from '../../settings/Profile';
@@ -10,6 +9,7 @@ import { classIcon } from './classIcons';
 import { LineupBar } from './LineupBar';
 import { TechTree } from './TechTree';
 import type { TechTreeEntry } from './techTreeLayout';
+import { AmmoPanel } from './AmmoPanel';
 
 function toProfileVehicles(vehicles: readonly VehicleSpec[]): ProfileVehicle[] {
   return vehicles.map((v) => ({
@@ -58,7 +58,7 @@ export class MainMenu {
   private readonly dropdown: HTMLDivElement;
   private readonly about: HTMLDivElement;
   private readonly info: HTMLDivElement;
-  private readonly ammo: HTMLDivElement;
+  private readonly ammoPanel: AmmoPanel;
   private readonly slots?: HTMLDivElement;
   private readonly lineupBar?: LineupBar;
   private techTree: TechTree | null = null;
@@ -138,7 +138,13 @@ export class MainMenu {
 
     // --- 左:载具信息;右:携弹;底:载具栏 / 编组栏
     this.info = h('div', 'mm-panel mm-info', this.root);
-    this.ammo = h('div', 'mm-panel mm-ammo', this.root);
+    this.ammoPanel = new AmmoPanel(this.root, {
+      onChange: (spec, loadout) => {
+        this.loadout = loadout;
+        this.opts.saveLoadout(spec, loadout);
+      },
+      onUiSound: opts.onUiSound,
+    });
     if (opts.profile) {
       this.lineupBar = new LineupBar(this.root, {
         vehicles: opts.vehicles,
@@ -174,18 +180,22 @@ export class MainMenu {
     closeAbout.addEventListener('click', () => this.about.classList.remove('open'));
 
     this.renderInfo();
-    this.renderAmmo();
+    this.ammoPanel.setVehicle(this.vehicle, this.loadout);
   }
 
   get visible(): boolean {
     return !this.root.classList.contains('hidden');
   }
 
+  get ammo(): HTMLElement {
+    return this.ammoPanel.root;
+  }
+
   show(): void {
     this.root.classList.remove('hidden');
     // 回到机库时刷新携弹(可能在别处改过)
     this.loadout = clampLoadout(this.vehicle, this.opts.loadLoadout(this.vehicle));
-    this.renderAmmo();
+    this.ammoPanel.setVehicle(this.vehicle, this.loadout);
     this.lineupBar?.refresh();
   }
 
@@ -217,7 +227,7 @@ export class MainMenu {
       this.renderSlots();
     }
     this.renderInfo();
-    this.renderAmmo();
+    this.ammoPanel.setVehicle(spec, this.loadout);
     this.opts.onVehicleChange(spec);
   }
 
@@ -343,43 +353,7 @@ export class MainMenu {
       <div class="sec">机动</div>${table(mob)}`;
   }
 
-  private renderAmmo(): void {
-    const v = this.vehicle;
-    const cap = ammoCapacity(v);
-    const ammo = v.weapons[0]?.ammo ?? [];
-    const total = loadoutTotal(this.loadout);
-    this.ammo.innerHTML = '';
-    h('h2', '', this.ammo, '携弹');
-    h('div', 'mm-note', this.ammo, `弹药架共 ${cap} 发;少带弹时最先取空的弹药架会空着,被击穿时更不容易殉爆。`);
-    const table = h('table', '', this.ammo);
-    for (const a of ammo) {
-      const tr = h('tr', '', table);
-      const name = h('td', '', tr, a.name);
-      h('div', 'type', name, `${SHELL_SHORT[a.type]} · ${SHELL_TYPES[a.type].name} · 穿深 ${Math.round(a.penetration)} mm`);
-      const minus = h('button', 'mm-btn small', h('td', '', tr), '−');
-      h('td', 'n', tr, String(this.loadout[a.id] ?? 0));
-      const plus = h('button', 'mm-btn small', h('td', '', tr), '+');
-      const change = (delta: number) => {
-        this.click();
-        const cur = this.loadout[a.id] ?? 0;
-        let next = Math.max(0, cur + delta);
-        // 超出容量时只加到满为止
-        if (delta > 0) next = Math.min(next, cur + (cap - loadoutTotal(this.loadout)));
-        this.loadout = clampLoadout(v, { ...this.loadout, [a.id]: next });
-        this.opts.saveLoadout(v, this.loadout);
-        this.renderAmmo();
-      };
-      minus.addEventListener('click', () => change(-5));
-      plus.addEventListener('click', () => change(5));
-      minus.disabled = (this.loadout[a.id] ?? 0) === 0;
-      plus.disabled = total >= cap;
-    }
-    const sum = h('div', 'total', this.ammo, `合计 ${total} / ${cap} 发`);
-    const bar = h('div', 'bar', sum);
-    h('div', '', bar).style.width = `${Math.round((total / Math.max(1, cap)) * 100)}%`;
-    const mg = v.weapons.find((w) => w.kind === 'mg');
-    if (mg) h('div', 'mm-note', this.ammo, `同轴机枪 ${mg.name}:${mg.rounds ?? 0} 发(每条弹链 ${mg.beltSize ?? '?'} 发),不占弹药架`);
-  }
+
 }
 
 /** 载具侧视剪影(按车体 / 炮塔尺寸画的示意图) */

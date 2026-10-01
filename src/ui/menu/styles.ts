@@ -581,6 +581,168 @@ export function injectClassIconStyles(): void {
   document.head.appendChild(style);
 }
 
+/* 地图界面样式 (MapScreen) */
+const MAP_SCREEN_CSS = `
+.ms-root {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  background: rgba(10, 12, 14, 0.95);
+  display: flex;
+  flex-direction: column;
+  font: 13px/1.45 system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: #e6e8ea;
+  user-select: none;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.ms-root.hidden {
+  display: none;
+}
+.ms-top {
+  padding: 8px 16px 6px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 12, 14, 0.88);
+  overflow-x: auto;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+.ms-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  background: rgba(30, 36, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 500;
+  min-width: 120px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.ms-card:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.ms-card.sel, .ms-card.active {
+  border-color: #e0b44c;
+  box-shadow: inset 0 0 0 1px #e0b44c;
+  background: rgba(60, 50, 25, 0.9);
+}
+.ms-card-name {
+  font-weight: bold;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+.ms-card-level {
+  font-size: 11px;
+  opacity: 0.75;
+  font-variant-numeric: tabular-nums;
+}
+.ms-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  min-width: 0;
+  padding: 10px 16px;
+  gap: 16px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.ms-left {
+  width: 440px;
+  max-width: 45vw;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+.ms-left .mm-ammo {
+  position: static;
+  width: 100%;
+  max-height: none;
+  box-sizing: border-box;
+}
+.ms-map-info {
+  font-size: 12px;
+  opacity: 0.75;
+  padding: 2px 4px;
+}
+.ms-map-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.ms-canvas {
+  display: block;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.ms-right {
+  width: 130px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 2px 0;
+  min-height: 0;
+  box-sizing: border-box;
+}
+.ms-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+.ms-symbology-select {
+  width: 100%;
+  font: inherit;
+  color: #e6e8ea;
+  background: rgba(22, 27, 32, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 3px;
+  padding: 4px 8px;
+}
+.ms-bottom-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.ms-confirm-btn {
+  font-size: 16px;
+  padding: 10px 24px;
+  min-width: 120px;
+  font-weight: 700;
+}
+`;
+
+let mapScreenInjected = false;
+
+export function injectMapScreenStyles(): void {
+  injectMenuStyles();
+  injectClassIconStyles();
+  if (mapScreenInjected || typeof document === 'undefined') return;
+  mapScreenInjected = true;
+  const style = document.createElement('style');
+  style.textContent = MAP_SCREEN_CSS;
+  document.head.appendChild(style);
+}
+
+
 /* 载具信息卡片样式 */
 const VEHICLE_CARD_CSS = `
 .vc-card {

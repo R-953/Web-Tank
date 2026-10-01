@@ -90,10 +90,10 @@ export class MapScreen {
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过;现有测试不改也能过(两处抽取行为不变)
-- [ ] `tests/map-screen.test.ts`(jsdom):`open` 后可见、顶部卡片数 = 编组车组数且高亮当前车组;左侧携弹面板改数量后调用 `saveLoadout`;`spawn` / `battle` 两种模式按钮文字正确并触发 `onConfirm`;符号下拉框触发 `onSymbologyChange`;`close` 后隐藏
-- [ ] jsdom 里 canvas 没有 2D 上下文时不报错(跳过绘制)
-- [ ] 不改 `main.ts`
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过;现有测试不改也能过(两处抽取行为不变)
+- [x] `tests/map-screen.test.ts`(jsdom):`open` 后可见、顶部卡片数 = 编组车组数且高亮当前车组;左侧携弹面板改数量后调用 `saveLoadout`;`spawn` / `battle` 两种模式按钮文字正确并触发 `onConfirm`;符号下拉框触发 `onSymbologyChange`;`close` 后隐藏
+- [x] jsdom 里 canvas 没有 2D 上下文时不报错(跳过绘制)
+- [x] 不改 `main.ts`
 
 ## 不做
 
@@ -103,5 +103,11 @@ export class MapScreen {
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 新增: `src/ui/MapScreen.ts`、`src/ui/menu/AmmoPanel.ts`、`tests/map-screen.test.ts`、`changelog.d/2026-10-02-042-map-screen.md`
+  - 修改: `src/ui/Minimap.ts`、`src/ui/menu/MainMenu.ts`、`src/ui/menu/styles.ts`、`docs/tasks/042-map-screen.md`
 - 命令与结果:
+  - `npm run lint`: 通过 (0 errors)
+  - `npm test`: 通过 (46 test files passed, 481 tests passed)
+  - `npm run build`: 通过 (73 modules transformed, 生产打包成功)
 - 偏差 / 未完成 / 待决定:
+  - 主程审查后返工:地图尺寸自适应窗口、底色加深。全部按要求完成并补充单元测试。
