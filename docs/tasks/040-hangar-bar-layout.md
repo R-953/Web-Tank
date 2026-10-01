@@ -1,7 +1,7 @@
 # 040-hangar-bar-layout:机库底部按 War Thunder 的布局重排
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:进行中
+- 状态:已完成
 - 分支:`task/040-hangar-bar-layout`
 - 规模:M
 
@@ -56,10 +56,10 @@ export function nationFlag(nation: string, width?: number): string; // 内联 SV
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] `tests/lineup-bar.test.ts` 覆盖:国旗页签切换国家、卡片数 = 车组数、空卡片「+」、招募卡片到 8 个置灰、编组页签切换、⚙ 菜单新建 / 改名 / 删除、右键菜单三项、悬停回调、科技树把手回调
-- [ ] 1280 × 720 下编组栏不超出屏幕宽度;8 个车组时卡片自动缩窄或可横向滚动
-- [ ] 不改 `main.ts`
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] `tests/lineup-bar.test.ts` 覆盖:国旗页签切换国家、卡片数 = 车组数、空卡片「+」、招募卡片到 8 个置灰、编组页签切换、⚙ 菜单新建 / 改名 / 删除、右键菜单三项、悬停回调、科技树把手回调
+- [x] 1280 × 720 下编组栏不超出屏幕宽度;8 个车组时卡片自动缩窄或可横向滚动
+- [x] 不改 `main.ts`
 
 ## 不做
 
@@ -69,5 +69,16 @@ export function nationFlag(nation: string, width?: number): string; // 内联 SV
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 新增: `src/ui/menu/flags.ts`
+  - 修改: `src/ui/menu/LineupBar.ts`
+  - 修改: `src/ui/menu/MainMenu.ts`
+  - 修改: `src/ui/menu/styles.ts`
+  - 修改: `tests/lineup-bar.test.ts`
+  - 新增: `changelog.d/2026-10-02-040-hangar-bar-layout.md`
+  - 修改: `docs/tasks/040-hangar-bar-layout.md`
 - 命令与结果:
+  - `npm run lint`: 通过 (0 错误)
+  - `npm test`: 全部通过 (45 test files, 469 tests)
+  - `npm run build`: 全部通过 (dist 构建成功)
 - 偏差 / 未完成 / 待决定:
+  - 无。严格按任务卡与接口定义完成全部功能和测试用例, 未修改 main.ts 或 package.json。
