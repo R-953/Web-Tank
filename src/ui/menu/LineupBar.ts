@@ -14,6 +14,7 @@ import {
 } from '../../settings/Profile';
 import { crewLevel } from '../../game/crew/progress';
 import { NATION_NAMES } from './techTreeLayout';
+import { classIcon } from './classIcons';
 import { h, injectLineupBarStyles } from './styles';
 
 export interface LineupBarOptions {
@@ -303,7 +304,9 @@ export class LineupBar {
       if (vehId !== null) {
         const veh = this.opts.vehicles.find((v) => v.id === vehId);
         const topRow = h('div', 'mm-lineup-slot-top', slot);
-        h('div', 'mm-lineup-slot-name', topRow, veh?.name ?? vehId);
+        const nameEl = h('div', 'mm-lineup-slot-name', topRow);
+        const iconHtml = veh?.vehicleClass ? classIcon(veh.vehicleClass) : '';
+        nameEl.innerHTML = `${iconHtml}${veh?.name ?? vehId}`;
         h('div', 'mm-lineup-slot-level', topRow, `Lv ${lvl}`);
 
         if (veh) {

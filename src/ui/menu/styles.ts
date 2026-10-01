@@ -165,10 +165,11 @@ const TECH_TREE_CSS = `
 .tt-vehicle-card.tt-current { border-color: #e0b44c; box-shadow: 0 0 10px rgba(224,180,76,.35), inset 0 0 0 1px #e0b44c; background: rgba(65, 55, 30, .9); }
 .tt-vehicle-card.tt-current .tt-vehicle-name { color: #f3d27f; font-weight: 700; }
 .tt-vehicle-name { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tt-vehicle-year { font-size: 11px; opacity: .65; margin-top: 2px; }
+.tt-vehicle-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 3px; gap: 4px; }
+.tt-vehicle-year { font-size: 11px; opacity: .65; white-space: nowrap; }
 
 /* 标记:已编组 */
-.tt-badge-lineup { position: absolute; right: 6px; top: 6px; font-size: 10px; padding: 1px 5px; border-radius: 2px; background: rgba(76, 175, 80, .2); border: 1px solid #4caf50; color: #a5d6a7; font-weight: 600; }
+.tt-badge-lineup { font-size: 10px; padding: 1px 5px; border-radius: 2px; background: rgba(76, 175, 80, .2); border: 1px solid #4caf50; color: #a5d6a7; font-weight: 600; margin-left: auto; white-space: nowrap; line-height: 1.2; }
 
 /* 多车组卡片 */
 .tt-group-card { z-index: 5; }
@@ -187,7 +188,6 @@ const TECH_TREE_CSS = `
 .tt-vehicle-item:hover { background: #36404a; border-color: rgba(255,255,255,.25); }
 .tt-vehicle-item.tt-current { border-color: #e0b44c; background: rgba(65, 55, 30, .9); }
 .tt-vehicle-item.tt-current .tt-vehicle-name { color: #f3d27f; font-weight: 700; }
-.tt-vehicle-item .tt-badge-lineup { top: 4px; right: 4px; }
 `;
 
 let ttInjected = false;
@@ -376,5 +376,36 @@ export function injectLineupBarStyles(): void {
   style.textContent = LINEUP_BAR_CSS;
   document.head.appendChild(style);
 }
+
+/* 载具类型图标样式 */
+const CLASS_ICON_CSS = `
+.vehicle-class-icon {
+  display: inline-block;
+  vertical-align: -2px;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+.mm-slot .name .vehicle-class-icon,
+.mm-slot svg.vehicle-class-icon {
+  display: inline-block;
+  margin: 0 4px 0 0;
+  vertical-align: -2px;
+}
+.tt-lane-header .vehicle-class-icon {
+  margin-right: 6px;
+}
+`;
+
+let classIconInjected = false;
+
+export function injectClassIconStyles(): void {
+  injectMenuStyles();
+  if (classIconInjected || typeof document === 'undefined') return;
+  classIconInjected = true;
+  const style = document.createElement('style');
+  style.textContent = CLASS_ICON_CSS;
+  document.head.appendChild(style);
+}
+
 
 
