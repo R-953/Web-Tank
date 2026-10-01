@@ -1,5 +1,4 @@
 import type { VehicleSpec } from '../../data/types';
-import { SHELL_TYPES } from '../../data/shells';
 import { applyCrewSkill } from '../../game/crew/progress';
 import { CLASS_NAMES, NATION_NAMES } from './techTreeLayout';
 import { h, injectVehicleCardStyles } from './styles';
@@ -73,12 +72,10 @@ export function vehicleCardData(spec: VehicleSpec, skill: number): VehicleCardDa
 
     if (cannon.ammo) {
       for (const shell of cannon.ammo) {
-        const typeSpec = SHELL_TYPES[shell.type];
-        const typeLabel = typeSpec ? `${shell.type} (${typeSpec.name})` : shell.type;
         const pen = Math.round(shell.penetration);
         fireRows.push({
           label: shell.name,
-          value: `${typeLabel} · 炮口穿深 ${pen} mm`,
+          value: `${shell.type} · 穿深 ${pen} mm`,
         });
       }
     }
@@ -304,7 +301,7 @@ export class VehicleCard {
     this.root.classList.add('hidden');
   }
 
-  /** 在卡片上双击:关闭(调用 hide) */
+  /** 移除卡片 DOM(双击卡片只是 hide,见构造函数) */
   dispose(): void {
     this.clearHideTimer();
     this.root.remove();
