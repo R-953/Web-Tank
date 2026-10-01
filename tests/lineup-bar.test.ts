@@ -9,6 +9,9 @@ import {
 } from '../src/settings/Profile';
 import { LineupBar } from '../src/ui/menu/LineupBar';
 import { MainMenu } from '../src/ui/menu/MainMenu';
+import type { SettingsStore } from '../src/settings/Settings';
+import type { SettingsPanel } from '../src/ui/menu/SettingsPanel';
+import type { MapSpec } from '../src/data/types';
 
 const vehicleList = Object.values(VEHICLES);
 const profileVehicles = vehicleList.map((v) => ({
@@ -313,11 +316,11 @@ describe('MainMenu 与 LineupBar / TechTree 集成', () => {
   const dummySettings = {
     get: vi.fn(),
     set: vi.fn(),
-  } as unknown as any;
+  } as unknown as SettingsStore;
 
   const dummySettingsPanel = {
     open: vi.fn(),
-  } as unknown as any;
+  } as unknown as SettingsPanel;
 
   const dummyMaps = [
     {
@@ -329,7 +332,7 @@ describe('MainMenu 与 LineupBar / TechTree 集成', () => {
       spawns: { north: [], south: [] },
       captureZones: [],
     },
-  ] as unknown as any;
+  ] as unknown as MapSpec[];
 
   it('不传 profile 时保持原载具栏行为', () => {
     const onVehicleChange = vi.fn();
