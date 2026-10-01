@@ -1,7 +1,7 @@
 # 031-tech-tree-ui:科技树界面(独立组件,先不接入机库)
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:已完成
+- 状态:已合并
 - 分支:`task/031-tech-tree-ui`
 - 规模:M
 

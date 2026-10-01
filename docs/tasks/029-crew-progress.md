@@ -1,7 +1,7 @@
 # 029-crew-progress:车组成长曲线与技能插值(纯逻辑)
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:已完成
+- 状态:已合并
 - 分支:`task/029-crew-progress`
 - 规模:S
 

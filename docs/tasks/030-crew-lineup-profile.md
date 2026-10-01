@@ -1,7 +1,7 @@
 # 030-crew-lineup-profile:车组与编组的存档(纯逻辑 + 本机存储)
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:已完成
+- 状态:已合并
 - 分支:`task/030-crew-lineup-profile`
 - 规模:M
 
