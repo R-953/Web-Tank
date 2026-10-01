@@ -1,0 +1,10 @@
+{
+  "name": "round8-copilot",
+  "base": "origin/docs/crew-design-update",
+  "permissions": "scoped",
+  "timeoutMin": 45,
+  "maxPerAgent": 1,
+  "jobs": [
+    { "id": "032", "agent": "copilot", "model": "auto", "card": "docs/tasks/032-dispatch-fixes.md", "branch": "task/032-dispatch-fixes", "commit": "fix: 调度脚本——改动行数按全部文件统计,Windows 下跑 npm 不再触发 DEP0190" }
+  ]
+}
