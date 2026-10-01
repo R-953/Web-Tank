@@ -1,7 +1,7 @@
 # 030-crew-lineup-profile:车组与编组的存档(纯逻辑 + 本机存储)
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:进行中
+- 状态:已完成
 - 分支:`task/030-crew-lineup-profile`
 - 规模:M
 
@@ -62,7 +62,10 @@ export interface Profile {
   nations: Record<string, NationProfile>;
 }
 
-/** 默认存档:每个国家的车组数 = 该国载具数;一个名为「编组 1」的编组,按 vehicles 顺序每个车组分一辆车并已训练;进度 0 */
+/** 每个国家的车位上限(游戏里俗称车位,负责人 10-01 暂定) */
+export const CREW_SLOT_LIMIT = 8;
+
+/** 默认存档:每个国家只有 1 个初级车组(progress 0),训练过该国在 vehicles 里的第一辆车;「编组 1」只有 1 格,分的就是这辆车,selected 0 */
 export function defaultProfile(vehicles: readonly ProfileVehicle[], now: number): Profile;
 
 /** 清洗:未知国家 / 载具剔除、slots 长度对齐车组数、空编组或 selected 指向空格时修正;救不回来就用 defaultProfile */
@@ -81,6 +84,8 @@ export function proficiency(crew: CrewState, vehicleId: string, vehicles: readon
  */
 export function assignVehicle(p: Profile, nation: string, lineupId: string, crewIndex: number, vehicleId: string | null, vehicles: readonly ProfileVehicle[]): Profile;
 export function selectCrew(p: Profile, nation: string, lineupId: string, crewIndex: number): Profile;
+/** 招募车组:车组数 < 上限时加一个初级车组,所有编组末尾补一个 null 格;到上限抛错,中文消息 */
+export function recruitCrew(p: Profile, nation: string): Profile;
 /** 新编组:复制当前编组的分配,名称默认「编组 N」 */
 export function addLineup(p: Profile, nation: string, name?: string): Profile;
 export function renameLineup(p: Profile, nation: string, lineupId: string, name: string): Profile;
@@ -106,18 +111,26 @@ export class ProfileStore {
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] `tests/profile.test.ts` 覆盖上面每个函数的正常路径和每条规则(移走重复、自动训练、不能变空、selected 修正、不能删最后一个编组、外国载具报错、清洗各种坏数据、存取往返、负时间)
-- [ ] 不依赖 DOM;storage 用假对象
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] `tests/profile.test.ts` 覆盖上面每个函数的正常路径和每条规则(移走重复、自动训练、不能变空、selected 修正、不能删最后一个编组、外国载具报错、清洗各种坏数据、存取往返、负时间)
+- [x] 不依赖 DOM;storage 用假对象
 
 ## 不做
 
 - 界面、接入 main.ts / 游戏(以后的卡)
-- 招募车组(以后再做;本卡车组数固定为该国载具数)
 - 跨车族熟练度打折(以后再做)
 
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - `src/settings/Profile.ts` (新增)
+  - `tests/profile.test.ts` (新增)
+  - `changelog.d/2026-10-02-030-crew-lineup-profile.md` (新增)
+  - `docs/tasks/030-crew-lineup-profile.md` (修改结果与状态)
 - 命令与结果:
+  - `npm run lint`: 通过 (`tsc --noEmit` 0 错误)
+  - `npm test`: 全部通过 (37 个测试文件、396 个测试用例全部通过)
+  - `npm run build`: 构建成功 (生产包构建成功无错误)
 - 偏差 / 未完成 / 待决定:
+  - 偏差: 负责人 10-01 改了车组数量设计，车组数与载具数脱钩。每个国家初始只有 1 个初级车组(编组 1 格)，车位上限常量 CREW_SLOT_LIMIT = 8，新增 `recruitCrew` 招募车组逻辑；`sanitizeProfile` 将存档中的车组数夹取在 [1, 8]，并且在编组分配了载具但熟练度为 0 时自动补齐训练记录。
+
