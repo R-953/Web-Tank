@@ -1,7 +1,7 @@
 # 030-crew-lineup-profile:车组与编组的存档(纯逻辑 + 本机存储)
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:进行中
+- 状态:已完成
 - 分支:`task/030-crew-lineup-profile`
 - 规模:M
 
@@ -106,9 +106,9 @@ export class ProfileStore {
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] `tests/profile.test.ts` 覆盖上面每个函数的正常路径和每条规则(移走重复、自动训练、不能变空、selected 修正、不能删最后一个编组、外国载具报错、清洗各种坏数据、存取往返、负时间)
-- [ ] 不依赖 DOM;storage 用假对象
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] `tests/profile.test.ts` 覆盖上面每个函数的正常路径和每条规则(移走重复、自动训练、不能变空、selected 修正、不能删最后一个编组、外国载具报错、清洗各种坏数据、存取往返、负时间)
+- [x] 不依赖 DOM;storage 用假对象
 
 ## 不做
 
@@ -119,5 +119,13 @@ export class ProfileStore {
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - `src/settings/Profile.ts` (新增)
+  - `tests/profile.test.ts` (新增)
+  - `changelog.d/2026-10-02-030-crew-lineup-profile.md` (新增)
+  - `docs/tasks/030-crew-lineup-profile.md` (修改结果与状态)
 - 命令与结果:
-- 偏差 / 未完成 / 待决定:
+  - `npm run lint`: 通过 (`tsc --noEmit` 0 错误)
+  - `npm test`: 全部通过 (37 个测试文件、391 个测试用例全部通过)
+  - `npm run build`: 构建成功 (生产包构建成功无错误)
+- 偏差 / 未完成 / 待决定: 无
+
