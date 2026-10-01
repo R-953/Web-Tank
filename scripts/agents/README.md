@@ -45,6 +45,7 @@ node scripts/agents/dispatch.mjs grade scripts/agents/jobs/<作业>.json [--only
 | `allow` | 可选,允许改的文件(通配符)。不写就从任务卡「允许修改的文件」一节里以「新增 / 修改 / 删除」开头的条目读取,任务卡本身总是允许改 |
 | `hidden` | 可选,隐藏测试文件(`*.hidden.ts`)。评分时临时拷进 worktree 的 `tests/__hidden__/` 运行,跑完删掉,agent 看不到 |
 | `worktree` / `branch` | 可选,默认 `../Main-<id>`、`agent/<id>` |
+| `base` | 可选,这个任务从哪个提交拉分支(默认取作业文件顶层的 `base`)。任务卡还没合并进 main 时,填卡所在的分支 |
 | `commit` | 提交信息(格式见 AGENTS.md) |
 | `maxPerAgent` | 同一种 agent 同时最多跑几个;不同 agent 之间总是并行 |
 
