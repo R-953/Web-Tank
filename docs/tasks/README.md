@@ -2,6 +2,22 @@
 
 一个任务一张卡(模板见 [TEMPLATE.md](TEMPLATE.md))。主程写卡、分配、审查;执行者只做卡上的事,完成后在卡末尾填「结果」。
 
+## 当前进度与下一步(新会话先读这里)
+
+> 每个对话之间不共享上下文。新开的会话先读这一节,再看下面的看板和 Changelog「路线与进度」;主程每轮收尾时更新这一节。
+
+最后更新:2026-10-01(第六轮收尾)
+
+- **刚完成:** 第六轮 013–026 全部合并(谢尔曼三车模型与涂装、美式分划、固定半径转向、湿式弹药架、第三人称放大、方位角与距离读数、击毁回放、机库镜头);仓库搬到 `D:\Web Tank`,旧 worktree 和已合并分支已清理,GitHub 开了「合并后自动删除分支」。
+- **进行中:** 020 车体正面分首上 / 首下(Antigravity 做,主程接 `Game.ts`)。
+- **下一步:** 科技树、编组与成员组。负责人 10-01 已答复设计稿里的待确认问题,稿子已按答复改好([docs/design/tech-tree-and-crew.md](../design/tech-tree-and-crew.md)),主程拆卡后派给 Antigravity。
+- **已出结果:** Antigravity 上 Claude Opus 4.6 的 B2 补测 7/7,外观和 3.8 Flash 相当、token 最省,结论见 [docs/research/model-bench-2026-10.md](../research/model-bench-2026-10.md)。
+- **排队:**
+  - 10 月 3 日 Copilot 权益生效后,重测 Copilot 可用的模型;OpenAI 工单解决后,把 Codex CLI 加进调度脚本。
+  - 候选车辆(见下文)型号确认后开卡。
+  - 自定义瞄具(后期)。
+- **派活方式:** 默认 Antigravity + Gemini 3.8 Flash High,用 `scripts/agents/dispatch.mjs` 派发(说明见 [scripts/agents/README.md](../../scripts/agents/README.md));Claude Code 当主程,写卡、审查、解决冲突。
+
 | 编号 | 任务 | 负责 | 车道 | 状态 |
 |---|---|---|---|---|
 | [000](000-git-sync.md) | 理顺 git,把第五轮和协作机制推上 GitHub | Claude Code | 主程 | 已合并 |
@@ -17,20 +33,21 @@
 | [010](010-isu122.md) | ISU-122 替换 StuG III G;SU-100 炮盾修正 | Claude Code | 主程 / 内容 | 已合并 |
 | [011](011-restart-key-test-timeout.md) | 重开键每帧重开;出生点视线测试偶发超时 | Claude Code | 主程 | 已合并 |
 | [012](012-shermans.md) | 谢尔曼三车(M4A3(76)W、M4A3E8、M4A3E2)数据与模型骨架 | Claude Code | 主程 / 内容 | 已合并 |
-| [013](013-sherman-hull.md) | 谢尔曼 M4A3 车体模型 | Antigravity(3.8 Flash High) | 内容 | 进行中 |
-| [014](014-sherman-suspension.md) | 谢尔曼 VVSS / HVSS 行走机构 | Antigravity(3.8 Flash High;原派 Copilot,mai-code 建模偏弱,改派) | 内容 | 进行中 |
-| [015](015-sherman-turrets.md) | 谢尔曼 T23 / Jumbo 炮塔与火炮 | Antigravity(3.8 Flash High) | 内容 | 进行中 |
+| [013](013-sherman-hull.md) | 谢尔曼 M4A3 车体模型 | Antigravity(3.8 Flash High) | 内容 | 已合并 |
+| [014](014-sherman-suspension.md) | 谢尔曼 VVSS / HVSS 行走机构 | Antigravity(3.8 Flash High;原派 Copilot,mai-code 建模偏弱,改派) | 内容 | 已合并 |
+| [015](015-sherman-turrets.md) | 谢尔曼 T23 / Jumbo 炮塔与火炮 | Antigravity(3.8 Flash High) | 内容 | 已合并 |
 | [016](016-agent-dispatch.md) | 命令行派发任务 + 各家模型测试 | Claude Code | 主程 | 已合并 |
-| [017](017-us-reticle.md) | 美式瞄准镜分划 | Antigravity | 界面 | 进行中 |
-| [018](018-fixed-radius-steering.md) | 受控差速器的固定半径转向(谢尔曼不能原地转) | Antigravity(主程审查) | 主程 / 内容 | 进行中 |
-| [019](019-wet-stowage.md) | 湿式弹药架降低殉爆和起火 | Antigravity(主程审查) | 主程 / 内容 | 进行中 |
-| [020](020-lower-front-armor.md) | 车体正面分首上 / 首下(虎王首下弱点等) | Claude Code → Antigravity | 主程 / 内容 | 待领取 |
-| [021](021-third-person-zoom.md) | 第三人称按 Z 放大视角 | Antigravity | 界面 | 进行中 |
-| [022](022-sight-azimuth-range.md) | 瞄准镜顶部改为方位角,距离读数移到准星右下 | Antigravity | 界面 | 进行中 |
-| [023](023-death-killcam.md) | 玩家被击毁时的回放 | Antigravity | 界面 | 进行中 |
-| [024](024-hangar-camera-walls.md) | 机库镜头拉远时穿墙 | Antigravity | 界面 | 进行中 |
-| [025](025-relocate-web-tank.md) | 仓库搬到 D:\Web Tank,清理旧 worktree,整理根目录 | Antigravity → 主程执行 | 杂务 | 进行中 |
-| [026](026-sherman-paint.md) | 谢尔曼按真实涂装改颜色、加白星标识 | Antigravity | 内容 | 进行中 |
+| [017](017-us-reticle.md) | 美式瞄准镜分划 | Antigravity | 界面 | 已合并 |
+| [018](018-fixed-radius-steering.md) | 受控差速器的固定半径转向(谢尔曼不能原地转) | Antigravity(主程审查) | 主程 / 内容 | 已合并 |
+| [019](019-wet-stowage.md) | 湿式弹药架降低殉爆和起火 | Antigravity(主程审查) | 主程 / 内容 | 已合并 |
+| [020](020-lower-front-armor.md) | 车体正面分首上 / 首下(虎王首下弱点等) | Antigravity(3.8 Flash High,主程审查) | 主程 / 内容 | 进行中 |
+| [021](021-third-person-zoom.md) | 第三人称按 Z 放大视角 | Antigravity | 界面 | 已合并 |
+| [022](022-sight-azimuth-range.md) | 瞄准镜顶部改为方位角,距离读数移到准星右下 | Antigravity | 界面 | 已合并 |
+| [023](023-death-killcam.md) | 玩家被击毁时的回放 | Antigravity | 界面 | 已合并 |
+| [024](024-hangar-camera-walls.md) | 机库镜头拉远时穿墙 | Antigravity | 界面 | 已合并 |
+| [025](025-relocate-web-tank.md) | 仓库搬到 D:\Web Tank,清理旧 worktree,整理根目录 | Antigravity → 主程执行 | 杂务 | 已合并 |
+| [026](026-sherman-paint.md) | 谢尔曼按真实涂装改颜色、加白星标识 | Antigravity | 内容 | 已合并 |
+| [027](027-round6-wrapup.md) | 第六轮收尾——日志汇总、看板状态、跨会话进度 | Antigravity(3.8 Flash High;主程审查) | 主程 | 进行中 |
 
 ### 候选车辆(负责人 2026-09-29 提出方向,型号待确认后再开卡)
 

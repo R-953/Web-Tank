@@ -1,7 +1,7 @@
 # 024-hangar-camera-walls:机库镜头拉远时穿墙
 
 - 负责:Antigravity(Gemini 3.8 Flash High;车道:界面)
-- 状态:已完成
+- 状态:已合并
 - 分支:`task/024-hangar-camera-walls`
 - 规模:S
 

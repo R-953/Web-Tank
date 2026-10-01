@@ -1,7 +1,7 @@
 # 025-relocate-web-tank:仓库搬到 D:\Web Tank,清理旧 worktree,整理根目录
 
 - 负责:Antigravity(Gemini 3.8 Flash High)写改动和搬家脚本 → 主程审查后执行脚本
-- 状态:待审查
+- 状态:已合并
 - 分支:`task/025-relocate-web-tank`
 - 规模:M
 

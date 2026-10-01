@@ -1,7 +1,7 @@
 # 019-wet-stowage:湿式弹药架降低殉爆和起火
 
 - 负责:Antigravity(Gemini 3.8 Flash High;主程审查)
-- 状态:待审查
+- 状态:已合并
 - 分支:`task/019-wet-stowage`
 - 规模:S–M
 

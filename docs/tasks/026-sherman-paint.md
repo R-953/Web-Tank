@@ -1,7 +1,7 @@
 # 026-sherman-paint:谢尔曼按真实涂装改颜色、加白星标识
 
 - 负责:Antigravity(Gemini 3.8 Flash High;车道:内容)
-- 状态:已完成
+- 状态:已合并
 - 分支:`task/026-sherman-paint`
 - 规模:S–M
 

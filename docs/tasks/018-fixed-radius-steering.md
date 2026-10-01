@@ -1,7 +1,7 @@
 # 018-fixed-radius-steering:受控差速器的固定半径转向(谢尔曼不能原地转)
 
 - 负责:Antigravity(Gemini 3.8 Flash High;主程审查)
-- 状态:已完成(待主程审查)
+- 状态:已合并
 - 分支:`task/018-fixed-radius-steering`
 - 规模:S–M
 

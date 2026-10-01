@@ -1,7 +1,7 @@
 # 023-death-killcam:玩家被击毁时的回放
 
 - 负责:Antigravity(Gemini 3.8 Flash High;车道:界面)
-- 状态:已完成
+- 状态:已合并
 - 分支:`task/023-death-killcam`
 - 规模:S–M
 
