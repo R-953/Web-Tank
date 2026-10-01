@@ -1,7 +1,7 @@
 # 031-tech-tree-ui:科技树界面(独立组件,先不接入机库)
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:进行中
+- 状态:已完成
 - 分支:`task/031-tech-tree-ui`
 - 规模:M
 
@@ -100,10 +100,10 @@ export class TechTree {
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] `tests/tech-tree-layout.test.ts`:年份轴去重排序、国家顺序和缺省、类别顺序且只含有车的、同车族成组且成员排序、`column` 正确、标题回退
-- [ ] (可选)jsdom 测试:点车触发 `onPick`、点组展开、Esc 触发 `onClose`
-- [ ] 不接入 `main.ts`、`MainMenu.ts`(主程在以后的卡里接)
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] `tests/tech-tree-layout.test.ts`:年份轴去重排序、国家顺序和缺省、类别顺序且只含有车的、同车族成组且成员排序、`column` 正确、标题回退
+- [x] (可选)jsdom 测试:点车触发 `onPick`、点组展开、Esc 触发 `onClose`
+- [x] 不接入 `main.ts`、`MainMenu.ts`(主程在以后的卡里接)
 
 ## 不做
 
@@ -113,5 +113,15 @@ export class TechTree {
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 新增: `src/ui/menu/techTreeLayout.ts`
+  - 新增: `src/ui/menu/TechTree.ts`
+  - 修改: `src/ui/menu/styles.ts` (末尾追加科技树样式与注入函数)
+  - 新增: `tests/tech-tree-layout.test.ts`
+  - 新增: `tests/tech-tree-ui.test.ts`
+  - 新增: `changelog.d/2026-10-02-031-tech-tree-ui.md`
+  - 修改: `docs/tasks/031-tech-tree-ui.md`
 - 命令与结果:
-- 偏差 / 未完成 / 待决定:
+  - `npm run lint`: 全部通过 (tsc --noEmit 无错误)
+  - `npm test`: 全部通过 (38 个测试文件、379 个测试全部通过, 包含新增的 17 个测试)
+  - `npm run build`: 全部通过 (tsc && vite build 正常产出 dist)
+- 偏差 / 未完成 / 待决定: 无, 严格遵守任务卡定死接口与不做要求。
