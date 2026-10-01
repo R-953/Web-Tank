@@ -1,0 +1,1 @@
+{ "name": "round6-paint", "base": "review/sherman", "permissions": "scoped", "timeoutMin": 60, "maxPerAgent": 1, "jobs": [ { "id": "026", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/026-sherman-paint.md", "branch": "task/026-sherman-paint", "commit": "model: 谢尔曼按真实涂装改颜色、加白星标识" } ] }
