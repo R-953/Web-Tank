@@ -397,10 +397,9 @@ export async function main() {
       console.log(`  移动 ${srcAgentRuns}\\ 到 ${destAgentRuns}...`);
       try {
         renameSync(srcAgentRuns, destAgentRuns);
-      } catch {
-        // 跨盘移动 fallback
-        copyDirectory(srcAgentRuns, destAgentRuns);
-        rmSync(srcAgentRuns, { recursive: true });
+      } catch (e) {
+        // 不做「复制后递归删除」的后备方案(卡片要求不出现强制删除);同盘移动失败多半是有程序占用,停下让负责人处理
+        throw new Error(`移动 ${srcAgentRuns} 失败(${e instanceof Error ? e.message : e}),请关闭占用它的程序后手动移动到 ${destAgentRuns}`);
       }
     } else {
       console.log('  未发现 agent-runs\\, 跳过');
