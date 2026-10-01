@@ -146,15 +146,17 @@ Changelog.md   开发日志:每轮的改动、决策与待确认事项
 
 ### 多智能体分工(2026-09-29 起试行)
 
-一个主程加几条执行车道,用各家 Coding Agent 各自的额度。核心系统不并行。
+一个主程加几条执行车道,优先用其他家的额度,Claude 作为中枢节点。核心系统不并行。
+
+**派发方式:** 主程用 `scripts/agents/dispatch.mjs` 从终端把任务卡派给各个 agent(一个任务一个 worktree,受限权限,并行跑),跑完自动评分、出报告,主程审查后再开 PR。用法见 [scripts/agents/README.md](scripts/agents/README.md),各家模型的测试见 [docs/research/model-bench-2026-10.md](docs/research/model-bench-2026-10.md)。
 
 | 车道 | 工具 | 负责 |
 |---|---|---|
-| 主程 / 集成 / 审查 | Claude Code | 核心规则(伤害、弹道、`Game` / `Vehicle` 主循环)、数据结构、写任务卡、审 PR、合并、疑难问题 |
-| 内容 | Gemini CLI | 新车数据调研(带出处)、按零件库做模型、地图 / 植被数据 |
-| 界面 / 实测 | Antigravity | 界面打磨、在真浏览器里截图验收、性能测量 |
-| 小任务 / 审查 | GitHub Copilot | 边界清楚的小功能 / 小 bug(Issue → PR)、补测试、PR 审查 |
-| 杂务 | 本地模型(LM Studio) | 待评估(见任务 004) |
+| 主程 / 集成 / 审查 | Claude Code | 拆任务、写任务卡、用调度脚本派发、审查、修冲突、合并;核心规则(伤害、弹道、`Game` / `Vehicle` 主循环)和数据结构。其他 agent 都做不了的才亲自写 |
+| 内容 / 界面 / 实测 | Antigravity(默认 Gemini 3.8 Flash High,第二选择 Claude Opus 4.6) | 新车数据调研(带出处)、按零件库做模型、界面打磨、在真浏览器里截图验收、性能测量 |
+| 小任务 / 审查 | GitHub Copilot | 边界清楚的小逻辑 / 小 bug、补测试、PR 审查。目前只有 mai-code-1.1-flash,2026-10-03 权益生效后重测 |
+| 待定 | Codex CLI | 等 OpenAI 回复工单 |
+| — | 本地模型(LM Studio) | 能力不够,暂不派活(见任务 004) |
 
 规则:
 - **数据结构冻结:** 核心数据结构只加可选字段,要改结构先单独提出。

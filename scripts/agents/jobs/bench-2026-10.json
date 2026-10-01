@@ -1,0 +1,21 @@
+{
+  "name": "bench",
+  "base": "origin/main",
+  "permissions": "scoped",
+  "timeoutMin": 30,
+  "maxPerAgent": 3,
+  "jobs": [
+    { "id": "b1-g38flash", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "scripts/agents/bench/b1-penetration.md", "hidden": ["scripts/agents/bench/hidden/b1.hidden.ts"], "worktree": "Main-bench/b1-g38flash", "branch": "bench/b1-g38flash", "commit": "feat: 穿深随距离的解析计算(模型测试 B1)" },
+    { "id": "b1-g31pro", "agent": "antigravity", "model": "gemini-3.1-pro-high", "card": "scripts/agents/bench/b1-penetration.md", "hidden": ["scripts/agents/bench/hidden/b1.hidden.ts"], "worktree": "Main-bench/b1-g31pro", "branch": "bench/b1-g31pro", "commit": "feat: 穿深随距离的解析计算(模型测试 B1)" },
+    { "id": "b1-sonnet46", "agent": "antigravity", "model": "claude-sonnet-4-6", "card": "scripts/agents/bench/b1-penetration.md", "hidden": ["scripts/agents/bench/hidden/b1.hidden.ts"], "worktree": "Main-bench/b1-sonnet46", "branch": "bench/b1-sonnet46", "commit": "feat: 穿深随距离的解析计算(模型测试 B1)" },
+    { "id": "b1-opus46", "agent": "antigravity", "model": "claude-opus-4-6-thinking", "card": "scripts/agents/bench/b1-penetration.md", "hidden": ["scripts/agents/bench/hidden/b1.hidden.ts"], "worktree": "Main-bench/b1-opus46", "branch": "bench/b1-opus46", "commit": "feat: 穿深随距离的解析计算(模型测试 B1)" },
+    { "id": "b1-gptoss", "agent": "antigravity", "model": "gpt-oss-120b-medium", "card": "scripts/agents/bench/b1-penetration.md", "hidden": ["scripts/agents/bench/hidden/b1.hidden.ts"], "worktree": "Main-bench/b1-gptoss", "branch": "bench/b1-gptoss", "commit": "feat: 穿深随距离的解析计算(模型测试 B1)" },
+    { "id": "b1-maicode", "agent": "copilot", "model": "auto", "card": "scripts/agents/bench/b1-penetration.md", "hidden": ["scripts/agents/bench/hidden/b1.hidden.ts"], "worktree": "Main-bench/b1-maicode", "branch": "bench/b1-maicode", "commit": "feat: 穿深随距离的解析计算(模型测试 B1)" },
+    { "id": "b2-g38flash", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "scripts/agents/bench/b2-m2hb.md", "hidden": ["scripts/agents/bench/hidden/b2.hidden.ts"], "worktree": "Main-bench/b2-g38flash", "branch": "bench/b2-g38flash", "commit": "model: M2HB 重机枪零件(模型测试 B2)" },
+    { "id": "b2-g31pro", "agent": "antigravity", "model": "gemini-3.1-pro-high", "card": "scripts/agents/bench/b2-m2hb.md", "hidden": ["scripts/agents/bench/hidden/b2.hidden.ts"], "worktree": "Main-bench/b2-g31pro", "branch": "bench/b2-g31pro", "commit": "model: M2HB 重机枪零件(模型测试 B2)" },
+    { "id": "b2-sonnet46", "agent": "antigravity", "model": "claude-sonnet-4-6", "card": "scripts/agents/bench/b2-m2hb.md", "hidden": ["scripts/agents/bench/hidden/b2.hidden.ts"], "worktree": "Main-bench/b2-sonnet46", "branch": "bench/b2-sonnet46", "commit": "model: M2HB 重机枪零件(模型测试 B2)" },
+    { "id": "b2-opus46", "agent": "antigravity", "model": "claude-opus-4-6-thinking", "card": "scripts/agents/bench/b2-m2hb.md", "hidden": ["scripts/agents/bench/hidden/b2.hidden.ts"], "worktree": "Main-bench/b2-opus46", "branch": "bench/b2-opus46", "commit": "model: M2HB 重机枪零件(模型测试 B2)" },
+    { "id": "b2-gptoss", "agent": "antigravity", "model": "gpt-oss-120b-medium", "card": "scripts/agents/bench/b2-m2hb.md", "hidden": ["scripts/agents/bench/hidden/b2.hidden.ts"], "worktree": "Main-bench/b2-gptoss", "branch": "bench/b2-gptoss", "commit": "model: M2HB 重机枪零件(模型测试 B2)" },
+    { "id": "b2-maicode", "agent": "copilot", "model": "auto", "card": "scripts/agents/bench/b2-m2hb.md", "hidden": ["scripts/agents/bench/hidden/b2.hidden.ts"], "worktree": "Main-bench/b2-maicode", "branch": "bench/b2-maicode", "commit": "model: M2HB 重机枪零件(模型测试 B2)" }
+  ]
+}
