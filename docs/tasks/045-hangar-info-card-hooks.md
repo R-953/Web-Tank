@@ -1,7 +1,7 @@
 # 045-hangar-info-card-hooks:机库去掉携弹面板,信息卡挂到编组栏和科技树
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待领取
+- 状态:已合并
 - 分支:`task/045-hangar-info-card-hooks`
 - 规模:M
 - 和 044 并行,改的文件不重叠;两张都合并后主程做 046(main.ts 接线)
@@ -45,10 +45,10 @@ MainMenu 的构造参数不变(main.ts 不用改就能编译通过)。
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] `crewSkillFor` 的单元测试
-- [ ] 测试(jsdom):机库里没有携弹面板;编组栏卡片 `mouseenter` 后信息卡可见、`dblclick` 后隐藏;科技树卡片悬停回调被调用
-- [ ] 主程会在浏览器里看:悬停显示、移到卡片上不消失、双击关闭
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] `crewSkillFor` 的单元测试
+- [x] 测试(jsdom):机库里没有携弹面板;编组栏卡片 `mouseenter` 后信息卡可见、`dblclick` 后隐藏;科技树卡片悬停回调被调用
+- [x] 主程会在浏览器里看:悬停显示、移到卡片上不消失、双击关闭
 
 ## 不做
 
@@ -57,5 +57,22 @@ MainMenu 的构造参数不变(main.ts 不用改就能编译通过)。
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - `src/game/crew/skill.ts`
+  - `src/ui/menu/TechTree.ts`
+  - `src/ui/menu/MainMenu.ts`
+  - `tests/crew-skill-for.test.ts` (新增)
+  - `tests/tech-tree-ui.test.ts`
+  - `tests/lineup-bar.test.ts`
+  - `changelog.d/2026-10-02-045-hangar-info-card-hooks.md` (新增)
+  - `docs/tasks/045-hangar-info-card-hooks.md`
 - 命令与结果:
-- 偏差 / 未完成 / 待决定:
+  - `npm run lint`: 通过 (0 错误)
+  - `npm test`: 50 test files passed, 521 tests passed (全部通过)
+  - `npm run build`: 通过 (tsc && vite build 构建成功)
+- 偏差 / 未完成 / 待决定: 无
+
+### 主程审查(Claude Code)
+
+- 代码、测试、浏览器里都看过:悬停显示、移到卡片上不消失、双击关闭、移开 150 ms 后隐藏、科技树悬停都正常。
+- 修了一处:科技树悬停算技能时没跟 `onPick` 一样用 `crewIndex ?? selected`,从空车位的「+」进科技树会按选中车组算错;改后补了测试(撤掉修复时该测试失败)。
+- `MainMenu` 的 `saveLoadout` 选项现在没人用了,留给 046 一起清理。
