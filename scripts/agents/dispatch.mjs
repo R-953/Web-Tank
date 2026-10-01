@@ -169,7 +169,8 @@ function promptFor(job, cardText, allowed) {
 function prepare(job, base, dry) {
   if (existsSync(join(job.wt, '.git'))) return `已存在 ${job.wt}`;
   if (dry) return `将新建 worktree ${job.wt}(${job.branch} ← ${base})并 npm ci`;
-  mkdirSync(dirname(job.wt), { recursive: true });
+  // 父目录是盘符根目录(如 D:\)时 mkdirSync 会报 EPERM,已存在就不建
+  if (!existsSync(dirname(job.wt))) mkdirSync(dirname(job.wt), { recursive: true });
   const r = git(REPO, 'worktree', 'add', job.wt, '-b', job.branch, base);
   if (r.code !== 0) throw new Error(`git worktree add 失败:${r.out}`);
   const ci = npm(job.wt, 'ci', '--no-audit', '--no-fund');
