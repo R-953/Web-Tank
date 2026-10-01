@@ -413,39 +413,42 @@ const MAP_SCREEN_CSS = `
   position: fixed;
   inset: 0;
   z-index: 25;
-  background: rgba(10, 14, 18, 0.9);
+  background: rgba(10, 12, 14, 0.95);
   display: flex;
   flex-direction: column;
   font: 13px/1.45 system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
   color: #e6e8ea;
   user-select: none;
   box-sizing: border-box;
+  overflow: hidden;
 }
 .ms-root.hidden {
   display: none;
 }
 .ms-top {
-  padding: 12px 20px 8px;
+  padding: 8px 16px 6px;
   display: flex;
   gap: 8px;
   align-items: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(16, 20, 24, 0.6);
+  background: rgba(10, 12, 14, 0.88);
   overflow-x: auto;
   flex-shrink: 0;
+  box-sizing: border-box;
 }
 .ms-card {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 14px;
+  padding: 4px 10px;
   background: rgba(30, 36, 42, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 3px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
-  min-width: 140px;
+  min-width: 120px;
   cursor: pointer;
+  white-space: nowrap;
 }
 .ms-card:hover {
   border-color: rgba(255, 255, 255, 0.3);
@@ -470,21 +473,27 @@ const MAP_SCREEN_CSS = `
   flex: 1;
   display: flex;
   min-height: 0;
-  padding: 16px 20px;
-  gap: 20px;
+  min-width: 0;
+  padding: 10px 16px;
+  gap: 16px;
   box-sizing: border-box;
+  overflow: hidden;
 }
 .ms-left {
-  width: 480px;
+  width: 440px;
+  max-width: 45vw;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 .ms-left .mm-ammo {
   position: static;
   width: 100%;
-  max-height: calc(100vh - 200px);
+  max-height: none;
   box-sizing: border-box;
 }
 .ms-map-info {
@@ -499,20 +508,24 @@ const MAP_SCREEN_CSS = `
   justify-content: center;
   min-width: 0;
   min-height: 0;
+  overflow: hidden;
 }
 .ms-canvas {
   display: block;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   border-radius: 2px;
+  flex-shrink: 0;
 }
 .ms-right {
-  width: 140px;
+  width: 130px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: flex-end;
-  padding: 4px 0;
+  padding: 2px 0;
+  min-height: 0;
+  box-sizing: border-box;
 }
 .ms-tools {
   display: flex;

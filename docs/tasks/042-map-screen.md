@@ -107,7 +107,7 @@ export class MapScreen {
   - 修改: `src/ui/Minimap.ts`、`src/ui/menu/MainMenu.ts`、`src/ui/menu/styles.ts`、`docs/tasks/042-map-screen.md`
 - 命令与结果:
   - `npm run lint`: 通过 (0 errors)
-  - `npm test`: 通过 (46 test files passed, 477 tests passed)
+  - `npm test`: 通过 (46 test files passed, 481 tests passed)
   - `npm run build`: 通过 (73 modules transformed, 生产打包成功)
 - 偏差 / 未完成 / 待决定:
-  - 无偏差，完全按照既定接口与布局约定完成。
+  - 主程审查后返工:地图尺寸自适应窗口、底色加深。全部按要求完成并补充单元测试。

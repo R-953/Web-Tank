@@ -9,9 +9,9 @@ import {
   type Profile,
   type ProfileVehicle,
 } from '../src/settings/Profile';
-import { MapScreen, type MapScreenOptions } from '../src/ui/MapScreen';
+import { MapScreen, mapCanvasSize, type MapScreenOptions } from '../src/ui/MapScreen';
 import { AmmoPanel } from '../src/ui/menu/AmmoPanel';
-import { renderMapBackground } from '../src/ui/Minimap';
+import * as MinimapModule from '../src/ui/Minimap';
 
 const vehicleList = Object.values(VEHICLES);
 const profileVehicles: ProfileVehicle[] = vehicleList.map((v) => ({
@@ -38,6 +38,29 @@ function createMockMap(size = 3000, name = '波兰'): GameMap {
   } as unknown as GameMap;
 }
 
+describe('mapCanvasSize 纯函数', () => {
+  it('取可用宽高的较小值，限制在 [240, 1000] 范围内并取整', () => {
+    // 正常范围
+    expect(mapCanvasSize(600, 500)).toBe(500);
+    expect(mapCanvasSize(500, 600)).toBe(500);
+    expect(mapCanvasSize(800, 800)).toBe(800);
+
+    // 下限 240
+    expect(mapCanvasSize(200, 300)).toBe(240);
+    expect(mapCanvasSize(100, 100)).toBe(240);
+    expect(mapCanvasSize(0, 500)).toBe(240);
+    expect(mapCanvasSize(-50, 400)).toBe(240);
+
+    // 上限 1000
+    expect(mapCanvasSize(1200, 1500)).toBe(1000);
+    expect(mapCanvasSize(2000, 1000)).toBe(1000);
+
+    // 取整
+    expect(mapCanvasSize(450.7, 500.9)).toBe(450);
+    expect(mapCanvasSize(600.2, 599.8)).toBe(599);
+  });
+});
+
 describe('AmmoPanel 携弹组件', () => {
   let container: HTMLElement;
   const tiger = VEHICLES.tiger_i;
@@ -61,8 +84,7 @@ describe('AmmoPanel 携弹组件', () => {
 
     // 查找加号按钮
     const plusBtns = panel.root.querySelectorAll<HTMLButtonElement>('button.mm-btn.small');
-    expect(plusBtns.length).toBeGreaterThanOrEqual(2); // 每个弹种有一对加减
-    // 第二个按钮是第一种弹的 + 按钮
+    expect(plusBtns.length).toBeGreaterThanOrEqual(2);
     const firstPlus = plusBtns[1];
     firstPlus.click();
 
@@ -140,7 +162,6 @@ describe('MapScreen 地图界面组件', () => {
   });
 
   it('顶部卡片数 = 编组车组数且高亮当前车组', () => {
-    // 招募到 3 个车位，并分配车辆
     currentProfile = recruitCrew(currentProfile, 'germany');
     currentProfile = recruitCrew(currentProfile, 'germany');
     currentProfile = assignVehicle(
@@ -158,16 +179,13 @@ describe('MapScreen 地图界面组件', () => {
     const cards = screen.root.querySelectorAll<HTMLElement>('.ms-card');
     expect(cards.length).toBe(3);
 
-    // 默认德国第一个车组 selected = 0，高亮
     expect(cards[0].classList.contains('sel')).toBe(true);
     expect(cards[0].classList.contains('active')).toBe(true);
     expect(cards[0].textContent).toContain('虎式');
 
-    // 第二个分配了虎王
     expect(cards[1].classList.contains('sel')).toBe(false);
     expect(cards[1].textContent).toContain('虎王');
 
-    // 第三个未分车
     expect(cards[2].textContent).toContain('未分车');
   });
 
@@ -223,7 +241,6 @@ describe('MapScreen 地图界面组件', () => {
     const { screen } = createScreen();
     screen.open(mockMap, 'spawn');
 
-    // 在没有 2D 上下文的环境中调用 draw 不应抛出任何错误
     expect(() => {
       screen.draw({
         player: { x: 0, z: 1200, heading: 0 },
@@ -234,14 +251,13 @@ describe('MapScreen 地图界面组件', () => {
       });
     }).not.toThrow();
 
-    // renderMapBackground 也不应抛错
     expect(() => {
-      const bg = renderMapBackground(mockMap, 240);
+      const bg = MinimapModule.renderMapBackground(mockMap, 240);
       expect(bg).toBeDefined();
     }).not.toThrow();
   });
 
-  it('当提供 2D 上下文时支持 drawMarker 自定义绘制', () => {
+  it('当提供 2D 上下文时支持 drawMarker 自定义绘制与 setTransform', () => {
     const { screen } = createScreen();
     screen.open(mockMap, 'spawn');
 
@@ -265,6 +281,7 @@ describe('MapScreen 地图界面组件', () => {
       closePath: vi.fn(),
       fill: vi.fn(),
       arc: vi.fn(),
+      setTransform: vi.fn(),
     } as unknown as CanvasRenderingContext2D;
 
     vi.spyOn(canvas, 'getContext').mockReturnValue(mockCtx);
@@ -278,7 +295,86 @@ describe('MapScreen 地图界面组件', () => {
       drawMarker,
     });
 
+    expect(mockCtx.setTransform).toHaveBeenCalled();
     expect(drawMarker).toHaveBeenCalledWith(mockCtx, marker, expect.any(Number), expect.any(Number));
+  });
+
+  it('open 时注册 resize 监听，close/dispose 时移除监听', () => {
+    const addSpy = vi.spyOn(window, 'addEventListener');
+    const removeSpy = vi.spyOn(window, 'removeEventListener');
+
+    const { screen } = createScreen();
+    screen.open(mockMap, 'spawn');
+
+    expect(addSpy).toHaveBeenCalledWith('resize', expect.any(Function));
+
+    screen.close();
+    expect(removeSpy).toHaveBeenCalledWith('resize', expect.any(Function));
+
+    screen.open(mockMap, 'spawn');
+    screen.dispose();
+    expect(removeSpy).toHaveBeenCalledWith('resize', expect.any(Function));
+
+    addSpy.mockRestore();
+    removeSpy.mockRestore();
+  });
+
+  it('尺寸未变时不重新生成底图，尺寸改变时重新生成底图', () => {
+    const renderBgSpy = vi.spyOn(MinimapModule, 'renderMapBackground');
+    const { screen } = createScreen();
+
+    // 首次 open 生成底图
+    screen.open(mockMap, 'spawn');
+    const callCountAfterOpen = renderBgSpy.mock.calls.length;
+    expect(callCountAfterOpen).toBeGreaterThanOrEqual(1);
+
+    // 触发相同尺寸的 resize，不应重新生成
+    window.dispatchEvent(new Event('resize'));
+    expect(renderBgSpy.mock.calls.length).toBe(callCountAfterOpen);
+
+    // 修改可用尺寸
+    const mapWrap = screen.root.querySelector<HTMLElement>('.ms-map-wrap')!;
+    Object.defineProperty(mapWrap, 'clientWidth', { value: 700, configurable: true });
+    Object.defineProperty(mapWrap, 'clientHeight', { value: 700, configurable: true });
+
+    window.dispatchEvent(new Event('resize'));
+    expect(renderBgSpy.mock.calls.length).toBe(callCountAfterOpen + 1);
+
+    renderBgSpy.mockRestore();
+  });
+
+  it('在 961×541、1280×720、1920×1080 窗口下自适应边长，地图内容完整且无滚动条', () => {
+    const viewports = [
+      { w: 961, h: 541 },
+      { w: 1280, h: 720 },
+      { w: 1920, h: 1080 },
+    ];
+
+    for (const vp of viewports) {
+      // 模拟视口
+      window.innerWidth = vp.w;
+      window.innerHeight = vp.h;
+
+      const { screen } = createScreen();
+      screen.open(mockMap, 'spawn');
+
+      const canvas = screen.root.querySelector<HTMLCanvasElement>('.ms-canvas')!;
+      const cssWidth = parseFloat(canvas.style.width);
+      const cssHeight = parseFloat(canvas.style.height);
+
+      expect(cssWidth).toBe(cssHeight);
+      expect(cssWidth).toBeGreaterThanOrEqual(240);
+      expect(cssWidth).toBeLessThanOrEqual(1000);
+
+      // 画布边长应当能完整放在窗口内（高度小于窗口高度，宽度留给左栏与工具栏）
+      expect(cssHeight).toBeLessThan(vp.h);
+      expect(cssWidth).toBeLessThan(vp.w);
+
+      // 根容器不溢出滚动
+      expect(screen.root.style.overflow || window.getComputedStyle(screen.root).overflow).toBe('hidden');
+
+      screen.dispose();
+    }
   });
 
   it('点击顶部其他载具卡片切换携弹面板所选载具', () => {
@@ -298,13 +394,11 @@ describe('MapScreen 地图界面组件', () => {
     const cards = screen.root.querySelectorAll<HTMLElement>('.ms-card');
     expect(cards.length).toBe(2);
 
-    // 点击第二个卡片(虎王)
     cards[1].click();
 
     expect(cards[1].classList.contains('sel')).toBe(true);
     expect(cards[0].classList.contains('sel')).toBe(false);
 
-    // 修改携弹应当是虎王
     const plusBtns = screen.root.querySelectorAll<HTMLButtonElement>('.ms-left button.mm-btn.small');
     plusBtns[1].click();
 

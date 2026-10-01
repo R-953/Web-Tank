@@ -7,6 +7,15 @@ import { AmmoPanel } from './menu/AmmoPanel';
 import { classIcon } from './menu/classIcons';
 import { h, injectMapScreenStyles } from './menu/styles';
 
+/**
+ * 计算大地图画布的正方形边长(含 24 px 标号边距)。
+ * 取可用宽高的较小值，下限 240、上限 1000，取整。
+ */
+export function mapCanvasSize(availWidth: number, availHeight: number): number {
+  const minDimension = Math.min(availWidth, availHeight);
+  return Math.floor(Math.max(240, Math.min(1000, minDimension)));
+}
+
 export interface MapScreenOptions {
   parent: HTMLElement;
   vehicles: readonly VehicleSpec[];
@@ -31,6 +40,8 @@ export class MapScreen {
   readonly root: HTMLElement;
   private readonly topBar: HTMLElement;
   private readonly leftCol: HTMLElement;
+  private readonly mapWrap: HTMLElement;
+  private readonly rightCol: HTMLElement;
   private readonly ammoContainer: HTMLElement;
   private readonly ammoPanel: AmmoPanel;
   private readonly mapInfoEl: HTMLElement;
@@ -44,8 +55,15 @@ export class MapScreen {
   private lastFrame: MapScreenFrame = { markers: [] };
   private symbology: 'nato' | 'warsaw';
 
-  private readonly mapSizePx = 600;
+  private currentCanvasSize = 0;
+  private lastBgPixels = 0;
   private readonly labelOffset = 24;
+
+  private readonly onResize = (): void => {
+    if (!this.isOpen) return;
+    this.updateDimensions();
+    this.draw(this.lastFrame);
+  };
 
   constructor(private readonly opts: MapScreenOptions) {
     injectMapScreenStyles();
@@ -58,7 +76,7 @@ export class MapScreen {
     // 主体: 左侧携弹 + 中间大地图 + 右侧工具栏
     const body = h('div', 'ms-body', this.root);
 
-    // 左侧 (宽约 480 px)
+    // 左侧 (宽约 480 px, 小窗口自适应)
     this.leftCol = h('div', 'ms-left', body);
     this.ammoContainer = h('div', 'ms-ammo-wrap', this.leftCol);
     this.ammoPanel = new AmmoPanel(this.ammoContainer, {
@@ -70,19 +88,14 @@ export class MapScreen {
     this.mapInfoEl = h('div', 'ms-map-info', this.leftCol);
 
     // 中间正方形大地图
-    const mapWrap = h('div', 'ms-map-wrap', body);
+    this.mapWrap = h('div', 'ms-map-wrap', body);
     this.canvas = document.createElement('canvas');
     this.canvas.className = 'ms-canvas';
-    const total = this.mapSizePx + this.labelOffset;
-    this.canvas.width = total;
-    this.canvas.height = total;
-    this.canvas.style.width = `${total}px`;
-    this.canvas.style.height = `${total}px`;
-    mapWrap.appendChild(this.canvas);
+    this.mapWrap.appendChild(this.canvas);
 
     // 右侧工具一列
-    const rightCol = h('div', 'ms-right', body);
-    const tools = h('div', 'ms-tools', rightCol);
+    this.rightCol = h('div', 'ms-right', body);
+    const tools = h('div', 'ms-tools', this.rightCol);
 
     // 符号体系下拉框「北约 / 华约」
     const symRow = h('div', 'ms-tool-item', tools);
@@ -101,7 +114,7 @@ export class MapScreen {
     });
 
     // 右下按钮
-    const bottomActions = h('div', 'ms-bottom-actions', rightCol);
+    const bottomActions = h('div', 'ms-bottom-actions', this.rightCol);
     this.confirmBtn = h('button', 'mm-btn primary ms-confirm-btn', bottomActions, '出战') as HTMLButtonElement;
     this.confirmBtn.addEventListener('click', () => {
       this.opts.onUiSound?.();
@@ -110,21 +123,34 @@ export class MapScreen {
   }
 
   open(map: GameMap, mode: 'spawn' | 'battle'): void {
+    if (this.map !== map) {
+      this.background = null;
+      this.lastBgPixels = 0;
+    }
     this.map = map;
     this.confirmBtn.textContent = mode === 'spawn' ? '出战' : '返回战斗';
     this.mapInfoEl.textContent = `地图: ${map.spec.name} · 尺寸: ${map.spec.size >= 1000 ? `${map.spec.size / 1000} km` : `${map.spec.size} m`} (${map.spec.size} × ${map.spec.size} m)`;
-    this.background = renderMapBackground(map, this.mapSizePx);
     this.symbology = this.opts.symbology;
     this.symbologySelect.value = this.symbology;
 
     this.renderTopBar();
 
     this.root.classList.remove('hidden');
+
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('resize', this.onResize);
+      window.addEventListener('resize', this.onResize);
+    }
+
+    this.updateDimensions();
     this.draw(this.lastFrame);
   }
 
   close(): void {
     this.root.classList.add('hidden');
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('resize', this.onResize);
+    }
   }
 
   get isOpen(): boolean {
@@ -137,9 +163,12 @@ export class MapScreen {
     const ctx = this.canvas.getContext('2d');
     if (!ctx) return;
 
-    const size = this.mapSizePx;
+    const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const total = this.currentCanvasSize;
     const label = this.labelOffset;
-    const total = size + label;
+    const size = total - label;
     const mapSize = this.map.spec.size;
     const half = mapSize / 2;
 
@@ -269,7 +298,48 @@ export class MapScreen {
   }
 
   dispose(): void {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('resize', this.onResize);
+    }
     this.root.remove();
+  }
+
+  private updateDimensions(): void {
+    if (!this.map) return;
+    const availW = this.mapWrap.clientWidth;
+    const availH = this.mapWrap.clientHeight;
+    let size: number;
+    if (availW > 0 && availH > 0) {
+      size = mapCanvasSize(availW, availH);
+    } else {
+      const winW = (typeof window !== 'undefined' && window.innerWidth) || 1280;
+      const winH = (typeof window !== 'undefined' && window.innerHeight) || 720;
+      const topH = this.topBar.offsetHeight || 70;
+      const leftW = this.leftCol.offsetWidth || 440;
+      const rightW = this.rightCol.offsetWidth || 130;
+      const fallbackW = Math.max(0, winW - leftW - rightW - 48);
+      const fallbackH = Math.max(0, winH - topH - 24);
+      size = mapCanvasSize(fallbackW, fallbackH);
+    }
+
+    if (this.currentCanvasSize !== size) {
+      this.currentCanvasSize = size;
+      this.canvas.style.width = `${size}px`;
+      this.canvas.style.height = `${size}px`;
+    }
+
+    const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
+    const pixelTotal = Math.round(size * dpr);
+    if (this.canvas.width !== pixelTotal || this.canvas.height !== pixelTotal) {
+      this.canvas.width = pixelTotal;
+      this.canvas.height = pixelTotal;
+    }
+
+    const contentPixels = Math.round((size - this.labelOffset) * dpr);
+    if (this.lastBgPixels !== contentPixels || !this.background) {
+      this.background = renderMapBackground(this.map, contentPixels);
+      this.lastBgPixels = contentPixels;
+    }
   }
 
   private renderTopBar(): void {
