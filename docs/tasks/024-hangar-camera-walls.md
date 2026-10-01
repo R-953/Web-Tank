@@ -1,7 +1,7 @@
 # 024-hangar-camera-walls:机库镜头拉远时穿墙
 
 - 负责:Antigravity(Gemini 3.8 Flash High;车道:界面)
-- 状态:待领取
+- 状态:已完成
 - 分支:`task/024-hangar-camera-walls`
 - 规模:S
 
@@ -40,9 +40,9 @@ export function fitRadius(target: { x: number; y: number; z: number }, dir: { x:
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] 新测试 `tests/hangar-camera.test.ts`:朝后墙、朝两侧墙、朝上的方向,`radius` = 20 时算出的镜头位置都在 `HANGAR_ROOM` 以内;朝 +z(敞开的一面)时不收缩;任何方向的返回值都 ≤ 输入的 `radius`
-- [ ] 已有测试全部不变地通过
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] 新测试 `tests/hangar-camera.test.ts`:朝后墙、朝两侧墙、朝上的方向,`radius` = 20 时算出的镜头位置都在 `HANGAR_ROOM` 以内;朝 +z(敞开的一面)时不收缩;任何方向的返回值都 ≤ 输入的 `radius`
+- [x] 已有测试全部不变地通过
 
 ## 不做
 
@@ -52,5 +52,12 @@ export function fitRadius(target: { x: number; y: number; z: number }, dir: { x:
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 修改: `src/ui/menu/Hangar.ts`
+  - 新增: `tests/hangar-camera.test.ts`
+  - 新增: `changelog.d/2026-10-01-024-hangar-camera-walls.md`
+  - 修改: `docs/tasks/024-hangar-camera-walls.md`
 - 命令与结果:
-- 偏差 / 未完成 / 待决定:
+  - `npm run lint`: 通过 (0 error)
+  - `npm test`: 通过 (26 个测试文件, 264 个测试全部通过)
+  - `npm run build`: 通过 (生产构建成功)
+- 偏差 / 未完成 / 待决定: 无

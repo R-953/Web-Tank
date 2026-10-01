@@ -129,10 +129,16 @@ export class HangarScene {
 
   private updateCamera(): void {
     const cp = Math.cos(this.pitch);
+    const dir = {
+      x: Math.sin(this.yaw) * cp,
+      y: Math.sin(this.pitch),
+      z: Math.cos(this.yaw) * cp,
+    };
+    const r = fitRadius(this.target, dir, this.radius);
     this.camera.position.set(
-      this.target.x + Math.sin(this.yaw) * cp * this.radius,
-      this.target.y + Math.sin(this.pitch) * this.radius,
-      this.target.z + Math.cos(this.yaw) * cp * this.radius,
+      this.target.x + dir.x * r,
+      this.target.y + dir.y * r,
+      this.target.z + dir.z * r,
     );
     this.camera.lookAt(this.target);
   }
@@ -167,22 +173,22 @@ export class HangarScene {
     add(new THREE.CylinderGeometry(5.2, 5.4, PLATFORM_H, 48), mat(0x3a3e42, 0.85, 0.2), 0, PLATFORM_H / 2, 0, false);
     add(new THREE.CylinderGeometry(5.45, 5.5, 0.03, 48), mat(0xc9a13a, 0.7), 0, 0.015, 0, false);
     // 墙
-    add(new THREE.BoxGeometry(40, 12, 0.4), wall, 0, 6, -15);
-    add(new THREE.BoxGeometry(0.4, 12, 40), wall, -17, 6, 0);
-    add(new THREE.BoxGeometry(0.4, 12, 40), wall, 17, 6, 0);
+    add(new THREE.BoxGeometry(40, 12, WALL_THICKNESS), wall, 0, 6, BACK_WALL_Z);
+    add(new THREE.BoxGeometry(WALL_THICKNESS, 12, 40), wall, -SIDE_WALL_X, 6, 0);
+    add(new THREE.BoxGeometry(WALL_THICKNESS, 12, 40), wall, SIDE_WALL_X, 6, 0);
     // 后墙上的大门(亮一点,像外面的天光)
-    add(new THREE.BoxGeometry(10, 7, 0.1), mat(0x9fb3c4, 1, 0, 0x2a3440), 0, 3.5, -14.75, false);
+    add(new THREE.BoxGeometry(10, 7, 0.1), mat(0x9fb3c4, 1, 0, 0x2a3440), 0, 3.5, BACK_WALL_Z + 0.25, false);
     for (const x of [-15, -9, -3, 3, 9, 15]) {
-      add(new THREE.BoxGeometry(0.45, 11, 0.45), steel, x, 5.5, -14.5);
+      add(new THREE.BoxGeometry(COLUMN_SIZE, 11, COLUMN_SIZE), steel, x, 5.5, BACK_COLUMN_Z);
     }
     for (const z of [-9, -3, 3, 9]) {
-      add(new THREE.BoxGeometry(0.45, 11, 0.45), steel, -16.5, 5.5, z);
-      add(new THREE.BoxGeometry(0.45, 11, 0.45), steel, 16.5, 5.5, z);
+      add(new THREE.BoxGeometry(COLUMN_SIZE, 11, COLUMN_SIZE), steel, -SIDE_COLUMN_X, 5.5, z);
+      add(new THREE.BoxGeometry(COLUMN_SIZE, 11, COLUMN_SIZE), steel, SIDE_COLUMN_X, 5.5, z);
     }
     // 屋架与吊灯
     const lamp = mat(0xfff1d0, 0.5, 0, 0xffe2a8);
     for (const z of [-12, -6, 0, 6]) {
-      add(new THREE.BoxGeometry(34, 0.5, 0.35), steel, 0, 10.5, z, false);
+      add(new THREE.BoxGeometry(SIDE_WALL_X * 2, TRUSS_HEIGHT, 0.35), steel, 0, TRUSS_Y, z, false);
       for (const x of [-6, 6]) add(new THREE.BoxGeometry(1.2, 0.12, 0.5), lamp, x, 10.1, z, false);
     }
     // 木箱、油桶
@@ -203,6 +209,51 @@ export class HangarScene {
 }
 
 const PLATFORM_H = 0.14;
+
+/** 厂房结构尺寸(内表面与立柱位置) */
+const WALL_THICKNESS = 0.4;
+const SIDE_WALL_X = 17;
+const BACK_WALL_Z = -15;
+const COLUMN_SIZE = 0.45;
+const SIDE_COLUMN_X = 16.5;
+const BACK_COLUMN_Z = -14.5;
+const TRUSS_Y = 10.5;
+const TRUSS_HEIGHT = 0.5;
+const CAMERA_MARGIN = 0.4;
+
+/** 镜头可以待的范围(厂房内表面再往里留余量):x ∈ [-halfWidth, halfWidth],z ≥ back,y ≤ ceiling */
+export const HANGAR_ROOM: { halfWidth: number; back: number; ceiling: number } = {
+  // 两侧立柱内表面(16.5 - 0.45/2 = 16.275)再往里留余量
+  halfWidth: SIDE_COLUMN_X - COLUMN_SIZE / 2 - CAMERA_MARGIN,
+  // 后立柱内表面(-14.5 + 0.45/2 = -14.275)再往里留余量
+  back: BACK_COLUMN_Z + COLUMN_SIZE / 2 + CAMERA_MARGIN,
+  // 屋架下表面(10.5 - 0.5/2 = 10.25)再往下留余量
+  ceiling: TRUSS_Y - TRUSS_HEIGHT / 2 - CAMERA_MARGIN,
+};
+
+/**
+ * 从 target 沿 dir(单位向量,指向镜头)出发,镜头最远能放多远而不出 HANGAR_ROOM。
+ * 返回 min(radius, 到边界的距离)。
+ */
+export function fitRadius(
+  target: { x: number; y: number; z: number },
+  dir: { x: number; y: number; z: number },
+  radius: number,
+): number {
+  let limit = radius;
+  if (dir.x > 0) {
+    limit = Math.min(limit, Math.max(0, (HANGAR_ROOM.halfWidth - target.x) / dir.x));
+  } else if (dir.x < 0) {
+    limit = Math.min(limit, Math.max(0, (-HANGAR_ROOM.halfWidth - target.x) / dir.x));
+  }
+  if (dir.y > 0) {
+    limit = Math.min(limit, Math.max(0, (HANGAR_ROOM.ceiling - target.y) / dir.y));
+  }
+  if (dir.z < 0) {
+    limit = Math.min(limit, Math.max(0, (HANGAR_ROOM.back - target.z) / dir.z));
+  }
+  return limit;
+}
 
 function disposeTree(root: THREE.Object3D): void {
   root.traverse((o) => {
