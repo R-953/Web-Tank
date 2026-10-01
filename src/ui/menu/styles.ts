@@ -407,5 +407,90 @@ export function injectClassIconStyles(): void {
   document.head.appendChild(style);
 }
 
+/* 载具信息卡片样式 */
+const VEHICLE_CARD_CSS = `
+.vc-card {
+  position: fixed;
+  z-index: 100;
+  width: 320px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  padding: 12px 14px;
+  background: rgba(22, 27, 32, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  font: 13px/1.45 system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: #e6e8ea;
+  user-select: none;
+  pointer-events: auto;
+  box-sizing: border-box;
+}
+.vc-card.hidden {
+  display: none;
+}
+.vc-header {
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 6px;
+}
+.vc-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f3d27f;
+  margin: 0 0 2px;
+}
+.vc-subtitle {
+  font-size: 11px;
+  color: #cfd3d6;
+  opacity: 0.75;
+}
+.vc-section {
+  margin-top: 8px;
+}
+.vc-sec-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e0b44c;
+  margin-bottom: 3px;
+  border-left: 2px solid #e0b44c;
+  padding-left: 5px;
+}
+.vc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.vc-table tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.vc-table td {
+  padding: 2px 0;
+  vertical-align: top;
+}
+.vc-label {
+  opacity: 0.7;
+  padding-right: 8px;
+  white-space: nowrap;
+  width: 32%;
+}
+.vc-val {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  word-break: break-word;
+}
+`;
+
+let vcInjected = false;
+
+export function injectVehicleCardStyles(): void {
+  injectMenuStyles();
+  if (vcInjected || typeof document === 'undefined') return;
+  vcInjected = true;
+  const style = document.createElement('style');
+  style.textContent = VEHICLE_CARD_CSS;
+  document.head.appendChild(style);
+}
+
 
 
