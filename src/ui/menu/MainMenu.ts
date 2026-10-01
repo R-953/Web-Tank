@@ -231,6 +231,19 @@ export class MainMenu {
     return { vehicle: this.vehicle, map: this.map, loadout: { ...this.loadout } };
   }
 
+  /** 档案或符号体系在别处改了(地图界面里换车组、设置里换符号体系)以后,让机库跟上 */
+  refresh(): void {
+    const id = this.opts.profile ? activeVehicleId(this.opts.profile.get()) : '';
+    const spec = id ? this.opts.vehicles.find((v) => v.id === id) : undefined;
+    if (spec && spec.id !== this.vehicle.id) {
+      this.select(spec);
+      return;
+    }
+    this.renderInfo();
+    if (this.lineupBar) this.lineupBar.refresh();
+    else this.renderSlots();
+  }
+
   private click(): void {
     this.opts.onUiSound?.();
   }
