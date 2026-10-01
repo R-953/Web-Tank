@@ -12,7 +12,7 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const LOCAL = process.env.LOCALAPPDATA ?? '';
@@ -74,12 +74,32 @@ function sh(cmd, args, cwd, opts = {}) {
   return { code: r.status ?? -1, out: `${r.stdout ?? ''}${r.stderr ?? ''}` };
 }
 const git = (cwd, ...args) => sh('git', args, cwd);
-const npm = (cwd, ...args) => sh(IS_WIN ? 'npm.cmd' : 'npm', args, cwd, { shell: IS_WIN });
+const npm = (cwd, ...args) => {
+  if (!IS_WIN) return sh('npm', args, cwd);
+  const npmCli = join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js');
+  if (existsSync(npmCli)) return sh(process.execPath, [npmCli, ...args], cwd);
+  const command = ['npm.cmd', ...args.map((arg) => `"${arg.replaceAll('"', '""')}"`)].join(' ');
+  return sh(command, [], cwd, { shell: true });
+};
 
 /** 简单通配:`*` 匹配一段路径里的任意字符,`**` 跨目录 */
 function globToRegExp(glob) {
   const s = glob.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*\*/g, '\0').replace(/\*/g, '[^/]*').replace(/\0/g, '.*');
   return new RegExp(`^${s}$`);
+}
+
+/** 汇总 git diff --numstat 输出,二进制文件计入文件数但不计行数 */
+export function sumNumstat(text) {
+  const stats = { files: 0, added: 0, deleted: 0 };
+  for (const line of text.split(/\r?\n/)) {
+    if (!line) continue;
+    const match = line.match(/^(\d+|-)\t(\d+|-)\t/);
+    if (!match) continue;
+    stats.files++;
+    if (match[1] !== '-') stats.added += Number(match[1]);
+    if (match[2] !== '-') stats.deleted += Number(match[2]);
+  }
+  return stats;
 }
 
 /**
@@ -255,9 +275,9 @@ function grade(job, base, allowed) {
   g.outOfScope = g.changed.filter((f) => !res.some((re) => re.test(f)));
   g.commits = git(wt, 'log', '--format=%s', `${baseSha}..HEAD`).out.split('\n').filter(Boolean);
   g.pushed = git(wt, 'ls-remote', '--heads', 'origin', job.branch).out.trim() !== '';
-  const added = git(wt, 'diff', '-U0', baseSha, '--', '*.ts').out.split('\n').filter((l) => l.startsWith('+') && !l.startsWith('+++'));
-  g.anyCasts = added.filter((l) => /(:\s*any\b|as any\b|<any>)/.test(l)).length;
-  g.addedLines = added.length;
+  const addedTsLines = git(wt, 'diff', '-U0', baseSha, '--', '*.ts').out.split('\n').filter((l) => l.startsWith('+') && !l.startsWith('+++'));
+  g.anyCasts = addedTsLines.filter((l) => /(:\s*any\b|as any\b|<any>)/.test(l)).length;
+  g.numstat = sumNumstat(git(wt, 'diff', '--numstat', baseSha).out);
   const card = join(wt, job.card);
   if (existsSync(card)) {
     const result = readFileSync(card, 'utf8').split(/^## 结果/m)[1] ?? '';
@@ -315,7 +335,7 @@ function report(rows, file) {
     const t = g.tests ? `${g.tests.passed}/${g.tests.total}` : '—';
     const h = g.hidden ? `${g.hidden.passed}/${g.hidden.total}` : '—';
     const quota = r.premium != null ? `${r.premium} 次` : r.tokens ? `${r.tokens.input}/${r.tokens.output} tok` : '—';
-    const commits = `${g.changed.length} 个文件 +${g.addedLines} 行${g.uncommitted.length ? `,${g.uncommitted.length} 个未提交` : ''}${g.pushed ? ',**已 push**' : ''}`;
+    const commits = `${g.numstat.files} 个文件 +${g.numstat.added} −${g.numstat.deleted} 行${g.uncommitted.length ? `,${g.uncommitted.length} 个未提交` : ''}${g.pushed ? ',**已 push**' : ''}`;
     lines.push(
       `| ${r.id} | ${r.agent} / ${r.model} | ${r.minutes?.toFixed(1) ?? '—'} 分${r.resumes ? `(续跑 ${r.resumes} 次)` : ''} | ${r.code ?? '—'} | ${quota} | ${g.outOfScope.length ? g.outOfScope.join('<br>') : '无'} | ${commits} | ${yes(g.lint)} ${yes(g.testsPass)} ${yes(g.build)} | ${t} | ${h} | ${yes(g.resultFilled)} ${yes(g.changelog)} | ${score(g)} / ${g.resultFilled === undefined ? 80 : 90} |`,
     );
@@ -406,7 +426,9 @@ async function main() {
   console.log(`\n报告:${file}`);
 }
 
-main().catch((e) => {
-  console.error(e instanceof Error ? e.message : e);
-  process.exit(1);
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((e) => {
+    console.error(e instanceof Error ? e.message : e);
+    process.exit(1);
+  });
+}
