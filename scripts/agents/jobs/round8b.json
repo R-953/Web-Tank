@@ -1,0 +1,13 @@
+{
+  "name": "round8b",
+  "base": "origin/docs/round8b-cards",
+  "permissions": "scoped",
+  "timeoutMin": 60,
+  "maxPerAgent": 4,
+  "jobs": [
+    { "id": "033", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/033-lineup-bar.md", "branch": "task/033-lineup-bar", "commit": "ui: 机库底部的编组栏,接上科技树" },
+    { "id": "034", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/034-crew-skill-in-battle.md", "branch": "task/034-crew-skill-in-battle", "commit": "feat: 开局按车组等级改玩家载具的装填和转速" },
+    { "id": "035", "agent": "copilot", "model": "auto", "card": "docs/tasks/035-minimap-marker-color.md", "branch": "task/035-minimap-marker-color", "commit": "test: 小地图标记颜色抽成纯函数并补测试" },
+    { "id": "036", "agent": "copilot", "model": "auto", "card": "docs/tasks/036-profile-dedupe-lineup-ids.md", "branch": "task/036-profile-dedupe-lineup-ids", "commit": "fix: 存档清洗时给重复的编组 id 去重" }
+  ]
+}

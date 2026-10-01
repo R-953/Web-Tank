@@ -1,7 +1,7 @@
 # 028-vehicle-meta-crew-ace:载具的国家 / 类别 / 年份 / 车族,以及王牌乘员数值
 
 - 负责:Antigravity(3.8 Flash High;`src/data/types.ts` 本归主程维护,本卡授权只加下面的可选字段)
-- 状态:进行中
+- 状态:已合并
 - 分支:`task/028-vehicle-meta-crew-ace`
 - 规模:S–M(数据 + 调研)
 

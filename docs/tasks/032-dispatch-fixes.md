@@ -1,7 +1,7 @@
 # 032-dispatch-fixes:调度脚本两处小修——改动行数统计、DEP0190 警告
 
 - 负责:GitHub Copilot CLI(主程审查)
-- 状态:进行中
+- 状态:已合并
 - 分支:`task/032-dispatch-fixes`
 - 规模:S
 
