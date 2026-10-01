@@ -475,7 +475,7 @@ export const M4A3_76W: VehicleSpec = {
   weapons: [gun76('76 mm M1A1'), m1919a4Coax()],
   // 车长 6.29(不含炮)/ 宽 2.68(带挡泥板)/ 全高 2.97,战斗全重 32.3 t(《Catalogue of Standard Ordnance Items》)
   // 转向按固定半径转向估算;加速度按功重比 13.9 hp/t 比照 T-34-85 估算(5.5 × 13.9 / 15.6)
-  hull: { length: 6.29, width: 2.68, height: 1.93, turnRate: 15, acceleration: 4.9 },
+  hull: { length: 6.29, width: 2.68, height: 1.93, turnRate: 15, turnRadius: 9.5, acceleration: 4.9 },
   // 俯仰 −12° / +25°;炮口伸出车首 47 in = 1.19 m → barrelLength = 1.19 − 2.5/2 + 6.29/2 ≈ 3.09(真实身管 52 倍径 3.96 m)
   // 高低机 2.8°/s 为 War Thunder 值(历史满改、新手乘员)
   turret: { length: 2.5, width: 2.2, height: 0.72, barrelLength: 3.09, elevation: [-12, 25], elevationSpeed: 2.8 },
@@ -504,7 +504,7 @@ export const M4A3E8: VehicleSpec = {
   weapons: [gun76('76 mm M1A2'), m1919a4Coax()],
   // 车长 6.27(不含炮)/ 宽 3.00(带挡泥板)/ 全高 2.97,战斗全重 33.7 t(Hunnicutt 1994)
   // 加速度按功重比 13.4 hp/t 比照 T-34-85 估算(5.5 × 13.4 / 15.6)
-  hull: { length: 6.27, width: 3.0, height: 1.93, turnRate: 15, acceleration: 4.7 },
+  hull: { length: 6.27, width: 3.0, height: 1.93, turnRate: 15, turnRadius: 9.5, acceleration: 4.7 },
   // 炮口伸出车首 50 in = 1.27 m(比 VVSS 型多出的 3 in 是制退器)→ barrelLength = 1.27 − 2.5/2 + 6.27/2 ≈ 3.16
   turret: { length: 2.5, width: 2.2, height: 0.72, barrelLength: 3.16, elevation: [-12, 25], elevationSpeed: 2.8 },
   sight: { magnifications: [4.3, 5], reticle: 'us' },
@@ -552,7 +552,7 @@ export const M4A3E2: VehicleSpec = {
   ],
   // 车长 6.27(不含炮)/ 宽 2.94(带挡泥板)/ 全高 2.95,战斗全重 38.0 t(Hunnicutt 1994)
   // 最小转向直径 74 ft(76 mm 车 62 ft),转向速度按同样方法缩小到 13°/s;加速度按功重比 11.8 hp/t 比照 T-34-85 估算(5.5 × 11.8 / 15.6)
-  hull: { length: 6.27, width: 2.94, height: 1.93, turnRate: 13, acceleration: 4.2 },
+  hull: { length: 6.27, width: 2.94, height: 1.93, turnRate: 13, turnRadius: 11.25, acceleration: 4.2 },
   // 俯仰 −10° / +25°;炮口伸出车首 0 in → barrelLength = 0 − 2.5/2 + 6.27/2 ≈ 1.89(真实身管 40 倍径 3.0 m)
   // 炮塔盒比 T23 宽 0.15 m(侧壁 152 mm 对 64 mm);火线高资料为 2.24 m,模型按同一车体 / 炮塔盒高取 2.29 m
   // 高低机 2.8°/s 为 War Thunder 值
