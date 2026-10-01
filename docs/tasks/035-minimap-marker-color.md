@@ -24,9 +24,9 @@ export function markerColor(team: 'enemy' | 'ally', dead: boolean): string;
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] `tests/minimap.test.ts` 新增:敌军红 `#ff3b30`、友军蓝 `#3aa0ff`、两方被击毁都是灰 `#5a5a5a`
-- [ ] 绘制效果不变(箭头样式里被击毁的车不画箭头这条逻辑不动)
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] `tests/minimap.test.ts` 新增:敌军红 `#ff3b30`、友军蓝 `#3aa0ff`、两方被击毁都是灰 `#5a5a5a`
+- [x] 绘制效果不变(箭头样式里被击毁的车不画箭头这条逻辑不动)
 
 ## 不做
 
@@ -34,6 +34,6 @@ export function markerColor(team: 'enemy' | 'ally', dead: boolean): string;
 
 ## 结果(完成后由执行者填写)
 
-- 改动文件:
-- 命令与结果:
-- 偏差 / 未完成 / 待决定:
+- 改动文件:修改 `src/ui/Minimap.ts`、`tests/minimap.test.ts`、`docs/tasks/035-minimap-marker-color.md`;新增 `changelog.d/2026-10-01-035-minimap-marker-color.md`。
+- 命令与结果:`npm run lint` 通过; `npm test` 首次运行因 Vitest worker 启动超时失败,重试通过(42 个测试文件、439 项); `npx vitest run` 通过(42 个测试文件、439 项); `npm run build` 通过。
+- 偏差 / 未完成 / 待决定:无。箭头分支中被击毁车辆不绘制箭头的条件未改动。
