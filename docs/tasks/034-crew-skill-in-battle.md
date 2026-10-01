@@ -1,7 +1,7 @@
 # 034-crew-skill-in-battle:开局按车组等级改玩家载具的装填和转速
 
 - 负责:Antigravity(3.8 Flash High;`src/game/Game.ts` 本归主程维护,本卡授权只做下面这一处)
-- 状态:已完成
+- 状态:已合并
 - 分支:`task/034-crew-skill-in-battle`
 - 规模:S
 

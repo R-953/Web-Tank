@@ -1,0 +1,13 @@
+{
+  "name": "round9",
+  "base": "origin/docs/round9-cards",
+  "permissions": "scoped",
+  "timeoutMin": 75,
+  "maxPerAgent": 4,
+  "jobs": [
+    { "id": "039", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/039-military-symbology.md", "branch": "task/039-military-symbology", "commit": "ui: 北约 / 华约军标符号(调研 + 模块 + 设置项)" },
+    { "id": "040", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/040-hangar-bar-layout.md", "branch": "task/040-hangar-bar-layout", "commit": "ui: 机库底部按 War Thunder 的布局重排" },
+    { "id": "041", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/041-vehicle-info-card.md", "branch": "task/041-vehicle-info-card", "commit": "ui: 鼠标悬停的载具信息卡片" },
+    { "id": "042", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/042-map-screen.md", "branch": "task/042-map-screen", "commit": "ui: 地图界面(编组 + 携弹 + 大地图),独立组件" }
+  ]
+}

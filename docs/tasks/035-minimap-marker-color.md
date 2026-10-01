@@ -1,7 +1,7 @@
 # 035-minimap-marker-color:小地图标记颜色抽成纯函数并补测试(友军蓝色)
 
 - 负责:GitHub Copilot CLI(主程审查)
-- 状态:进行中
+- 状态:已合并
 - 分支:`task/035-minimap-marker-color`
 - 规模:S
 

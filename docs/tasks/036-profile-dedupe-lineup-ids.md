@@ -1,7 +1,7 @@
 # 036-profile-dedupe-lineup-ids:存档清洗时给重复的编组 id 去重
 
 - 负责:GitHub Copilot CLI(主程审查)
-- 状态:完成
+- 状态:已合并
 - 分支:`task/036-profile-dedupe-lineup-ids`
 - 规模:S
 
@@ -23,8 +23,8 @@
 
 ## 验收标准
 
-- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [x] 新测试:两个编组 id 相同 → 清洗后 id 各不相同、名称和格子不变、`activeLineup` 指向第一个;三个相同也能处理
+- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [ ] 新测试:两个编组 id 相同 → 清洗后 id 各不相同、名称和格子不变、`activeLineup` 指向第一个;三个相同也能处理
 
 ## 不做
 
@@ -33,9 +33,5 @@
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
-  - 修改:`src/settings/Profile.ts`
-  - 修改:`tests/profile.test.ts`
-  - 修改:`docs/tasks/036-profile-dedupe-lineup-ids.md`
-  - 新增:`changelog.d/2026-10-01-036-profile-dedupe-lineup-ids.md`
-- 命令与结果:`npm run lint` 通过;`npm test` 通过(42 个测试文件、440 个测试);`npm run build` 通过(仅有 bundle 体积提示)。
-- 偏差 / 未完成 / 待决定:无。
+- 命令与结果:
+- 偏差 / 未完成 / 待决定:

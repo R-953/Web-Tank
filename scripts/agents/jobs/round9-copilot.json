@@ -1,0 +1,10 @@
+{
+  "name": "round9-copilot",
+  "base": "origin/docs/round9-cards",
+  "permissions": "scoped",
+  "timeoutMin": 45,
+  "maxPerAgent": 1,
+  "jobs": [
+    { "id": "043", "agent": "copilot", "model": "auto", "card": "docs/tasks/043-vite-watch-worktree.md", "branch": "task/043-vite-watch-worktree", "commit": "fix: worktree 里跑 dev server 时改代码不刷新——只忽略项目根目录下的 .worktrees / Archive" }
+  ]
+}
