@@ -194,8 +194,8 @@ export const T34_85: VehicleSpec = {
 export const TIGER_II: VehicleSpec = {
   id: 'tiger_ii',
   name: '虎王(亨舍尔炮塔)',
-  // 首上 150@50° ≈ 233;首下 100@50°:几何视线厚度 156(War Thunder 高硬度装甲 0.95 系数折算 148,分界高度 0.9m);侧面下部 80 垂直(上部 80@25° ≈ 88);后部 80@30° ≈ 92
-  armor: { front: 233, side: 80, rear: 92, lowerFront: { thickness: 148, height: 0.9 } },
+  // 首上 150@50° ≈ 233;首下 100@50° ≈ 156(分界高度 0.9m);侧面下部 80 垂直(上部 80@25° ≈ 88);后部 80@30° ≈ 92
+  armor: { front: 233, side: 80, rear: 92, lowerFront: { thickness: 156, height: 0.9 } },
   // 炮塔正面 180@10° ≈ 183;侧面 80@21° ≈ 86;后部 80@20° ≈ 85
   turretArmor: { front: 183, side: 86, rear: 85 },
   maxSpeed: 41.5,

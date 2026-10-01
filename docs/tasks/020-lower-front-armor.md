@@ -65,13 +65,15 @@ lowerFront?: { thickness: number; height: number };
   - 修改: `src/game/Damage.ts`(新增 `frontArmorAt` 函数;`resolveHit` 增加 `hitLocalY` 与 `hullBottomY` 可选参数以在受击面为正面时选首上/首下)
   - 修改: `src/data/vehicles.ts`(为 `tiger_ii`、`t34_85`、`m4a3_76w`、`m4a3e8`、`m4a3e2` 配置 `lowerFront`;`tiger_i`、`su_100`、`isu_122` 首下不比首上薄,按规则不设)
   - 修改: `docs/physics-validation.md`(新增第 12 节,记录各车首下数据、出处、模型分界高度与历史战术验证)
-  - 修改: `tests/realism.test.ts`(历史对局常识补充 BR-471 在 500 m 打虎王首上与首下对比测试)
-  - 新增: `tests/lower-front-armor.test.ts`(测试边界高度判定、无首下车辆退回 `front`、各车数据配置一致性、ISU-122 在 500 m 打虎王首上打不穿/打首下能打穿)
+  - 修改: `tests/realism.test.ts`(历史对局常识补充 BR-471 在 500 m 打首上打不穿，在 300 m 打首下能打穿、首上仍打不穿的对比测试)
+  - 新增: `tests/lower-front-armor.test.ts`(测试边界高度判定、无首下车辆退回 `front`、各车数据配置一致性、ISU-122 在 500 m 打虎王首上打不穿/打首下亦打不穿、在 300 m 打首下能打穿)
   - 新增: `changelog.d/2026-10-01-020-lower-front-armor.md`
 - 命令与结果:
   - `npm run lint`: 通过(tsc --noEmit 无错误)
   - `npm test`: 通过(36 个测试文件, 362 个测试全部通过)
   - `npm run build`: 通过(tsc && vite build 成功打包)
 - 偏差 / 未完成 / 待决定:
-  - 虎王首下视线厚度:纯几何换算为 100 mm / cos 50° ≈ 156 mm。但由于项目中 BR-471 按苏联 Shirokorad 表拟合,在 500 m 处计算穿深为 149.5 mm。若直接填 156 mm,则 500 m 处穿深相差 6.5 mm 无法击穿首下(需拉近至 300 m 以内)。参考 War Thunder 官方 wiki 德系后期高硬度装甲 0.95 折减系数(War Thunder 值:100 × 0.95 / cos 50° ≈ 148 mm,库宾卡实测对苏制 122 mm AP 等效约 145–148 mm),取 148 mm 使 500 m 处恰能击穿,符合验收标准。如需严格采用 156 mm 几何值,可由主程决定是否改回 156 mm 并将 500 m 测试改为 100/300 m。
-  - `src/game/Game.ts`: 归主程维护,本卡未越界修改。后续主程审查合并时,建议在 `Game.ts` 命中结算处(约 583 行和 645 行)为 `resolveHit` 调用补充传入 `entry.y` 与 `-vehicle.spec.hull.height / 2` 参数,使实战对局中正面被命中时首上/首下完整生效。
+  - 虎王首下装甲厚度与测试距离偏差:
+    1. 虎王首下视线厚度统一采用纯几何视线厚度 156 mm (100 / cos 50° ≈ 155.6 mm), 与首上 233 mm 及其他车辆规则保持一致, 不乘任何装甲硬度折减系数。
+    2. 验收标准中「BR-471(ISU-122)在 500 m 打首下能打穿」为主程写卡时的错误假设。本游戏中 BR-471 在 500 m 处计算穿深为 149.5 mm, 小于首下 156 mm, 如实反映了远距离动能衰减导致无法击穿首下。经 `flyShell` 计算, BR-471 穿深 ≥ 156 mm 的最远距离约为 340 m, 因此将穿透测试距离改为 300 m (穿深 157.8 mm > 156 mm, 击穿首下、首上仍打不穿), 500 m 保留首上与首下均无法击穿的断言, 测试名如实体现 300 m。
+  - `src/game/Game.ts`: 归主程维护, 已由主程修改传入 `entry.y` 与 `-vehicle.spec.hull.height / 2`。

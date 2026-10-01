@@ -17,7 +17,7 @@ describe('首上 / 首下装甲判定 frontArmorAt', () => {
     front: 233,
     side: 80,
     rear: 92,
-    lowerFront: { thickness: 148, height: 0.9 },
+    lowerFront: { thickness: 156, height: 0.9 },
   };
 
   const armorWithoutLower: ArmorSpec = {
@@ -34,7 +34,7 @@ describe('首上 / 首下装甲判定 frontArmorAt', () => {
   });
 
   it('分界下一点:使用首下 lowerFront.thickness', () => {
-    expect(frontArmorAt(armorWithLower, splitY - 1e-4, hullBottomY)).toBe(148);
+    expect(frontArmorAt(armorWithLower, splitY - 1e-4, hullBottomY)).toBe(156);
   });
 
   it('分界上一点:使用首上 front', () => {
@@ -61,13 +61,13 @@ describe('穿透判定 resolveHit 对首下装甲的支持', () => {
     front: 233,
     side: 80,
     rear: 92,
-    lowerFront: { thickness: 148, height: 0.9 },
+    lowerFront: { thickness: 156, height: 0.9 },
   };
   const hullBottomY = -1.05;
 
   it('打中首下(低于分界线)采用首下厚度', () => {
     const res = resolveHit({ penetration: 170 }, armor, frontDir, frontNormal, undefined, -0.5, hullBottomY);
-    expect(res.armor).toBe(148);
+    expect(res.armor).toBe(156);
     expect(res.penetrated).toBe(true);
   });
 
@@ -91,12 +91,12 @@ describe('历史战术校验:BR-471(ISU-122)对虎王正面', () => {
   const tigerII = TIGER_II;
   const hullBottomY = -tigerII.hull.height / 2; // -1.05
 
-  it('BR-471(ISU-122)在 500 m 打虎王首上打不穿、打首下能打穿', () => {
+  it('BR-471(ISU-122)在 500 m 打虎王首上打不穿、在 300 m 打首下能打穿', () => {
     const br471 = shellOf('isu_122', 'br471');
-    const [s500] = flyShell(br471, [500]);
 
-    // 首上:高于分界线 (-0.15m), 取 y = 0.2
-    const hitUpper = resolveHit(
+    // 500 m 处穿深 149.5 mm: 首上(233 mm)打不穿, 首下(156 mm)亦打不穿
+    const [s500] = flyShell(br471, [500]);
+    const hitUpper500 = resolveHit(
       { ...br471, penetration: s500.penetration },
       tigerII.armor,
       frontDir,
@@ -105,11 +105,9 @@ describe('历史战术校验:BR-471(ISU-122)对虎王正面', () => {
       0.2,
       hullBottomY,
     );
-    expect(hitUpper.armor).toBe(tigerII.armor.front);
-    expect(hitUpper.penetrated).toBe(false);
-
-    // 首下:低于分界线 (-0.15m), 取 y = -0.5
-    const hitLower = resolveHit(
+    expect(hitUpper500.armor).toBe(233);
+    expect(hitUpper500.penetrated).toBe(false);
+    const hitLower500 = resolveHit(
       { ...br471, penetration: s500.penetration },
       tigerII.armor,
       frontDir,
@@ -118,8 +116,32 @@ describe('历史战术校验:BR-471(ISU-122)对虎王正面', () => {
       -0.5,
       hullBottomY,
     );
-    expect(hitLower.armor).toBe(tigerII.armor.lowerFront!.thickness);
-    expect(hitLower.penetrated).toBe(true);
+    expect(hitLower500.armor).toBe(156);
+    expect(hitLower500.penetrated).toBe(false);
+
+    // 300 m 处穿深约 157.8 mm: 首上仍打不穿, 首下成功击穿
+    const [s300] = flyShell(br471, [300]);
+    const hitUpper300 = resolveHit(
+      { ...br471, penetration: s300.penetration },
+      tigerII.armor,
+      frontDir,
+      frontNormal,
+      undefined,
+      0.2,
+      hullBottomY,
+    );
+    expect(hitUpper300.penetrated).toBe(false);
+    const hitLower300 = resolveHit(
+      { ...br471, penetration: s300.penetration },
+      tigerII.armor,
+      frontDir,
+      frontNormal,
+      undefined,
+      -0.5,
+      hullBottomY,
+    );
+    expect(hitLower300.armor).toBe(156);
+    expect(hitLower300.penetrated).toBe(true);
   });
 });
 
@@ -129,7 +151,7 @@ describe('各车辆 lowerFront 数据完整性与一致性', () => {
   });
 
   it('虎王首下弱点配置', () => {
-    expect(VEHICLES.tiger_ii.armor.lowerFront).toEqual({ thickness: 148, height: 0.9 });
+    expect(VEHICLES.tiger_ii.armor.lowerFront).toEqual({ thickness: 156, height: 0.9 });
   });
 
   it('谢尔曼车系传动罩配置', () => {
