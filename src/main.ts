@@ -7,6 +7,7 @@ import { OrbitCamera } from './engine/OrbitCamera';
 import { FreeLook } from './engine/FreeLook';
 import { Game, type GameEvent } from './game/Game';
 import { readPlayerControls } from './game/PlayerController';
+import { buildTerrain } from './game/terrain';
 import { SIGHT_RANGE } from './game/Ballistics';
 import { clampLoadout, defaultLoadout } from './game/Loadout';
 import { MAPS, RIVER_VALLEY } from './data/maps';
@@ -14,16 +15,18 @@ import { VEHICLES } from './data/vehicles';
 import { bindingShort, type ActionId } from './data/controls';
 import { SHELL_SHORT } from './data/shells';
 import { SURFACES } from './data/surfaces';
-import type { Loadout, VehicleSpec } from './data/types';
+import type { Loadout, MapSpec, VehicleSpec } from './data/types';
 import { SettingsStore, type GameSettings } from './settings/Settings';
-import { ProfileStore, advanceTime, assignVehicle, setActiveNation, type Profile, type ProfileVehicle } from './settings/Profile';
+import { ProfileStore, activeVehicleId, advanceTime, assignVehicle, selectCrew, setActiveNation, type Profile, type ProfileVehicle } from './settings/Profile';
 import { progressAfter } from './game/crew/progress';
 import { activeCrewSkill } from './game/crew/skill';
 import { SoundManager, type ImpactKind, type SoundSource } from './audio/Sound';
 import { Hud, type HudState } from './ui/Hud';
 import { SightOverlay, azimuthFromYaw } from './ui/SightOverlay';
 import { KillCam, killcamRect } from './ui/KillCam';
-import { Minimap } from './ui/Minimap';
+import { Minimap, type MapLike, type MinimapMarker } from './ui/Minimap';
+import { MapScreen } from './ui/MapScreen';
+import { currentSymbology, setSymbology } from './ui/symbols';
 import { HangarScene } from './ui/menu/Hangar';
 import { MainMenu, type MenuSelection } from './ui/menu/MainMenu';
 import { PauseMenu } from './ui/menu/PauseMenu';
@@ -53,6 +56,14 @@ function loadSavedLoadout(spec: VehicleSpec): Loadout {
 function saveLoadout(spec: VehicleSpec, loadout: Loadout): void {
   try {
     localStorage.setItem(`webtank.loadout.${spec.id}`, JSON.stringify(loadout));
+  } catch {
+    /* 忽略 */
+  }
+}
+
+function saveLastSelection(vehicleId: string, mapId: string): void {
+  try {
+    localStorage.setItem('webtank.selection', JSON.stringify({ vehicleId, mapId }));
   } catch {
     /* 忽略 */
   }
@@ -211,16 +222,7 @@ async function start(): Promise<void> {
     loadLoadout: loadSavedLoadout,
     saveLoadout,
     onVehicleChange: (spec) => hangar.setVehicle(spec),
-    onStart: (sel) => {
-      try {
-        localStorage.setItem('webtank.selection', JSON.stringify({ vehicleId: sel.vehicle.id, mapId: sel.map.id }));
-      } catch {
-        /* 忽略 */
-      }
-      saveLoadout(sel.vehicle, sel.loadout);
-      startBattle(sel);
-      lockPointer();
-    },
+    onStart: (sel) => openSpawnMap(sel),
     onUiSound: uiClick,
   });
   hangar.setVehicle(menu.selection().vehicle);
@@ -232,13 +234,91 @@ async function start(): Promise<void> {
       onResume: () => lockPointer(),
       onSettings: () => settingsPanel.open(),
       onRestart: () => {
-        if (selection) startBattle(selection);
+        restartBattle();
         lockPointer();
       },
       onExit: () => backToHangar(),
     },
     { onUiSound: uiClick },
   );
+
+  // --- 地图界面:出战前(spawn)调携弹、选车组;战斗中(battle)按 M 查看大地图、调下一局的携弹
+  /** 地图界面用的地形网格,按地图 id 缓存(开局之前就要用,不能等 Game 创建) */
+  const mapViews = new Map<string, MapLike>();
+  const mapViewOf = (spec: MapSpec): MapLike => {
+    let v = mapViews.get(spec.id);
+    if (!v) {
+      v = { spec, grid: buildTerrain(spec) };
+      mapViews.set(spec.id, v);
+    }
+    return v;
+  };
+  /** 机库点「进入战斗」时的选择:地图在这里定,车以出战那一刻存档里选中的车组为准 */
+  let spawnSelection: MenuSelection | null = null;
+
+  const mapScreen = new MapScreen({
+    parent: document.body,
+    vehicles: Object.values(VEHICLES),
+    getProfile: () => profiles.get(),
+    loadLoadout: loadSavedLoadout,
+    saveLoadout,
+    // 符号体系以设置为准:每次打开地图界面都重新读,不用构造时的值
+    get symbology() {
+      return cfg().game.symbology;
+    },
+    onSymbologyChange: (v) => settings.update((d) => (d.game.symbology = v)),
+    onSelectCrew: (index) => {
+      const p = profiles.get();
+      profiles.set(selectCrew(p, p.activeNation, p.nations[p.activeNation].activeLineup, index));
+      menu.refresh();
+    },
+    onConfirm: () => (appState === 'battle' ? closeBattleMap() : sortie()),
+    onUiSound: uiClick,
+  });
+
+  function openSpawnMap(sel: MenuSelection): void {
+    spawnSelection = sel;
+    menu.hide();
+    mapScreen.open(mapViewOf(sel.map), 'spawn');
+  }
+
+  /** 地图界面里点「出战」:载具和携弹都按存档重新读,再开局、锁鼠标 */
+  function sortie(): void {
+    if (!spawnSelection) return;
+    const vehicle = VEHICLES[activeVehicleId(profiles.get())] ?? spawnSelection.vehicle;
+    const sel: MenuSelection = { vehicle, map: spawnSelection.map, loadout: loadSavedLoadout(vehicle) };
+    saveLastSelection(vehicle.id, sel.map.id);
+    startBattle(sel);
+    lockPointer();
+  }
+
+  /** 战斗中按 M:先打开地图界面再解锁鼠标,pointerlockchange 里看到地图开着就不弹暂停菜单 */
+  function openBattleMap(): void {
+    if (!game || mapScreen.isOpen) return;
+    mapScreen.open(mapViewOf(game.map.spec), 'battle');
+    // 地图界面的遮罩是半透明的,不藏小地图和 HUD 会透出来
+    minimap.setVisible(false);
+    hud.setVisible(false);
+    cursor = null;
+    if (document.pointerLockElement === canvas) document.exitPointerLock();
+  }
+
+  /** 关地图界面回战斗(再按 M / 点「返回战斗」);Esc 也走这里,锁不上时由 pointerlockerror 弹暂停菜单 */
+  function closeBattleMap(): void {
+    closeMapScreen();
+    lockPointer();
+  }
+
+  /** 战斗中关地图界面:小地图和 HUD 跟着恢复 */
+  function closeMapScreen(): void {
+    mapScreen.close();
+    minimap.setVisible(true);
+    hud.setVisible(true);
+  }
+
+  function restartBattle(): void {
+    if (selection) startBattle({ ...selection, loadout: loadSavedLoadout(selection.vehicle) });
+  }
 
   // --- 设置生效
   const applySettings = (s: GameSettings) => {
@@ -270,6 +350,10 @@ async function start(): Promise<void> {
     actions.setBindings(s.controls.bindings);
     minimap.setShape(s.game.minimapShape);
     minimap.setMarkerStyle(s.game.minimapMarkers);
+    if (s.game.symbology !== currentSymbology()) {
+      setSymbology(s.game.symbology);
+      menu.refresh();
+    }
     sound.applySettings(s.sound);
   };
   applySettings(cfg());
@@ -311,6 +395,7 @@ async function start(): Promise<void> {
     appState = 'battle';
     menu.hide();
     pause.hide();
+    mapScreen.close();
     hud.setVisible(true);
     minimap.setVisible(true);
   }
@@ -321,6 +406,7 @@ async function start(): Promise<void> {
     game = null;
     appState = 'menu';
     pause.hide();
+    mapScreen.close();
     killcam.stop();
     hud.setVisible(false);
     minimap.setVisible(false);
@@ -333,6 +419,7 @@ async function start(): Promise<void> {
   function showResult(): void {
     if (!game || resultShown) return;
     resultShown = true;
+    if (mapScreen.isOpen) closeMapScreen();
     const t = Math.round(game.time);
     const lines = [
       `用时 ${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`,
@@ -346,15 +433,33 @@ async function start(): Promise<void> {
     const locked = document.pointerLockElement === canvas;
     if (appState !== 'battle' || !game) return;
     if (locked) {
+      if (mapScreen.isOpen) closeMapScreen();
       pause.hide();
       settingsPanel.close();
       input.reset();
       stepper.reset();
+    } else if (mapScreen.isOpen) {
+      // 按 M 主动解锁来看大地图,不弹暂停菜单
+      cursor = null;
     } else if (game.state !== 'playing') {
       showResult();
     } else {
       cursor = null;
       pause.show('pause');
+    }
+  });
+  // 重新锁鼠标失败(比如在地图界面按 Esc 回来:Esc 不算用户操作,浏览器不让锁):弹暂停菜单,点「继续」再锁
+  document.addEventListener('pointerlockerror', () => {
+    if (appState === 'battle' && game && game.state === 'playing' && !mapScreen.isOpen && document.pointerLockElement !== canvas) pause.show('pause');
+  });
+  // 地图界面里按 Esc:出战前回机库,战斗中回战斗
+  window.addEventListener('keydown', (e) => {
+    if (e.code !== 'Escape' || !mapScreen.isOpen) return;
+    if (appState === 'battle') {
+      closeBattleMap();
+    } else {
+      mapScreen.close();
+      menu.show();
     }
   });
 
@@ -371,6 +476,8 @@ async function start(): Promise<void> {
         camera,
         killcam,
         minimap,
+        mapScreen,
+        profiles,
         settings,
         input,
         actions,
@@ -441,7 +548,7 @@ async function start(): Promise<void> {
   const key = (a: ActionId) => bindingShort(cfg().controls.bindings[a][0] ?? cfg().controls.bindings[a][1]);
   const hints = () => {
     const move = [key('forward'), key('left'), key('back'), key('right')].join('');
-    return `${move} 移动 · ${key('fireMain')} 主炮 · ${key('fireMg')} 机枪 · 1–4 弹种 · ${key('scope')} 开镜 · ${key('zoomCycle')} 放大 / 倍率 · 表尺 ${key('rangeUp')} / ${key('rangeDown')} · ${key('repair')} 维修 · ${key('extinguish')} 灭火 · 按住 ${key('freeLook')} 自由视角 · 按住 ${key('cursor')} 操作小地图 · Esc 暂停`;
+    return `${move} 移动 · ${key('fireMain')} 主炮 · ${key('fireMg')} 机枪 · 1–4 弹种 · ${key('scope')} 开镜 · ${key('zoomCycle')} 放大 / 倍率 · 表尺 ${key('rangeUp')} / ${key('rangeDown')} · ${key('repair')} 维修 · ${key('extinguish')} 灭火 · 按住 ${key('freeLook')} 自由视角 · 按住 ${key('cursor')} 操作小地图 · ${key('mapScreen')} 地图 · Esc 暂停`;
   };
 
   let last = performance.now();
@@ -499,10 +606,14 @@ async function start(): Promise<void> {
 
     // 1. 瞄准镜 / 弹种 / 维修 / 灭火 等按键
     if (locked && actions.pressed('restart') && selection) {
-      startBattle(selection);
+      restartBattle();
       // 提前结束这一帧也要清空「刚按下」,否则下一帧还会读到重开键,变成每帧都重开一局
       input.endFrame();
       return;
+    }
+    if (actions.pressed('mapScreen')) {
+      if (mapScreen.isOpen) closeBattleMap();
+      else if (locked) openBattleMap();
     }
     if (locked && actions.pressed('minimapShape')) {
       settings.update((d) => (d.game.minimapShape = d.game.minimapShape === 'square' ? 'circle' : 'square'));
@@ -555,7 +666,8 @@ async function start(): Promise<void> {
     g.setPlayerControls(controls);
 
     // 4. 固定步长模拟 + 插值渲染;暂停(没锁定鼠标)时停住,胜负已分后继续跑(残骸冒烟等)
-    const simulate = locked || g.state !== 'playing';
+    // 地图界面开着时对局继续跑(玩家车不受控,敌人照常行动)
+    const simulate = locked || mapScreen.isOpen || g.state !== 'playing';
     if (simulate) stepper.advance(dt, (step) => g.fixedUpdate(step));
     g.syncVisuals(stepper.alpha);
     updateCamera();
@@ -682,14 +794,13 @@ async function start(): Promise<void> {
         ? killcamRect(killcam.layout, window.innerWidth, window.innerHeight)
         : null,
     });
-    minimap.draw(
-      { x: pos.x, z: pos.z, heading, view: orbit.yaw },
-      g.targets.map((t) => {
-        const p = t.physicsPosition();
-        const f = new THREE.Vector3(0, 0, -1).applyQuaternion(t.physicsQuaternion());
-        return { x: p.x, z: p.z, team: 'enemy' as const, dead: t.isDead, heading: Math.atan2(-f.x, -f.z) };
-      }),
-    );
+    const markers: MinimapMarker[] = g.targets.map((t) => {
+      const p = t.physicsPosition();
+      const f = new THREE.Vector3(0, 0, -1).applyQuaternion(t.physicsQuaternion());
+      return { x: p.x, z: p.z, team: 'enemy', dead: t.isDead, heading: Math.atan2(-f.x, -f.z), vehicleClass: t.spec.vehicleClass };
+    });
+    minimap.draw({ x: pos.x, z: pos.z, heading, view: orbit.yaw }, markers);
+    if (mapScreen.isOpen) mapScreen.draw({ player: { x: pos.x, z: pos.z, heading }, markers });
 
     renderer.render(scene, camera);
     killcam.update(now);

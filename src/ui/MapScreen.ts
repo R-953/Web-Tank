@@ -1,4 +1,4 @@
-import type { Loadout, VehicleSpec } from '../data/types';
+import type { Loadout, VehicleClass, VehicleSpec } from '../data/types';
 import type { Profile } from '../settings/Profile';
 import { crewLevel } from '../game/crew/progress';
 import { renderMapBackground, type MapLike, type MinimapMarker } from './Minimap';
@@ -113,6 +113,7 @@ export class MapScreen {
       const val = this.symbologySelect.value as 'nato' | 'warsaw';
       this.symbology = val;
       this.opts.onSymbologyChange(val);
+      this.refreshCardIcons();
       this.draw(this.lastFrame);
     });
 
@@ -353,6 +354,17 @@ export class MapScreen {
     }
   }
 
+  /** 符号体系换了:只重画车组卡片名字前的类型图标,不动携弹面板和选中状态 */
+  private refreshCardIcons(): void {
+    for (const card of Array.from(this.topBar.querySelectorAll<HTMLElement>('.ms-card'))) {
+      const cls = card.dataset.vehicleClass as VehicleClass | undefined;
+      const nameEl = card.querySelector('.ms-card-name');
+      if (!cls || !nameEl) continue;
+      nameEl.querySelector('svg')?.remove();
+      nameEl.insertAdjacentHTML('afterbegin', classIcon(cls));
+    }
+  }
+
   private renderTopBar(): void {
     this.topBar.innerHTML = '';
     const p = this.opts.getProfile();
@@ -374,6 +386,7 @@ export class MapScreen {
 
       const card = h('div', `ms-card mm-lineup-slot ms-slot${isSelected ? ' sel active' : ''}`, this.topBar);
       card.dataset.slotIndex = String(i);
+      if (veh?.vehicleClass) card.dataset.vehicleClass = veh.vehicleClass;
 
       const nameEl = h('div', 'ms-card-name', card);
       const iconHtml = veh?.vehicleClass ? classIcon(veh.vehicleClass) : '';
