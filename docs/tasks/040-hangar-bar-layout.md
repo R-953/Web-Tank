@@ -1,7 +1,7 @@
 # 040-hangar-bar-layout:机库底部按 War Thunder 的布局重排
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:已完成
+- 状态:已合并
 - 分支:`task/040-hangar-bar-layout`
 - 规模:M
 

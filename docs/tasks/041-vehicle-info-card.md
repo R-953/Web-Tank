@@ -1,7 +1,7 @@
 # 041-vehicle-info-card:鼠标悬停的载具信息卡片
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待审查
+- 状态:已合并
 - 分支:`task/041-vehicle-info-card`
 - 规模:M
 

@@ -1,7 +1,7 @@
 # 039-military-symbology:北约 / 华约军标符号(取代自绘的类型图标)
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:进行中
+- 状态:已合并
 - 分支:`task/039-military-symbology`
 - 规模:M(调研 + 纯逻辑)
 

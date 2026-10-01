@@ -1,0 +1,11 @@
+{
+  "name": "round9b",
+  "base": "origin/main",
+  "permissions": "scoped",
+  "timeoutMin": 75,
+  "maxPerAgent": 2,
+  "jobs": [
+    { "id": "044", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/044-mapscreen-key-and-symbols.md", "branch": "task/044-mapscreen-key-and-symbols", "commit": "feat: M 键打开地图界面;小地图和地图界面的标记换成军标" },
+    { "id": "045", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/045-hangar-info-card-hooks.md", "branch": "task/045-hangar-info-card-hooks", "commit": "ui: 机库去掉携弹面板,信息卡挂到编组栏和科技树" }
+  ]
+}
