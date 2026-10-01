@@ -98,6 +98,21 @@ describe('历史对局常识', () => {
   it('虎王 88 L/71 在 2000 m 仍能正面击穿虎式', () => {
     expect(hit('tiger_ii', 'pzgr39_43', 2000, 'tiger_i', 0).penetrated).toBe(true);
   });
+
+  it('BR-471(ISU-122)在 500 m 打虎王首上打不穿、打首下能打穿', () => {
+    const w = shellOf('isu_122', 'br471');
+    const [s] = flyShell(w, [500]);
+    const target = VEHICLES.tiger_ii;
+    const bottomY = -target.hull.height / 2;
+    // 首上 (分界在 y = -0.15, 取 y = 0.2)
+    const upper = resolveHit({ ...w, penetration: s.penetration }, target.armor, fromAngle(0), front, undefined, 0.2, bottomY);
+    expect(upper.armor).toBe(233);
+    expect(upper.penetrated).toBe(false);
+    // 首下 (取 y = -0.5)
+    const lower = resolveHit({ ...w, penetration: s.penetration }, target.armor, fromAngle(0), front, undefined, -0.5, bottomY);
+    expect(lower.armor).toBe(target.armor.lowerFront!.thickness);
+    expect(lower.penetrated).toBe(true);
+  });
 });
 
 describe('机动(发动机功率、滚动阻力、附着力)', () => {
