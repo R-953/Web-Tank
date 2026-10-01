@@ -19,7 +19,7 @@ import { SettingsStore, type GameSettings } from './settings/Settings';
 import { SoundManager, type ImpactKind, type SoundSource } from './audio/Sound';
 import { Hud, type HudState } from './ui/Hud';
 import { SightOverlay, azimuthFromYaw } from './ui/SightOverlay';
-import { KILLCAM, KillCam } from './ui/KillCam';
+import { KillCam, killcamRect } from './ui/KillCam';
 import { Minimap } from './ui/Minimap';
 import { HangarScene } from './ui/menu/Hangar';
 import { MainMenu, type MenuSelection } from './ui/menu/MainMenu';
@@ -526,14 +526,21 @@ async function start(): Promise<void> {
       hud.onEvent(e, g.time);
       playEventSound(e);
       if (e.type === 'fired' && e.shooterId === player.id && e.weapon === 'main') stats.shots++;
-      if (e.type === 'hit' && e.shooterId === player.id) {
-        stats.hits++;
-        if (e.replay.destroyed && cfg().game.killCam) killcam.play(e.replay);
+      if (e.type === 'hit') {
+        if (e.shooterId === player.id) {
+          stats.hits++;
+          if (e.replay.destroyed && cfg().game.killCam) killcam.play(e.replay);
+        }
+        if (e.targetId === player.id && e.replay.destroyed && cfg().game.killCam) {
+          const killer = g.vehicles.find((v) => v.id === e.shooterId);
+          const title = killer ? `被 ${killer.spec.name} 击毁` : '被击毁';
+          killcam.play(e.replay, { layout: 'full', title });
+        }
       }
     }
     if (g.state !== 'playing') {
       resultAt ??= now;
-      if (!resultShown && now - resultAt > RESULT_DELAY * 1000) {
+      if (!resultShown && now - resultAt > RESULT_DELAY * 1000 && !killcam.active) {
         if (document.pointerLockElement === canvas) document.exitPointerLock();
         else showResult();
       }
@@ -627,9 +634,9 @@ async function start(): Promise<void> {
       range: sightRange,
       azimuth: azimuthFromYaw(orbit.yaw),
       reticle: player.spec.sight.reticle,
-      // 击杀回放画在同一个 WebGL 画布的右上角,瞄准镜遮罩要给它挖个洞
+      // 击杀回放画在同一个 WebGL 画布上,瞄准镜遮罩要给它挖个洞
       cutout: killcam.active
-        ? { x: window.innerWidth - KILLCAM.width - KILLCAM.margin, y: KILLCAM.margin, w: KILLCAM.width, h: KILLCAM.height }
+        ? killcamRect(killcam.layout, window.innerWidth, window.innerHeight)
         : null,
     });
     minimap.draw(

@@ -79,7 +79,7 @@ const FEED_MAX = 5;
 
 const CSS = `
 .hud { position: fixed; inset: 0; pointer-events: none; font: 13px/1.35 system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; color: #f2f2f2; text-shadow: 0 1px 2px rgba(0,0,0,.85); user-select: none; z-index: 4; }
-.hud.hidden { display: none; }
+.hud.hidden, body.killcam-full .hud, .killcam-full .hud, body.killcam-full .minimap, .killcam-full .minimap { display: none !important; }
 .hud-crosshair { position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px; }
 .hud-crosshair::before, .hud-crosshair::after { content: ""; position: absolute; background: rgba(255,255,255,.9); box-shadow: 0 0 2px #000; }
 .hud-crosshair::before { left: 8px; top: 0; width: 2px; height: 18px; }
