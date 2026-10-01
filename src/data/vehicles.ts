@@ -490,7 +490,7 @@ export const M4A3_76W: VehicleSpec = {
     barrelLength: 3.09,
     breech: { z: 0.9, length: 1.0 },
   }),
-  color: 0x4b5320, // 橄榄绿,估算
+  color: 0x544f3d, // 二战美军 Olive Drab No. 9 / No. 319(FS 595 色号 FS 33070)
 };
 
 /** M4A3E8(M4A3(76)W HVSS,1944 年 8 月起):车体、炮塔同 M4A3(76)W,换水平螺旋弹簧悬挂和宽履带,76 mm M1A2 带制退器 */
@@ -517,7 +517,7 @@ export const M4A3E8: VehicleSpec = {
     barrelLength: 3.16,
     breech: { z: 0.9, length: 1.0 },
   }),
-  color: 0x4b5320,
+  color: 0x544f3d, // Olive Drab No. 9 / No. 319(FS 33070)
 };
 
 /**
@@ -569,7 +569,7 @@ export const M4A3E2: VehicleSpec = {
     barrelLength: 1.89,
     breech: { z: 0.7, length: 0.8 },
   }),
-  color: 0x4b5320,
+  color: 0x544f3d, // Olive Drab No. 9 / No. 319(FS 33070)
 };
 
 export const VEHICLES: Readonly<Record<string, VehicleSpec>> = {

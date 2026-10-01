@@ -125,13 +125,13 @@ export function buildSuspension(L: ShermanLayout, kit: ModelKit, root: THREE.Obj
       .build();
 
     // 单托带轮(12 段圆轮,挂胶色)
-    const singleRoller = wheel(rollerR, 0.13, 12);
+    const singleRoller = new GeoBatch().add(wheel(rollerR, 0.13, 12), C.rubber).build();
 
-    // 双托带轮(两片 12 段圆轮跨过中央诱导齿)
+    // 双托带轮(两片 12 段圆轮跨过中央诱导齿,挂胶色)
     const rollerHalf = wheel(rollerR, 0.08, 12);
     const twinRoller = new GeoBatch()
-      .add(rollerHalf, C.shade, [0.1, 0, 0])
-      .add(rollerHalf, C.shade, [-0.1, 0, 0])
+      .add(rollerHalf, C.rubber, [0.1, 0, 0])
+      .add(rollerHalf, C.rubber, [-0.1, 0, 0])
       .build();
 
     // 双诱导轮(12 段圆轮)

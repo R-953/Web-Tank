@@ -4,6 +4,7 @@ import { shermanLayout, type ShermanVariant } from './layout';
 import { buildShermanHull } from './hull';
 import { buildSuspension } from './suspension';
 import { buildShermanTurret } from './turret';
+import { buildShermanMarkings } from './markings';
 
 /**
  * 谢尔曼 M4A3 系列:同一个车体 + 两种悬挂 + 两种炮塔拼出三辆车(主程维护)。
@@ -14,9 +15,11 @@ function buildSherman(variant: ShermanVariant) {
     const L = shermanLayout(spec, variant);
     const C = palette(spec.color);
     const H = kit.batch(root);
+    const T = kit.batch(turretPivot);
     buildShermanHull(L, H, C);
     buildSuspension(L, kit, root, H, C);
-    buildShermanTurret(L, kit.batch(turretPivot), kit.batch(gunPivot), C);
+    buildShermanTurret(L, T, kit.batch(gunPivot), C);
+    buildShermanMarkings(L, H, T, C);
   };
 }
 
@@ -26,3 +29,5 @@ export const buildM4A3_76W = buildSherman({ suspension: 'vvss', turret: 't23', g
 export const buildM4A3E8 = buildSherman({ suspension: 'hvss', turret: 't23', gun: 'm1a2', applique: false });
 /** M4A3E2:VVSS(加宽端联器)、Jumbo 炮塔、75 mm M3、附加装甲 */
 export const buildM4A3E2 = buildSherman({ suspension: 'vvss', turret: 'jumbo', gun: 'm3', applique: true });
+
+export { buildShermanMarkings } from './markings';

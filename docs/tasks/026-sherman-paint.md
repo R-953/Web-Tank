@@ -1,7 +1,7 @@
 # 026-sherman-paint:谢尔曼按真实涂装改颜色、加白星标识
 
 - 负责:Antigravity(Gemini 3.8 Flash High;车道:内容)
-- 状态:待领取
+- 状态:已完成
 - 分支:`task/026-sherman-paint`
 - 规模:S–M
 
@@ -58,13 +58,13 @@ export function buildShermanMarkings(L: ShermanLayout, H: GeoBatch, T: GeoBatch,
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] 三辆车的 `color` 换成有出处的 OD 色值,注释写明出处,去掉「估算」
-- [ ] 新测试 `tests/sherman-markings.test.ts`:
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] 三辆车的 `color` 换成有出处的 OD 色值,注释写明出处,去掉「估算」
+- [x] 新测试 `tests/sherman-markings.test.ts`:
   - 三辆车都生成了标识;
   - 每个标识的顶点离它所贴的面不超过 1 cm(用 `layout.ts` 的尺寸算面的位置);
   - 标识三角面合计 ≤ 300
-- [ ] 已有测试全部不变地通过
+- [x] 已有测试全部不变地通过
 
 ## 不做
 
@@ -75,5 +75,17 @@ export function buildShermanMarkings(L: ShermanLayout, H: GeoBatch, T: GeoBatch,
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - `src/data/vehicles.ts`: 三辆谢尔曼的 `color` 改为有出处的二战美军 Olive Drab No. 9 / No. 319 (FS 595 色号 FS 33070, 色值 `0x544f3d`), 移除「估算」并注明出处。
+  - `src/game/models/sherman/markings.ts`: 新增 `buildShermanMarkings`, 生成平光暖白(`0xede8dc`)五角星与带圆环对空识别星, 贴在对应装甲面外侧 5 mm 处。
+  - `src/game/models/sherman/index.ts`: 引入并调用 `buildShermanMarkings(L, H, T, C)`, 导出该函数。
+  - `src/game/models/sherman/suspension.ts`: 修复 HVSS 托带轮挂胶颜色问题, 改用 `C.rubber`。
+  - `docs/research/m4a3-76w.md`: 补充资料来源 S7/S8/S9, 新增第 12 节「涂装与标识」, 详述 OD 色号考证对比与各车标识布设依据。
+  - `tests/sherman-markings.test.ts`: 新增 5 项测试, 验证三车标识生成、解析几何顶点距离 ≤ 1 cm、面数 ≤ 300、车型历史差异与暖白色值。
+  - `changelog.d/2026-10-01-026-sherman-paint.md`: 新增任务日志。
+  - `docs/tasks/026-sherman-paint.md`: 勾选验收项, 填写执行结果。
 - 命令与结果:
+  - `npm run lint`: 通过(tsc --noEmit 零错误)。
+  - `npm test`: 通过(29 个测试套件全部通过, 共 299 项测试全部绿色, 原有 294 项测试零回归)。
+  - `npm run build`: 通过(Vite 构建成功生成 dist 产物)。
 - 偏差 / 未完成 / 待决定:
+  - 无偏差, 任务卡与规范要求全部完成。
