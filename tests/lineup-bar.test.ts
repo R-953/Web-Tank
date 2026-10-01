@@ -9,6 +9,7 @@ import {
 } from '../src/settings/Profile';
 import { LineupBar } from '../src/ui/menu/LineupBar';
 import { MainMenu } from '../src/ui/menu/MainMenu';
+import { VehicleCard } from '../src/ui/menu/VehicleCard';
 import { nationFlag } from '../src/ui/menu/flags';
 import type { SettingsStore } from '../src/settings/Settings';
 import type { SettingsPanel } from '../src/ui/menu/SettingsPanel';
@@ -693,6 +694,50 @@ describe('MainMenu 与 LineupBar / TechTree 集成', () => {
       menu.dispose();
     } finally {
       vi.useRealTimers();
+    }
+  });
+  it('从空车位的「+」进入科技树时, 悬停信息卡的技能按该车组算, 不是当前选中的车组', () => {
+    currentProfile = recruitCrew(currentProfile, 'germany');
+    // 车组 0 刚开始(progress 0);车组 1 练过虎王、progress 0.5 → 开虎王技能应为 0.5
+    const np = currentProfile.nations.germany;
+    currentProfile = {
+      ...currentProfile,
+      nations: {
+        ...currentProfile.nations,
+        germany: {
+          ...np,
+          crews: np.crews.map((c, i) => (i === 1 ? { ...c, progress: 0.5, trained: ['tiger_ii'] } : c)),
+        },
+      },
+    };
+    const showSpy = vi.spyOn(VehicleCard.prototype, 'show');
+    try {
+      const menu = new MainMenu({
+        parent: menuContainer,
+        settings: dummySettings,
+        settingsPanel: dummySettingsPanel,
+        vehicles: vehicleList,
+        maps: dummyMaps,
+        initial: { vehicleId: 'tiger_i', mapId: 'poland' },
+        loadLoadout: () => ({ pzgr39: 20 }),
+        saveLoadout: vi.fn(),
+        onVehicleChange: vi.fn(),
+        onStart: vi.fn(),
+        profile: {
+          get: () => currentProfile,
+          set: (p) => {
+            currentProfile = p;
+          },
+        },
+      });
+      menuContainer.querySelectorAll<HTMLElement>('.mm-lineup-slot')[1].click();
+      const tiger2Card = menuContainer.querySelector<HTMLElement>('.tt-root [data-vehicle-id="tiger_ii"]')!;
+      tiger2Card.dispatchEvent(new MouseEvent('mouseenter'));
+      expect(showSpy).toHaveBeenCalledTimes(1);
+      expect(showSpy.mock.calls[0][1]).toBeCloseTo(0.5, 5);
+      menu.dispose();
+    } finally {
+      showSpy.mockRestore();
     }
   });
 });

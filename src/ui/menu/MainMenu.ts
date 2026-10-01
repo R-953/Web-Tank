@@ -288,7 +288,7 @@ export class MainMenu {
             const curP = this.opts.profile.get();
             const curNationProfile = curP.nations[nation];
             const curLineup = curNationProfile?.lineups.find((l) => l.id === curNationProfile.activeLineup);
-            const selectedCrewIndex = curLineup?.selected ?? 0;
+            const selectedCrewIndex = crewIndex ?? curLineup?.selected ?? 0;
             const skill = crewSkillFor(curP, toProfileVehicles(this.opts.vehicles), nation, selectedCrewIndex, vehicleId);
             this.vehicleCard.show(spec, skill, rect);
           }

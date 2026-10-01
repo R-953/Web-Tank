@@ -50,4 +50,3 @@ export function activeCrewSkill(p: Profile, vehicles: readonly ProfileVehicle[])
   }
   return crewSkillFor(p, vehicles, p.activeNation, selected, vehicleId);
 }
-
