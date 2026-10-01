@@ -194,9 +194,30 @@ export interface InternalsSpec {
   crew: CrewSpec[];
 }
 
+/** 国家 */
+export type Nation = 'germany' | 'ussr' | 'usa';
+/** 载具类别(科技树里的一条线) */
+export type VehicleClass = 'light' | 'medium' | 'heavy' | 'td';
+/** 车组满级(War Thunder「王牌乘员」)时的数值;单位同 VehicleSpec / WeaponSpec 里的对应字段 */
+export interface CrewAceSpec {
+  /** 主炮装填时间,秒 */
+  reloadTime: number;
+  /** 炮塔(固定战斗室为火炮)水平转动速度,度/秒 */
+  turretRotationSpeed: number;
+  /** 高低机速度,度/秒 */
+  elevationSpeed: number;
+}
+
 export interface VehicleSpec {
   id: string;
   name: string;
+  nation?: Nation;
+  vehicleClass?: VehicleClass;
+  /** 服役年份(科技树横轴) */
+  serviceYear?: number;
+  /** 车族 id:同车族的车在科技树里叠成一组,车组换车保留熟练度 */
+  family?: string;
+  crewAce?: CrewAceSpec;
   /** 车体装甲 */
   armor: ArmorSpec;
   /** 炮塔装甲(炮塔碰撞盒按自身朝向判定受击面) */

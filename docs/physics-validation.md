@@ -530,5 +530,68 @@
   - 分界线上方(分界高度 + 1e-4):采用首上 `front`。
   - 未配置 `lowerFront` 或命中点高度未提供:均平滑退回 `front`。
 
+## 13. 第八轮(2026-10-02):载具国家 / 类别 / 年份 / 车族与王牌乘员数值(任务 028)
+
+根据科技树与成员组设计稿([docs/design/tech-tree-and-crew.md](design/tech-tree-and-crew.md))及任务卡 028 需求,为全部 8 辆现有载具补充 `nation`、`vehicleClass`、`serviceYear`、`family` 以及 `crewAce`(War Thunder「王牌乘员」满级状态数值)。
+
+### 13.1 元数据汇总表
+
+| 载具 id | 载具名称 | 国家 (nation) | 类别 (vehicleClass) | 服役年份 (serviceYear) | 车族 (family) | 服役年份出处与说明 |
+|---|---|---|---|---|---|---|
+| `tiger_i` | 虎式 Ausf. E(1944 后期型) | germany | heavy | 1942 | `tiger` | Wikipedia: 虎式 I 型于 1942 年底正式列装并投入实战(列宁格勒/突尼斯) |
+| `tiger_ii` | 虎王(亨舍尔炮塔) | germany | heavy | 1944 | `tiger_ii` | Wikipedia: 1944 年中投入实战(诺曼底/东线) |
+| `t34_85` | T-34-85 | ussr | medium | 1944 | `t34` | Wikipedia: 1944 年 1 月 23 日由苏联国防委员会(GKO)正式批准列装,1944 年初投入使用 |
+| `su_100` | SU-100 | ussr | td | 1944 | `su100` | Wikipedia: 1944 年 10 月正式投入现役服役 |
+| `isu_122` | ISU-122 | ussr | td | 1944 | `isu` | Wikipedia: 1944 年 3 月 12 日列装,4 月首批下线投入部队服役 |
+| `m4a3_76w` | M4A3(76)W | usa | medium | 1944 | `m4a3` | Hunnicutt 1994: 1944 年 3 月陆军开始验收,1944 年夏欧战(眼镜蛇行动)投入实战 |
+| `m4a3e8` | M4A3E8 | usa | medium | 1944 | `m4a3` | Hunnicutt 1994: 1944 年 8 月开始验收,1944 年 12 月阿登战役(突出部战役)首次投入实战 |
+| `m4a3e2` | M4A3E2 | usa | medium | 1944 | `m4a3` | Hunnicutt 1994: 1944 年 5–6 月由费舍尔车体厂制造,1944 年秋欧战投入实战 |
+
+### 13.2 王牌乘员数值对比与折算说明
+
+根据任务卡规则:
+1. 先比较 War Thunder Wiki 的「新手乘员」数值(历史模式满改)与本仓库现有值。
+2. **一致时**: 直接采用 WT 王牌乘员数值,注明「War Thunder 值」。
+3. **不一致时**: 现有值保持不变,王牌值按 WT 的比例折算: 王牌值 = 现有值 × (WT 王牌 / WT 新手)。在 War Thunder 中,瞄准技能(Targeting)使方向机水平转动与高低机俯仰速度从新手到王牌提升比例均为 1.0 / 0.7 = 10 / 7 ≈ 1.42857。
+4. **WT 页面没有高低机乘员数值时**: 按方向机的同一比例(10 / 7)折算,标明「估算」。
+
+| 载具 | 属性 | 现有值 (新手) | WT 新手 | WT 王牌 | 取值 / 折算王牌值 | 确定方式与说明 |
+|---|---|---|---|---|---|---|
+| **虎式 Ausf. E** | 装填时间 (s) | 7.5 | 10.4 | 8.0 | **5.77** | 按 WT 新手→王牌比例折算: 7.5 × (8.0 / 10.4) ≈ 5.77 s |
+| | 方向机转速 (°/s) | 19.0 | 8.3 | 11.9 | **27.14** | 按 WT 新手→王牌比例折算: 19.0 × (10 / 7) ≈ 27.14°/s |
+| | 高低机速度 (°/s) | 4.0 | — | — | **5.71** | 估算: 按方向机同一比例(10 / 7)折算: 4.0 × (10 / 7) ≈ 5.71°/s |
+| **虎王** | 装填时间 (s) | 7.5 | 9.7 | 7.5 | **5.80** | 按 WT 新手→王牌比例折算: 7.5 × (7.5 / 9.7) ≈ 5.80 s |
+| | 方向机转速 (°/s) | 19.0 | 13.3 | 19.0 | **27.14** | 按 WT 新手→王牌比例折算: 19.0 × (19.0 / 13.3) = 19.0 × (10 / 7) ≈ 27.14°/s |
+| | 高低机速度 (°/s) | 4.0 | 4.7 | 6.7 | **5.71** | 估算: 按方向机同一比例(10 / 7)折算: 4.0 × (10 / 7) ≈ 5.71°/s(6.7 / 4.7 ≈ 10 / 7) |
+| **T-34-85** | 装填时间 (s) | 8.0 | 9.6 | 7.4 | **6.17** | 按 WT 新手→王牌比例折算: 8.0 × (7.4 / 9.6) = 37 / 6 ≈ 6.17 s |
+| | 方向机转速 (°/s) | 24.0 | 17.5 | 25.0 | **34.29** | 按 WT 新手→王牌比例折算: 24.0 × (25.0 / 17.5) = 24.0 × (10 / 7) ≈ 34.29°/s |
+| | 高低机速度 (°/s) | 4.0 | 2.8 | 4.0 | **5.71** | 估算: 按方向机同一比例(10 / 7)折算: 4.0 × (4.0 / 2.8) = 4.0 × (10 / 7) ≈ 5.71°/s |
+| **SU-100** | 装填时间 (s) | 13.7 | 13.7 | 10.5 | **10.5** | War Thunder 值(现有值即 WT 新手值 13.7 s) |
+| | 方向机转速 (°/s) | 4.9 | 4.9 | 7.0 | **7.0** | War Thunder 值(现有值即 WT 新手值 4.9°/s) |
+| | 高低机速度 (°/s) | 2.8 | 2.8 | 4.0 | **4.0** | War Thunder 值(现有值即 WT 新手值 2.8°/s) |
+| **ISU-122** | 装填时间 (s) | 26.0 | 26.0 | 20.0 | **20.0** | War Thunder 值(现有值即 WT 新手值 26.0 s) |
+| | 方向机转速 (°/s) | 4.9 | 4.9 | 7.0 | **7.0** | War Thunder 值(现有值即 WT 新手值 4.9°/s) |
+| | 高低机速度 (°/s) | 2.8 | 2.8 | 4.0 | **4.0** | War Thunder 值(现有值即 WT 新手值 2.8°/s) |
+| **M4A3(76)W** | 装填时间 (s) | 7.6 | 7.6 | 5.9 | **5.9** | War Thunder 值(现有值即 WT 新手值 7.6 s) |
+| | 方向机转速 (°/s) | 24.0 | 14.7 | 21.0 | **34.29** | 按 WT 新手→王牌比例折算: 24.0 × (21.0 / 14.7) = 24.0 × (10 / 7) ≈ 34.29°/s |
+| | 高低机速度 (°/s) | 2.8 | 2.8 | 4.0 | **4.0** | War Thunder 值(现有值即 WT 新手值 2.8°/s) |
+| **M4A3E8** | 装填时间 (s) | 7.6 | 7.6 | 5.9 | **5.9** | War Thunder 值(同 M4A3(76)W) |
+| | 方向机转速 (°/s) | 24.0 | 14.7 | 21.0 | **34.29** | 按 WT 新手→王牌比例折算: 24.0 × (10 / 7) ≈ 34.29°/s |
+| | 高低机速度 (°/s) | 2.8 | 2.8 | 4.0 | **4.0** | War Thunder 值(同 M4A3(76)W) |
+| **M4A3E2** | 装填时间 (s) | 6.5 | 6.5 | 5.0 | **5.0** | War Thunder 值(现有值即 WT 新手值 6.5 s) |
+| | 方向机转速 (°/s) | 24.0 | 14.3 | 20.4 | **34.29** | 按 WT 新手→王牌比例折算: 24.0 × (10 / 7) ≈ 34.29°/s |
+| | 高低机速度 (°/s) | 2.8 | 2.8 | 4.0 | **4.0** | War Thunder 值(现有值即 WT 新手值 2.8°/s) |
+
+### 13.3 资料出处
+
+- [Tiger I — Wikipedia](https://en.wikipedia.org/wiki/Tiger_I)、[Tiger E — War Thunder 官方 wiki](https://wiki.warthunder.com/Tiger_E)
+- [Tiger II — Wikipedia](https://en.wikipedia.org/wiki/Tiger_II)、[Tiger II (H) — War Thunder 官方 wiki](https://wiki.warthunder.com/Tiger_II_(H))
+- [T-34-85 — Wikipedia](https://en.wikipedia.org/wiki/T-34-85)、[T-34-85 — War Thunder 官方 wiki](https://wiki.warthunder.com/T-34-85)
+- [SU-100 — Wikipedia](https://en.wikipedia.org/wiki/SU-100)、[SU-100 — War Thunder 官方 wiki](https://wiki.warthunder.com/unit/ussr_su_100_1945)
+- [ISU-122 — Wikipedia](https://en.wikipedia.org/wiki/ISU-122)、[ISU-122 — War Thunder 官方 wiki](https://wiki.warthunder.com/unit/ussr_isu_122)
+- [Medium Tank M4 Sherman — afvdatabase.com](https://afvdatabase.com/usa/m4sherman.html)(Hunnicutt 1994)
+- [M4A3 (76) W HVSS — War Thunder 官方 wiki](https://wiki.warthunder.com/unit/us_m4a3e8_76w_sherman)、[M4A3E2 — War Thunder 官方 wiki](https://wiki.warthunder.com/unit/us_m4a3e2_sherman_jumbo)
+
+
 
 

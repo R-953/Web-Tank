@@ -68,10 +68,10 @@ crewAce?: CrewAceSpec;
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] 新测试 `tests/vehicle-meta.test.ts`:8 辆车都填了 5 个新字段;王牌装填 < 现有装填、王牌转速 ≥ 现有转速;三辆谢尔曼 `family` 相同,其余各不相同
-- [ ] `docs/physics-validation.md` 新一节列出每辆车的新手 / 王牌数值、服役年份和出处
-- [ ] 每个数值都有出处或折算说明
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] 新测试 `tests/vehicle-meta.test.ts`:8 辆车都填了 5 个新字段;王牌装填 < 现有装填、王牌转速 ≥ 现有转速;三辆谢尔曼 `family` 相同,其余各不相同
+- [x] `docs/physics-validation.md` 新一节列出每辆车的新手 / 王牌数值、服役年份和出处
+- [x] 每个数值都有出处或折算说明
 
 ## 不做
 
@@ -81,5 +81,16 @@ crewAce?: CrewAceSpec;
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - `src/data/types.ts`: 新增 `Nation`、`VehicleClass`、`CrewAceSpec` 接口,`VehicleSpec` 新增 `nation`、`vehicleClass`、`serviceYear`、`family`、`crewAce` 可选字段
+  - `src/data/vehicles.ts`: 为全部 8 辆载具填补元数据与王牌乘员数值,添加出处/折算注释
+  - `docs/physics-validation.md`: 新增第 13 节详细记录 8 辆车服役年份、新手/王牌乘员数值对比与折算说明
+  - `tests/vehicle-meta.test.ts`: 新增测试验证 8 辆车元数据完备性、车族分类、王牌乘员数值提升
+  - `changelog.d/2026-10-02-028-vehicle-meta-crew-ace.md`: 新增任务日志
+  - `docs/tasks/028-vehicle-meta-crew-ace.md`: 勾选验收标准并更新完成结果
 - 命令与结果:
+  - `npm run lint`: 通过,无类型错误
+  - `npm test`: 37 个测试套件,366 项测试全部通过
+  - `npm run build`: 通过,构建输出成功
 - 偏差 / 未完成 / 待决定:
+  - 无偏差,全部按任务卡与设计稿约定完成。
+
