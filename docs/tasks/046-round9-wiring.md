@@ -1,7 +1,7 @@
 # 046-round9-wiring:main.ts 接上地图界面、军标和符号体系
 
 - 负责:Claude Code(主程)
-- 状态:已完成
+- 状态:已合并
 - 分支:`task/046-round9-wiring`
 - 规模:M
 
