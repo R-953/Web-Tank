@@ -261,7 +261,8 @@ function grade(job, base, allowed) {
   const card = join(wt, job.card);
   if (existsSync(card)) {
     const result = readFileSync(card, 'utf8').split(/^## 结果/m)[1] ?? '';
-    g.resultFilled = /改动文件[::][ \t]*\S/.test(result) && /命令与结果[::][ \t]*\S/.test(result);
+    // 内容可以写在同一行,也可以写在下一行的子条目里
+    g.resultFilled = /改动文件[::]\s*\S/.test(result) && /命令与结果[::]\s*\S/.test(result);
   }
   g.changelog = g.changed.some((f) => f.startsWith('changelog.d/') && f.endsWith('.md'));
   g.lint = npm(wt, 'run', 'lint').code === 0;

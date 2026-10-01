@@ -65,7 +65,7 @@ export const ACTIONS: readonly ActionDef[] = [
   { id: 'nextShell', name: '切换到下一种弹', group: '武器', wt: 'ID_NEXT_BULLET_TYPE', defaults: ['CapsLock', null] },
 
   { id: 'scope', name: '开镜 / 关镜', group: '瞄准', wt: 'ID_TOGGLE_VIEW_GM', defaults: ['ShiftLeft', 'ShiftRight'] },
-  { id: 'zoomCycle', name: '循环切换瞄准镜倍率', group: '瞄准', defaults: ['KeyZ', null] },
+  { id: 'zoomCycle', name: '放大视角 / 切换瞄准镜倍率', group: '瞄准', defaults: ['KeyZ', null] },
   { id: 'zoomIn', name: '瞄准镜放大', group: '瞄准', wt: 'gm_zoom_rangeMax', defaults: ['PageUp', null] },
   { id: 'zoomOut', name: '瞄准镜缩小', group: '瞄准', wt: 'gm_zoom_rangeMin', defaults: ['PageDown', null] },
   { id: 'rangeUp', name: '表尺加远', group: '瞄准', hint: '每次 +50 m', wt: 'gm_sight_distance_rangeMax', defaults: ['WheelDown', null] },

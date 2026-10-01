@@ -559,7 +559,11 @@ export class Vehicle {
     const nv = rest.addScaledVector(fwd, newFwd).addScaledVector(right, newLat);
     this.body.setLinvel({ x: nv.x, y: nv.y, z: nv.z }, true);
 
-    const maxYawRate = this.spec.hull.turnRate * DEG2RAD * (canDrive ? Math.min(this.damage.mobilityFactor, this.damage.trackFactor) : 0);
+    let maxTurnRate = this.spec.hull.turnRate * DEG2RAD;
+    if (this.spec.hull.turnRadius !== undefined && this.spec.hull.turnRadius > 0) {
+      maxTurnRate = Math.min(maxTurnRate, Math.abs(newFwd) / this.spec.hull.turnRadius);
+    }
+    const maxYawRate = maxTurnRate * (canDrive ? Math.min(this.damage.mobilityFactor, this.damage.trackFactor) : 0);
     const av = this.body.angvel();
     const w = new THREE.Vector3(av.x, av.y, av.z);
     const wUp = w.dot(up);
