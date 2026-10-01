@@ -47,16 +47,16 @@ wet?: boolean;
     - `src/data/types.ts`: `ModuleSpec` 新增可选字段 `wet?: boolean`
     - `src/data/damage.ts`: `DAMAGE.ammo` 新增 `wetFactor: 0.18` 与出处注释
     - `src/game/damage/DamageModel.ts`: 弹药架被打坏殉爆判定和起火 cook-off 判定中对 `wet: true` 乘上 `DAMAGE.ammo.wetFactor`
-    - `src/data/vehicles.ts`: 三辆谢尔曼(`M4A3_76W`、`M4A3E8`、`M4A3E2`)的所有弹药架均标记 `wet: true`
-    - `docs/physics-validation.md`: 补充 11.5 节,记录 1945 年美军战损调查出处与折减系数定值
+    - `src/data/vehicles.ts`: 三辆谢尔曼(`M4A3_76W`、`M4A3E8`、`M4A3E2`)的车体底板弹药箱(`ammo_floor_l` / `ammo_floor_r`)标记为 `wet: true`,炮塔待发弹架(`ammo_ready`)无水套保持干式
+    - `docs/physics-validation.md`: 补充 11.5 节,记录 1945 年美军战损调查出处与折减系数定值,注明底板为湿式、待发弹架为干式
     - `docs/tasks/019-wet-stowage.md`: 更新状态为待审查,勾选验收标准,填写结果
   - 新增:
-    - `tests/wet-stowage.test.ts`: 7 个单元测试,验证弹药架配置、确定性模式表现、固定随机数阈值校验、10,000 次蒙特卡洛统计检验及起火 cook-off 折减
+    - `tests/wet-stowage.test.ts`: 7 个单元测试,验证底板 wet / 待发干式配置、确定性模式表现、固定随机数阈值校验、10,000 次蒙特卡洛统计检验及起火 cook-off 折减
     - `changelog.d/2026-10-01-019-wet-stowage.md`: 开发日志
 - 运行命令与结果:
   - `npm run lint`: 通过(tsc --noEmit 无错误)
   - `npm test`: 通过(26 个测试文件全部通过,共 262 项测试全部通过)
   - `npm run build`: 通过(生产构建成功输出 dist/)
 - 和任务卡不一致的地方、没做完的部分、需要负责人决定的问题:
-  - 无不一致、无遗留未完成项、无需要负责人决定的问题。
+  - **审查返工与偏差**:主程审查指出湿式改进仅针对车体底板的弹药箱(`ammo_floor_l` / `ammo_floor_r`),炮塔里的待发弹架(`ammo_ready`)没有水套、按干式处理。主程已在 `src/data/vehicles.ts` 中将 `ammo_ready` 设为干式。执行者同步调整了 `tests/wet-stowage.test.ts`(第一项断言明确校验待发弹架为干式、底板弹药架为 wet,其余用例统一取底板弹药架作为湿式样本)及文档说明。
 

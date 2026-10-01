@@ -494,5 +494,6 @@
   - `ModuleSpec` 增加可选字段 `wet?: boolean`。
   - 弹药架被打坏时,殉爆判定概率 `p = DAMAGE.ammo.detonationChance * fill * (m.spec.wet ? DAMAGE.ammo.wetFactor : 1)`。
   - 车辆起火且灼烧达到 `cookOffDelay` 后,弹药架每秒殉爆判定概率 `p = f.cookOffChance * fill * dt * (m.spec.wet ? DAMAGE.ammo.wetFactor : 1)`。
-  - 三辆谢尔曼(M4A3(76)W、M4A3E8、M4A3E2)的弹药架均设为 `wet: true`。
+  - 三辆谢尔曼(M4A3(76)W、M4A3E8、M4A3E2)车体底板的弹药箱(`ammo_floor_l` / `ammo_floor_r`)设为 `wet: true`;炮塔待发弹架(`ammo_ready`)没有水套,按干式算(估算)。
+
 
