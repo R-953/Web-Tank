@@ -86,6 +86,43 @@ export function zoomCircle(radius: number, steps: number): number {
 }
 
 /**
+ * 生成地形底图(地表颜色 + 山体阴影 + 水面)。
+ * jsdom 里 canvas 没有 2D 上下文时返回空 canvas。
+ */
+export function renderMapBackground(map: GameMap, pixels: number): HTMLCanvasElement {
+  const bg = document.createElement('canvas');
+  bg.width = pixels;
+  bg.height = pixels;
+  const c = bg.getContext('2d');
+  if (!c || typeof c.createImageData !== 'function') return bg;
+  const img = c.createImageData(pixels, pixels);
+  const g = map.grid;
+  const n = g.resolution;
+  const colors = SURFACE_ORDER.map((t) => SURFACES[t].color);
+  const water = map.spec.waterLevel;
+  for (let py = 0; py < pixels; py++) {
+    const iz = Math.min(n - 1, Math.round((py / (pixels - 1)) * (n - 1)));
+    for (let px = 0; px < pixels; px++) {
+      const ix = Math.min(n - 1, Math.round((px / (pixels - 1)) * (n - 1)));
+      const k = iz * n + ix;
+      const h = g.heights[k];
+      // 山体阴影:西北方向来光
+      const hx = g.heights[iz * n + Math.min(n - 1, ix + 1)] - g.heights[iz * n + Math.max(0, ix - 1)];
+      const hz = g.heights[Math.min(n - 1, iz + 1) * n + ix] - g.heights[Math.max(0, iz - 1) * n + ix];
+      const shade = Math.max(0.55, Math.min(1.25, 1 - (hx + hz) / (4 * g.cellSize)));
+      const col = water !== undefined && h < water ? 0x3d6e8c : colors[g.surfaces[k]];
+      const o = (py * pixels + px) * 4;
+      img.data[o] = Math.min(255, ((col >> 16) & 255) * shade);
+      img.data[o + 1] = Math.min(255, ((col >> 8) & 255) * shade);
+      img.data[o + 2] = Math.min(255, (col & 255) * shade);
+      img.data[o + 3] = 255;
+    }
+  }
+  c.putImageData(img, 0, 0);
+  return bg;
+}
+
+/**
  * 右下角小地图(War Thunder 风格):地表颜色 + 山体阴影 + 水面,10 × 10 网格,上边标数字、左边标字母。
  *   - 方形:北朝上,缺省显示整张地图;滚轮以光标处为中心放大(放大后玩家跑出视野会自动跟过去)。
  *   - 圆形:北朝上,以玩家为中心,滚轮改变显示半径。
@@ -157,37 +194,9 @@ export class Minimap {
     this.circleRadius = CIRCLE_RADIUS.default;
   }
 
+
   setMap(map: GameMap): void {
-    const size = MINIMAP.size * BG_SCALE;
-    const bg = document.createElement('canvas');
-    bg.width = size;
-    bg.height = size;
-    const c = bg.getContext('2d')!;
-    const img = c.createImageData(size, size);
-    const g = map.grid;
-    const n = g.resolution;
-    const colors = SURFACE_ORDER.map((t) => SURFACES[t].color);
-    const water = map.spec.waterLevel;
-    for (let py = 0; py < size; py++) {
-      const iz = Math.min(n - 1, Math.round((py / (size - 1)) * (n - 1)));
-      for (let px = 0; px < size; px++) {
-        const ix = Math.min(n - 1, Math.round((px / (size - 1)) * (n - 1)));
-        const k = iz * n + ix;
-        const h = g.heights[k];
-        // 山体阴影:西北方向来光
-        const hx = g.heights[iz * n + Math.min(n - 1, ix + 1)] - g.heights[iz * n + Math.max(0, ix - 1)];
-        const hz = g.heights[Math.min(n - 1, iz + 1) * n + ix] - g.heights[Math.max(0, iz - 1) * n + ix];
-        const shade = Math.max(0.55, Math.min(1.25, 1 - (hx + hz) / (4 * g.cellSize)));
-        const col = water !== undefined && h < water ? 0x3d6e8c : colors[g.surfaces[k]];
-        const o = (py * size + px) * 4;
-        img.data[o] = Math.min(255, ((col >> 16) & 255) * shade);
-        img.data[o + 1] = Math.min(255, ((col >> 8) & 255) * shade);
-        img.data[o + 2] = Math.min(255, (col & 255) * shade);
-        img.data[o + 3] = 255;
-      }
-    }
-    c.putImageData(img, 0, 0);
-    this.background = bg;
+    this.background = renderMapBackground(map, MINIMAP.size * BG_SCALE);
     this.mapSize = map.spec.size;
     this.markerValue = null;
     this.resetView();

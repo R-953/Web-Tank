@@ -407,5 +407,154 @@ export function injectClassIconStyles(): void {
   document.head.appendChild(style);
 }
 
+/* 地图界面样式 (MapScreen) */
+const MAP_SCREEN_CSS = `
+.ms-root {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  background: rgba(10, 14, 18, 0.9);
+  display: flex;
+  flex-direction: column;
+  font: 13px/1.45 system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: #e6e8ea;
+  user-select: none;
+  box-sizing: border-box;
+}
+.ms-root.hidden {
+  display: none;
+}
+.ms-top {
+  padding: 12px 20px 8px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(16, 20, 24, 0.6);
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+.ms-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: rgba(30, 36, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  font-size: 13px;
+  font-weight: 500;
+  min-width: 140px;
+  cursor: pointer;
+}
+.ms-card:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.ms-card.sel, .ms-card.active {
+  border-color: #e0b44c;
+  box-shadow: inset 0 0 0 1px #e0b44c;
+  background: rgba(60, 50, 25, 0.9);
+}
+.ms-card-name {
+  font-weight: bold;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+.ms-card-level {
+  font-size: 11px;
+  opacity: 0.75;
+  font-variant-numeric: tabular-nums;
+}
+.ms-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  padding: 16px 20px;
+  gap: 20px;
+  box-sizing: border-box;
+}
+.ms-left {
+  width: 480px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ms-left .mm-ammo {
+  position: static;
+  width: 100%;
+  max-height: calc(100vh - 200px);
+  box-sizing: border-box;
+}
+.ms-map-info {
+  font-size: 12px;
+  opacity: 0.75;
+  padding: 2px 4px;
+}
+.ms-map-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+}
+.ms-canvas {
+  display: block;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  border-radius: 2px;
+}
+.ms-right {
+  width: 140px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 4px 0;
+}
+.ms-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+.ms-symbology-select {
+  width: 100%;
+  font: inherit;
+  color: #e6e8ea;
+  background: rgba(22, 27, 32, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 3px;
+  padding: 4px 8px;
+}
+.ms-bottom-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.ms-confirm-btn {
+  font-size: 16px;
+  padding: 10px 24px;
+  min-width: 120px;
+  font-weight: 700;
+}
+`;
+
+let mapScreenInjected = false;
+
+export function injectMapScreenStyles(): void {
+  injectMenuStyles();
+  injectClassIconStyles();
+  if (mapScreenInjected || typeof document === 'undefined') return;
+  mapScreenInjected = true;
+  const style = document.createElement('style');
+  style.textContent = MAP_SCREEN_CSS;
+  document.head.appendChild(style);
+}
+
+
 
 
