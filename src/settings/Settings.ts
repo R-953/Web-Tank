@@ -1,6 +1,7 @@
 import { ACTIONS, defaultBindings, type Bindings } from '../data/controls';
 import { DEFAULT_SOUND_SETTINGS, sanitizeSettings, type SoundSettings } from '../audio/Sound';
 import type { AIPresetId } from '../data/ai';
+import type { Symbology } from '../ui/symbols';
 
 /**
  * 玩家设置(游戏 / 图像 / 声音 / 操作),存在本机浏览器里(localStorage)。
@@ -18,6 +19,8 @@ export interface GameSettings {
     minimapShape: 'square' | 'circle';
     /** 小地图上其他车辆的标记:圆点 / 箭头(尖端指向车头) */
     minimapMarkers: 'dot' | 'arrow';
+    /** 地图符号规范:北约 / 华约 */
+    symbology: Symbology;
     /** 显示操作提示条 */
     showHints: boolean;
     /** 显示帧率 */
@@ -59,7 +62,7 @@ export const GRAPHICS_PRESETS: Readonly<Record<GraphicsPreset, Omit<GameSettings
 
 export function defaultSettings(): GameSettings {
   return {
-    game: { aiPreset: 'training', killCam: true, minimapShape: 'square', minimapMarkers: 'dot', showHints: true, showFps: false },
+    game: { aiPreset: 'training', killCam: true, minimapShape: 'square', minimapMarkers: 'dot', symbology: 'nato', showHints: true, showFps: false },
     graphics: { preset: 'medium', ...GRAPHICS_PRESETS.medium, antialias: true },
     sound: { ...DEFAULT_SOUND_SETTINGS },
     controls: { mouseSensitivity: 1, sightSensitivity: 1, scaleWithZoom: true, invertY: false, bindings: defaultBindings() },
@@ -93,6 +96,7 @@ export function sanitize(raw: unknown): GameSettings {
       killCam: bool(g.killCam, d.game.killCam),
       minimapShape: pick(g.minimapShape, ['square', 'circle'] as const, d.game.minimapShape),
       minimapMarkers: pick(g.minimapMarkers, ['dot', 'arrow'] as const, d.game.minimapMarkers),
+      symbology: pick(g.symbology, ['nato', 'warsaw'] as const, d.game.symbology),
       showHints: bool(g.showHints, d.game.showHints),
       showFps: bool(g.showFps, d.game.showFps),
     },
