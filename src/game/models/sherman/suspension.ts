@@ -6,14 +6,14 @@ import type { ShermanLayout } from './layout';
 /**
  * 谢尔曼行走机构:
  *   - VVSS(垂直螺旋弹簧):M4A3(76)W、M4A3E2(Jumbo)使用
- *     每侧 3 个负重轮架,每个架 2 个单负重轮(20 in / 0.508 m,冲压辐板挂胶轮);
- *     外侧可见竖直螺旋弹簧与两根摆臂;每个负重轮架后上方设 1 个托带轮;后置单诱导轮;
+ *     每侧 3 个负重轮架,每个架 2 个单负重轮(20 in / 0.508 m,冲压辐板挂胶轮,12 段圆轮);
+ *     外侧可见竖直螺旋弹簧与两根摆臂;每个负重轮架后上方设 1 个托带轮(12 段圆轮);后置单诱导轮(12 段圆轮);
  *     T48 橡胶履带(平履带板,VVSS 无现成外侧诱导齿样式,用 'plain')。
  *   - HVSS(水平螺旋弹簧):M4A3E8(Easy Eight)使用
- *     每侧 3 个负重轮架,每个架 2 对双负重轮(20.5 in / 0.52 m 挂胶轮,两片之间留诱导齿缝隙);
+ *     每侧 3 个负重轮架,每个架 2 对双负重轮(20.5 in / 0.52 m 挂胶轮,两片之间留诱导齿缝隙,12 段圆轮);
  *     两对轮之间设 1 根水平螺旋弹簧,每个架设 1 根斜置减震器;
- *     每侧 2 个双托带轮(装在负重轮架之间车体侧面)+ 3 个单托带轮(装在负重轮架上方车体侧面);
- *     后置双诱导轮;T66 履带(带中央诱导齿 'guide')。
+ *     每侧 2 个双托带轮(装在负重轮架之间车体侧面)+ 3 个单托带轮(装在负重轮架上方车体侧面,均 12 段圆轮);
+ *     后置双诱导轮(12 段圆轮);T66 履带(带中央诱导齿 'guide')。
  */
 export function buildSuspension(L: ShermanLayout, kit: ModelKit, root: THREE.Object3D, H: GeoBatch, C: Palette): void {
   const { ground, track, sprocket, bogieZ, lowerHalfW } = L;
@@ -39,20 +39,20 @@ export function buildSuspension(L: ShermanLayout, kit: ModelKit, root: THREE.Obj
     const idlerR = 0.25;
     const idlerW = 0.26;
 
-    // 旋转部件:单负重轮、后置托带轮、主动轮、诱导轮、履带板
+    // 旋转部件:单负重轮、后置托带轮、主动轮、诱导轮、履带板 (全部车轮 >= 12 段)
     runningGear(
       kit,
       root,
       { x: track.x, width: track.width, thickness: T, pitch: track.pitch, color: C.track, style: 'plain' },
       [
         {
-          geo: rubberRoadWheel(wheelR, wheelW, wc, 8),
+          geo: rubberRoadWheel(wheelR, wheelW, wc, 12),
           radius: wheelR,
           wheels: bogieZ.flatMap((z) => [z - half, z + half]).map((z) => ({ x: track.x, y: wheelY, z })),
         },
         // 托带轮:每个负重轮架后上方一个(装在轮架伸出的支架上)
         {
-          geo: rubberRoadWheel(rollerR, rollerW, { face: C.shade, rim: C.rubber, hub: C.deep, tyre: C.rubber }, 6),
+          geo: rubberRoadWheel(rollerR, rollerW, { face: C.shade, rim: C.rubber, hub: C.deep, tyre: C.rubber }, 12),
           radius: rollerR,
           wheels: bogieZ.map((z) => ({ x: track.x, y: rollerY, z: z + 0.29 })),
         },
@@ -63,7 +63,7 @@ export function buildSuspension(L: ShermanLayout, kit: ModelKit, root: THREE.Obj
           wheels: [{ x: track.x, y: sprocket.y, z: sprocket.z }],
         },
         {
-          geo: discWheel(idlerR, idlerW, { ...wc, hole: C.dark }, 6, 8),
+          geo: discWheel(idlerR, idlerW, { ...wc, hole: C.dark }, 6, 12),
           radius: idlerR,
           tensioner: true,
           wheels: [{ x: track.x, y: idlerY, z: idlerZ }],
@@ -117,25 +117,25 @@ export function buildSuspension(L: ShermanLayout, kit: ModelKit, root: THREE.Obj
     const rollerY = ground + 0.86;
     const idlerR = 0.26;
 
-    // 双负重轮:两片挂胶轮夹着中央诱导齿缝隙(4 分段控制全系统总三角面在 6,000 以内)
-    const roadDisc = rubberRoadWheel(wheelR, 0.13, wc, 4);
+    // 双负重轮:两片挂胶轮夹着中央诱导齿缝隙(12 段圆轮)
+    const roadDisc = rubberRoadWheel(wheelR, 0.13, wc, 12);
     const twinRoadWheel = new GeoBatch()
       .add(roadDisc, null, [0.12, 0, 0])
       .add(roadDisc, null, [-0.12, 0, 0], undefined, [-1, 1, 1])
       .build();
 
-    // 单托带轮(装在 3 个负重轮架正上方车体侧面)
-    const singleRoller = wheel(rollerR, 0.13, 4);
+    // 单托带轮(12 段圆轮,挂胶色)
+    const singleRoller = wheel(rollerR, 0.13, 12);
 
-    // 双托带轮(装在负重轮架之间的车体侧面,跨过中央诱导齿)
-    const rollerHalf = wheel(rollerR, 0.08, 4);
+    // 双托带轮(两片 12 段圆轮跨过中央诱导齿)
+    const rollerHalf = wheel(rollerR, 0.08, 12);
     const twinRoller = new GeoBatch()
       .add(rollerHalf, C.shade, [0.1, 0, 0])
       .add(rollerHalf, C.shade, [-0.1, 0, 0])
       .build();
 
-    // 双诱导轮(4 分段盘面)
-    const idlerDisc = discWheel(idlerR, 0.13, { ...wc, hole: C.dark }, 0, 4);
+    // 双诱导轮(12 段圆轮)
+    const idlerDisc = discWheel(idlerR, 0.13, { ...wc, hole: C.dark }, 0, 12);
     const twinIdler = new GeoBatch()
       .add(idlerDisc, null, [0.12, 0, 0])
       .add(idlerDisc, null, [-0.12, 0, 0], undefined, [-1, 1, 1])
@@ -191,30 +191,30 @@ export function buildSuspension(L: ShermanLayout, kit: ModelKit, root: THREE.Obj
       H.add(box(sprMountW, 0.22, 0.22), C.shade, [s * (lowerHalfW + sprMountW / 2 + 0.005), sprocket.y, sprocket.z]);
 
       // 诱导轮支架
-      H.add(rod([s * (lowerHalfW + 0.04), ground + 0.44, bogieZ[2] + 0.55], [s * track.x, idlerY, idlerZ], 0.035, 3), C.shade);
+      H.add(rod([s * (lowerHalfW + 0.04), ground + 0.44, bogieZ[2] + 0.55], [s * track.x, idlerY, idlerZ], 0.035, 4), C.shade);
 
       for (const z of bogieZ) {
         // 1. 负重轮架安装座(装在下部车体侧面 lowerHalfW 上)
         H.add(box(bracketW, 0.26, 0.44), C.shade, [s * bracketCenterX, ground + 0.53, z]);
 
         // 2. 水平螺旋弹簧(HVSS 核心特征:两对双轮之间的水平弹簧筒)
-        H.add(tube(0.055, 0.055, 0.16, -0.16, 4), C.deep, [s * (track.x + 0.02), ground + 0.54, z]);
+        H.add(tube(0.055, 0.055, 0.16, -0.16, 6), C.deep, [s * (track.x + 0.02), ground + 0.54, z]);
 
         // 3. 斜置减震器(每个架 1 个斜置筒)
-        H.add(rod([s * (track.x + 0.08), ground + 0.66, z - 0.15], [s * (track.x + 0.08), ground + 0.44, z + 0.15], 0.022, 3), C.steel);
+        H.add(rod([s * (track.x + 0.08), ground + 0.66, z - 0.15], [s * (track.x + 0.08), ground + 0.44, z + 0.15], 0.022, 4), C.steel);
 
         // 4. 摆臂
         const pivotX = s * (track.x + 0.06);
-        H.add(rod([pivotX, ground + 0.5, z - 0.08], [pivotX, wheelY, z - half], 0.028, 3), C.shade);
-        H.add(rod([pivotX, ground + 0.5, z + 0.08], [pivotX, wheelY, z + half], 0.028, 3), C.shade);
+        H.add(rod([pivotX, ground + 0.5, z - 0.08], [pivotX, wheelY, z - half], 0.028, 4), C.shade);
+        H.add(rod([pivotX, ground + 0.5, z + 0.08], [pivotX, wheelY, z + half], 0.028, 4), C.shade);
 
         // 单托带轮支架
-        H.add(rod([s * (lowerHalfW + 0.02), rollerY, z], [s * (track.x - 0.06), rollerY, z], 0.025, 3), C.shade);
+        H.add(rod([s * (lowerHalfW + 0.02), rollerY, z], [s * (track.x - 0.06), rollerY, z], 0.025, 4), C.shade);
       }
 
       // 车体侧面 2 个双托带轮支架
       for (const z of midRollerZ) {
-        H.add(rod([s * (lowerHalfW + 0.02), rollerY, z], [s * (track.x - 0.1), rollerY, z], 0.028, 3), C.shade);
+        H.add(rod([s * (lowerHalfW + 0.02), rollerY, z], [s * (track.x - 0.1), rollerY, z], 0.028, 4), C.shade);
       }
     });
   }
