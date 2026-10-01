@@ -1,7 +1,7 @@
 # 014-sherman-suspension:谢尔曼 VVSS / HVSS 行走机构
 
 - 负责:Antigravity(Gemini 3.8 Flash High;原派 GitHub Copilot,模型测试里 mai-code 建模偏弱,2026-10-01 改派)
-- 状态:待领取(012 合并后开工)
+- 状态:已合并
 - 分支:`task/014-sherman-suspension`
 - 规模:M(一个文件 + 一个测试文件)
 

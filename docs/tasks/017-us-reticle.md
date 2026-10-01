@@ -1,7 +1,7 @@
 # 017-us-reticle:美式瞄准镜分划
 
 - 负责:Antigravity(Gemini 3.8 Flash High;车道:界面)
-- 状态:待审查
+- 状态:已合并
 - 分支:`task/017-us-reticle`
 - 规模:S
 

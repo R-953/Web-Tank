@@ -1,7 +1,7 @@
 # 021-third-person-zoom:第三人称按 Z 放大视角
 
 - 负责:Antigravity(Gemini 3.8 Flash High;车道:界面)
-- 状态:已完成
+- 状态:已合并
 - 分支:`task/021-third-person-zoom`
 - 规模:S
 

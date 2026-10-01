@@ -1,7 +1,7 @@
 # 022-sight-azimuth-range:瞄准镜顶部改为方位角,距离读数移到准星右下
 
 - 负责:Antigravity(Gemini 3.8 Flash High;车道:界面)
-- 状态:已完成
+- 状态:已合并
 - 分支:`task/022-sight-azimuth-range`
 - 规模:S
 
