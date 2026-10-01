@@ -16,10 +16,20 @@
 | [009](009-casemate-models.md) | StuG III G、SU-100 专属模型(战斗室可前后偏移) | Claude Code | 主程 / 内容 | 已合并 |
 | [010](010-isu122.md) | ISU-122 替换 StuG III G;SU-100 炮盾修正 | Claude Code | 主程 / 内容 | 已合并 |
 | [011](011-restart-key-test-timeout.md) | 重开键每帧重开;出生点视线测试偶发超时 | Claude Code | 主程 | 已合并 |
-| [012](012-shermans.md) | 谢尔曼三车(M4A3(76)W、M4A3E8、M4A3E2)数据与模型骨架 | Claude Code | 主程 / 内容 | 待审查 |
-| [013](013-sherman-hull.md) | 谢尔曼 M4A3 车体模型 | Antigravity | 内容 | 待领取(012 合并后) |
-| [014](014-sherman-suspension.md) | 谢尔曼 VVSS / HVSS 行走机构 | GitHub Copilot | 内容 | 待领取(012 合并后) |
-| [015](015-sherman-turrets.md) | 谢尔曼 T23 / Jumbo 炮塔与火炮 | Antigravity(第二个会话) | 内容 | 待领取(012 合并后,可与 013 并行) |
+| [012](012-shermans.md) | 谢尔曼三车(M4A3(76)W、M4A3E8、M4A3E2)数据与模型骨架 | Claude Code | 主程 / 内容 | 已合并 |
+| [013](013-sherman-hull.md) | 谢尔曼 M4A3 车体模型 | Antigravity(3.8 Flash High) | 内容 | 进行中 |
+| [014](014-sherman-suspension.md) | 谢尔曼 VVSS / HVSS 行走机构 | Antigravity(3.8 Flash High;原派 Copilot,mai-code 建模偏弱,改派) | 内容 | 进行中 |
+| [015](015-sherman-turrets.md) | 谢尔曼 T23 / Jumbo 炮塔与火炮 | Antigravity(3.8 Flash High) | 内容 | 进行中 |
+| [016](016-agent-dispatch.md) | 命令行派发任务 + 各家模型测试 | Claude Code | 主程 | 已合并 |
+| [017](017-us-reticle.md) | 美式瞄准镜分划 | Antigravity | 界面 | 进行中 |
+| [018](018-fixed-radius-steering.md) | 受控差速器的固定半径转向(谢尔曼不能原地转) | Antigravity(主程审查) | 主程 / 内容 | 进行中 |
+| [019](019-wet-stowage.md) | 湿式弹药架降低殉爆和起火 | Antigravity(主程审查) | 主程 / 内容 | 进行中 |
+| [020](020-lower-front-armor.md) | 车体正面分首上 / 首下(虎王首下弱点等) | Claude Code → Antigravity | 主程 / 内容 | 待领取 |
+| [021](021-third-person-zoom.md) | 第三人称按 Z 放大视角 | Antigravity | 界面 | 进行中 |
+| [022](022-sight-azimuth-range.md) | 瞄准镜顶部改为方位角,距离读数移到准星右下 | Antigravity | 界面 | 进行中 |
+| [023](023-death-killcam.md) | 玩家被击毁时的回放 | Antigravity | 界面 | 进行中 |
+| [024](024-hangar-camera-walls.md) | 机库镜头拉远时穿墙 | Antigravity | 界面 | 进行中 |
+| [025](025-relocate-web-tank.md) | 仓库搬到 D:\Web Tank,清理旧 worktree,整理根目录 | Antigravity → 主程执行 | 杂务 | 进行中 |
 
 ### 候选车辆(负责人 2026-09-29 提出方向,型号待确认后再开卡)
 
@@ -32,17 +42,10 @@
 | 苏联 | 各口径自行反坦克炮 | SU-76M(76 mm)、SU-85(85 mm)、SU-100(100 mm,007)、ISU-122(122 mm,010)、ISU-122S(D-25S 炮,不是换皮,要做另开卡)、ISU-152(152 mm) |
 | 苏联 | 各重量坦克 | 轻型 T-70、中型 T-34-85(已有)、重型 IS-2(1944) |
 
-### 第六轮新增(012 合并后并入上表)
+**已规划:**
 
-| 编号 | 任务 | 负责 | 车道 | 状态 |
-|---|---|---|---|---|
-| [016](016-agent-dispatch.md) | 命令行派发任务 + 各家模型测试 | Claude Code | 主程 | 待审查 |
-| [017](017-us-reticle.md) | 美式瞄准镜分划 | Antigravity | 界面 | 待领取(012 合并后) |
-| [018](018-fixed-radius-steering.md) | 受控差速器的固定半径转向(谢尔曼不能原地转) | Antigravity(主程审查) | 主程 / 内容 | 待领取(012 合并后) |
-| [019](019-wet-stowage.md) | 湿式弹药架降低殉爆和起火 | Antigravity(主程审查) | 主程 / 内容 | 待领取(012 合并后) |
-| [020](020-lower-front-armor.md) | 车体正面分首上 / 首下(虎王首下弱点等) | Claude Code → Antigravity | 主程 / 内容 | 待领取 |
-
-**已规划:** 科技树、成员组,谢尔曼三车(013–015)完工后开卡,设计稿见 [docs/design/tech-tree-and-crew.md](../design/tech-tree-and-crew.md)。
+- 科技树、成员组:谢尔曼三车(013–015)完工后开卡,设计稿见 [docs/design/tech-tree-and-crew.md](../design/tech-tree-and-crew.md)。
+- 自定义瞄具(负责人 2026-10-01 提出,后期再做):参考 War Thunder 的自定义瞄具,玩家可以自己摆分划、刻度和读数的位置。022 先把方位角、距离读数按 WT 默认布局做好。
 
 状态:待领取 → 进行中 → 待审查 → 已合并。改状态时同时改卡片开头的「状态」一行。
 

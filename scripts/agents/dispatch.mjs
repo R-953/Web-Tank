@@ -369,7 +369,7 @@ async function main() {
         while ((running.get(job.agent) ?? 0) >= limit) await new Promise((r) => setTimeout(r, 2000));
         running.set(job.agent, (running.get(job.agent) ?? 0) + 1);
         try {
-          const ready = gitLock.then(() => prepare(job, base, dry));
+          const ready = gitLock.then(() => prepare(job, job.base ?? base, dry));
           gitLock = ready.catch(() => undefined);
           console.log(`[${job.id}] ${await ready}`);
           const prompt = promptFor(job, cardText, allowed);
@@ -391,7 +391,7 @@ async function main() {
           running.set(job.agent, (running.get(job.agent) ?? 1) - 1);
         }
       }
-      row.grade = grade(job, base, allowed);
+      row.grade = grade(job, job.base ?? base, allowed);
       console.log(`[${job.id}] 评分完成`);
       rows.push(row);
     }),

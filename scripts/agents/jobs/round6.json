@@ -1,0 +1,20 @@
+{
+  "name": "round6",
+  "base": "origin/main",
+  "permissions": "scoped",
+  "timeoutMin": 60,
+  "maxPerAgent": 4,
+  "jobs": [
+    { "id": "013", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/013-sherman-hull.md", "branch": "task/013-sherman-hull", "commit": "model: 谢尔曼 M4A3 车体" },
+    { "id": "014", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/014-sherman-suspension.md", "branch": "task/014-sherman-suspension", "commit": "model: 谢尔曼 VVSS / HVSS 行走机构" },
+    { "id": "015", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/015-sherman-turrets.md", "branch": "task/015-sherman-turrets", "commit": "model: 谢尔曼 T23 / Jumbo 炮塔与火炮" },
+    { "id": "017", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/017-us-reticle.md", "branch": "task/017-us-reticle", "commit": "ui: 美式瞄准镜分划" },
+    { "id": "022", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/022-sight-azimuth-range.md", "base": "origin/docs/round6b-cards", "branch": "task/022-sight-azimuth-range", "commit": "ui: 瞄准镜顶部方位角、准星右下距离读数" },
+    { "id": "021", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/021-third-person-zoom.md", "base": "origin/docs/round6b-cards", "branch": "task/021-third-person-zoom", "commit": "feat: 第三人称按 Z 放大视角" },
+    { "id": "023", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/023-death-killcam.md", "base": "origin/docs/round6b-cards", "branch": "task/023-death-killcam", "commit": "feat: 玩家被击毁时的回放" },
+    { "id": "024", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/024-hangar-camera-walls.md", "base": "origin/docs/round6b-cards", "branch": "task/024-hangar-camera-walls", "commit": "fix: 机库镜头拉远时不再穿墙" },
+    { "id": "018", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/018-fixed-radius-steering.md", "branch": "task/018-fixed-radius-steering", "commit": "feat: 受控差速器的固定半径转向" },
+    { "id": "019", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/019-wet-stowage.md", "branch": "task/019-wet-stowage", "commit": "feat: 湿式弹药架降低殉爆" },
+    { "id": "025", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/025-relocate-web-tank.md", "base": "origin/docs/round6b-cards", "branch": "task/025-relocate-web-tank", "commit": "chore: 仓库搬到 D:\\Web Tank 的约定与搬家脚本" }
+  ]
+}
