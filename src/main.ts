@@ -18,7 +18,7 @@ import type { Loadout, VehicleSpec } from './data/types';
 import { SettingsStore, type GameSettings } from './settings/Settings';
 import { SoundManager, type ImpactKind, type SoundSource } from './audio/Sound';
 import { Hud, type HudState } from './ui/Hud';
-import { SightOverlay } from './ui/SightOverlay';
+import { SightOverlay, azimuthFromYaw } from './ui/SightOverlay';
 import { KillCam, killcamRect } from './ui/KillCam';
 import { Minimap } from './ui/Minimap';
 import { HangarScene } from './ui/menu/Hangar';
@@ -626,6 +626,7 @@ async function start(): Promise<void> {
       fovDeg: orbit.fov,
       magnification: magnifications[zoomIndex],
       range: sightRange,
+      azimuth: azimuthFromYaw(orbit.yaw),
       reticle: player.spec.sight.reticle,
       // 击杀回放画在同一个 WebGL 画布上,瞄准镜遮罩要给它挖个洞
       cutout: killcam.active

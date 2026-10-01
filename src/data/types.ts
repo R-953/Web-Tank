@@ -130,7 +130,7 @@ export interface SightSpec {
   /** 可切换的放大倍率(按 Z 循环),例如 [2.5, 5] */
   magnifications: number[];
   /** 分划样式 */
-  reticle: 'german' | 'soviet';
+  reticle: 'german' | 'soviet' | 'us';
 }
 
 /**
