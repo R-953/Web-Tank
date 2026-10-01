@@ -42,6 +42,18 @@ const crew = (role: CrewSpec['role'], part: CrewSpec['part'], x: number, y: numb
 export const TIGER_I: VehicleSpec = {
   id: 'tiger_i',
   name: '虎式 Ausf. E(1944 后期型)',
+  nation: 'germany',
+  vehicleClass: 'heavy',
+  serviceYear: 1942, // Wikipedia: Tiger I 于 1942 年底列装投入使用
+  family: 'tiger',
+  crewAce: {
+    // 现有装填 7.5 s,War Thunder 新手 10.4 s → 王牌 8.0 s,按 WT 新手→王牌比例折算:7.5 × (8.0 / 10.4) ≈ 5.77 s
+    reloadTime: 5.77,
+    // 现有 19°/s,WT 新手 8.3°/s → 王牌 11.9°/s(瞄准技能 10/7),按 WT 新手→王牌比例折算:19 × (10 / 7) ≈ 27.14°/s
+    turretRotationSpeed: 27.14,
+    // 现有 4°/s,WT 页面未列乘员高低机数值,按方向机同一比例(10/7)折算估算:4 × (10 / 7) ≈ 5.71°/s
+    elevationSpeed: 5.71,
+  },
   // 车首 100mm 垂直;侧面上部 80 / 下部 60;后部 80
   armor: { front: 100, side: 80, rear: 80 },
   // 炮塔正面 100(防盾 110–200),侧面 / 后部 80
@@ -120,6 +132,18 @@ export const TIGER_I: VehicleSpec = {
 export const T34_85: VehicleSpec = {
   id: 't34_85',
   name: 'T-34-85',
+  nation: 'ussr',
+  vehicleClass: 'medium',
+  serviceYear: 1944, // Wikipedia: 1944 年 1 月正式列装并投入实战
+  family: 't34',
+  crewAce: {
+    // 现有装填 8.0 s,War Thunder 新手 9.6 s → 王牌 7.4 s,按 WT 新手→王牌比例折算:8.0 × (7.4 / 9.6) ≈ 6.17 s
+    reloadTime: 6.17,
+    // 现有 24°/s,WT 新手 17.5°/s → 王牌 25.0°/s,按 WT 新手→王牌比例折算:24 × (25.0 / 17.5) = 24 × (10 / 7) ≈ 34.29°/s
+    turretRotationSpeed: 34.29,
+    // 现有 4°/s,WT 新手 2.8°/s → 王牌 4.0°/s,按 WT 新手→王牌比例折算:4 × (4.0 / 2.8) = 4 × (10 / 7) ≈ 5.71°/s(估算)
+    elevationSpeed: 5.71,
+  },
   // 首上 45@60° → 90;首下 45@53° ≈ 75(分界高度 0.71m);侧面下部 45 垂直(上部 45@40° ≈ 59);后部 45@45° ≈ 64
   armor: { front: 90, side: 45, rear: 64, lowerFront: { thickness: 75, height: 0.71 } },
   // 炮塔正面 90,侧面 75,后部 52
@@ -194,6 +218,18 @@ export const T34_85: VehicleSpec = {
 export const TIGER_II: VehicleSpec = {
   id: 'tiger_ii',
   name: '虎王(亨舍尔炮塔)',
+  nation: 'germany',
+  vehicleClass: 'heavy',
+  serviceYear: 1944, // Wikipedia: 1944 年中投入实战
+  family: 'tiger_ii',
+  crewAce: {
+    // 现有装填 7.5 s,War Thunder 新手 9.7 s → 王牌 7.5 s,按 WT 新手→王牌比例折算:7.5 × (7.5 / 9.7) ≈ 5.80 s
+    reloadTime: 5.8,
+    // 现有 19°/s,WT 新手 13.3°/s → 王牌 19.0°/s(瞄准技能 10/7),按 WT 新手→王牌比例折算:19 × (10 / 7) ≈ 27.14°/s
+    turretRotationSpeed: 27.14,
+    // 现有 4°/s,按方向机同一比例(10/7)折算估算:4 × (10 / 7) ≈ 5.71°/s(WT 新手 4.7°/s → 王牌 6.7°/s 亦为 10/7)
+    elevationSpeed: 5.71,
+  },
   // 首上 150@50° ≈ 233;首下 100@50° ≈ 156(分界高度 0.9m);侧面下部 80 垂直(上部 80@25° ≈ 88);后部 80@30° ≈ 92
   armor: { front: 233, side: 80, rear: 92, lowerFront: { thickness: 156, height: 0.9 } },
   // 炮塔正面 180@10° ≈ 183;侧面 80@21° ≈ 86;后部 80@20° ≈ 85
@@ -270,6 +306,18 @@ export const TIGER_II: VehicleSpec = {
 export const SU_100: VehicleSpec = {
   id: 'su_100',
   name: 'SU-100',
+  nation: 'ussr',
+  vehicleClass: 'td',
+  serviceYear: 1944, // Wikipedia: 1944 年 10 月投入使用
+  family: 'su100',
+  crewAce: {
+    // 现有装填 13.7 s 与 WT 新手 13.7 s 一致,直接取 WT 王牌值
+    reloadTime: 10.5, // War Thunder 值
+    // 现有方向机 4.9°/s 与 WT 新手 4.9°/s 一致,直接取 WT 王牌值
+    turretRotationSpeed: 7.0, // War Thunder 值
+    // 现有高低机 2.8°/s 与 WT 新手 2.8°/s 一致,直接取 WT 王牌值
+    elevationSpeed: 4.0, // War Thunder 值
+  },
   // 首上 75@55° → 131;侧面 45、后部 45 倾角没核实,按竖直填
   armor: { front: 131, side: 45, rear: 45 },
   turretArmor: { front: 131, side: 45, rear: 45 },
@@ -328,6 +376,18 @@ export const SU_100: VehicleSpec = {
 export const ISU_122: VehicleSpec = {
   id: 'isu_122',
   name: 'ISU-122',
+  nation: 'ussr',
+  vehicleClass: 'td',
+  serviceYear: 1944, // Wikipedia: 1944 年 3 月列装、4 月首批下线投入使用
+  family: 'isu',
+  crewAce: {
+    // 现有装填 26.0 s 与 WT 新手 26.0 s 一致,直接取 WT 王牌值
+    reloadTime: 20.0, // War Thunder 值
+    // 现有方向机 4.9°/s 与 WT 新手 4.9°/s 一致,直接取 WT 王牌值
+    turretRotationSpeed: 7.0, // War Thunder 值
+    // 现有高低机 2.8°/s 与 WT 新手 2.8°/s 一致,直接取 WT 王牌值
+    elevationSpeed: 4.0, // War Thunder 值
+  },
   // 车体正面 90 / 侧面 90 / 后部 60,War Thunder 值(Wikipedia:正面 90、侧面 90)
   armor: { front: 90, side: 90, rear: 60 },
   // 战斗室正面 90 / 侧面 75 / 后部 60,War Thunder 值;防盾 120 mm(Wikipedia)没有单独建模
@@ -475,6 +535,18 @@ function shermanInternals(o: {
 export const M4A3_76W: VehicleSpec = {
   id: 'm4a3_76w',
   name: 'M4A3(76)W',
+  nation: 'usa',
+  vehicleClass: 'medium',
+  serviceYear: 1944, // Hunnicutt 1994: 1944 年 3 月验收、夏欧战投入使用
+  family: 'm4a3',
+  crewAce: {
+    // 现有装填 7.6 s 与 WT 新手 7.6 s 一致,直接取 WT 王牌值
+    reloadTime: 5.9, // War Thunder 值
+    // 现有 24°/s(史料液压),WT 新手 14.7°/s → 王牌 21.0°/s,按 WT 新手→王牌比例折算:24 × (21.0 / 14.7) = 24 × (10 / 7) ≈ 34.29°/s
+    turretRotationSpeed: 34.29,
+    // 现有高低机 2.8°/s 与 WT 新手 2.8°/s 一致,直接取 WT 王牌值
+    elevationSpeed: 4.0, // War Thunder 值
+  },
   // 首上 63.5@47° → 93(首下铸造传动罩 108,分界高度 1.0m);侧面 38.1 垂直;后部 38.1@10–22° ≈ 40
   armor: { front: 93, side: 38, rear: 40, lowerFront: { thickness: 108, height: 1.0 } },
   // 炮盾 88.9 垂直(炮盾外的正面 63.5@40–45° ≈ 83–90);侧面 63.5@0–13° ≈ 64;后部 63.5 垂直
@@ -506,6 +578,18 @@ export const M4A3_76W: VehicleSpec = {
 export const M4A3E8: VehicleSpec = {
   id: 'm4a3e8',
   name: 'M4A3E8',
+  nation: 'usa',
+  vehicleClass: 'medium',
+  serviceYear: 1944, // Hunnicutt 1994: 1944 年 8 月验收、12 月阿登战役实战
+  family: 'm4a3',
+  crewAce: {
+    // 现有装填 7.6 s 与 WT 新手 7.6 s 一致,直接取 WT 王牌值
+    reloadTime: 5.9, // War Thunder 值
+    // 现有 24°/s,按 WT 新手→王牌比例折算:24 × (10 / 7) ≈ 34.29°/s
+    turretRotationSpeed: 34.29,
+    // 现有高低机 2.8°/s 与 WT 新手 2.8°/s 一致,直接取 WT 王牌值
+    elevationSpeed: 4.0, // War Thunder 值
+  },
   armor: { front: 93, side: 38, rear: 40, lowerFront: { thickness: 108, height: 1.0 } },
   turretArmor: { front: 89, side: 64, rear: 64 },
   maxSpeed: 42,
@@ -536,6 +620,18 @@ export const M4A3E8: VehicleSpec = {
 export const M4A3E2: VehicleSpec = {
   id: 'm4a3e2',
   name: 'M4A3E2',
+  nation: 'usa',
+  vehicleClass: 'medium',
+  serviceYear: 1944, // Hunnicutt 1994: 1944 年 5–6 月制造、秋欧战投入使用
+  family: 'm4a3',
+  crewAce: {
+    // 现有装填 6.5 s 与 WT 新手 6.5 s 一致,直接取 WT 王牌值
+    reloadTime: 5.0, // War Thunder 值
+    // 现有 24°/s,按 WT 新手→王牌比例折算:24 × (10 / 7) ≈ 34.29°/s
+    turretRotationSpeed: 34.29,
+    // 现有高低机 2.8°/s 与 WT 新手 2.8°/s 一致,直接取 WT 王牌值
+    elevationSpeed: 4.0, // War Thunder 值
+  },
   // 首上 101.6@47° → 149(首下加厚传动罩 140,分界高度 1.0m);上部侧面 76.2 垂直(下部 38.1,藏在行走机构后面);后部 38.1@10–22° ≈ 40
   armor: { front: 149, side: 76, rear: 40, lowerFront: { thickness: 140, height: 1.0 } },
   // 炮盾 177.8 垂直;炮塔正面 152.4@12° ≈ 156(炮盾覆盖大部分,取炮盾值);侧面 152.4@6° ≈ 153;后部 152.4@2° ≈ 152
