@@ -201,3 +201,180 @@ export function injectTechTreeStyles(): void {
   document.head.appendChild(style);
 }
 
+/* 编组栏样式 */
+const LINEUP_BAR_CSS = `
+.mm-lineup-bar {
+  position: absolute;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px;
+  min-width: 500px;
+  max-width: 96vw;
+  box-sizing: border-box;
+  z-index: 10;
+}
+.mm-lineup-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.mm-lineup-nations {
+  display: flex;
+  gap: 4px;
+}
+.mm-lineup-nation-tab.on {
+  border-color: #e0b44c;
+  color: #f3d27f;
+  background: rgba(224, 180, 76, 0.15);
+}
+.mm-lineup-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mm-lineup-select {
+  font: inherit;
+  color: #e6e8ea;
+  background: rgba(30, 36, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-size: 12px;
+}
+.mm-lineup-rename-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.mm-lineup-rename-input {
+  font: inherit;
+  color: #e6e8ea;
+  background: #1a2026;
+  border: 1px solid #e0b44c;
+  border-radius: 3px;
+  padding: 2px 6px;
+  width: 110px;
+  font-size: 12px;
+}
+.mm-lineup-error {
+  color: #ff7a6a;
+  font-size: 12px;
+  background: rgba(255, 74, 74, 0.12);
+  border: 1px solid rgba(255, 74, 74, 0.3);
+  border-radius: 3px;
+  padding: 2px 8px;
+  text-align: center;
+}
+.mm-lineup-slots {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  max-width: 100%;
+  padding-bottom: 2px;
+  justify-content: center;
+}
+.mm-lineup-slot {
+  width: 155px;
+  min-width: 155px;
+  min-height: 96px;
+  padding: 6px 8px;
+  background: rgba(30, 36, 42, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  transition: border-color .15s;
+  position: relative;
+}
+.mm-lineup-slot:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.mm-lineup-slot.sel {
+  border-color: #e0b44c;
+  box-shadow: inset 0 0 0 1px #e0b44c;
+  background: rgba(60, 50, 25, 0.9);
+}
+.mm-lineup-slot.empty {
+  border-style: dashed;
+  background: rgba(22, 27, 32, 0.6);
+  align-items: center;
+  justify-content: center;
+}
+.mm-lineup-slot-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+.mm-lineup-slot-name {
+  font-weight: 700;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 105px;
+}
+.mm-lineup-slot-level {
+  font-size: 11px;
+  color: #e0b44c;
+  font-weight: 600;
+  background: rgba(224, 180, 76, 0.12);
+  padding: 1px 4px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.mm-lineup-slot-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  width: 100%;
+}
+.mm-lineup-btn-clear {
+  padding: 0 5px;
+  font-size: 12px;
+  line-height: 16px;
+  min-width: 20px;
+}
+.mm-lineup-slot-add-btn {
+  font-size: 26px;
+  font-weight: 700;
+  color: #e0b44c;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+.mm-lineup-slot-empty-hint {
+  font-size: 11px;
+  opacity: .5;
+  margin-top: 4px;
+}
+.mm-btn-sm {
+  padding: 2px 8px;
+  font-size: 12px;
+}
+`;
+
+let lineupInjected = false;
+
+export function injectLineupBarStyles(): void {
+  injectMenuStyles();
+  if (lineupInjected || typeof document === 'undefined') return;
+  lineupInjected = true;
+  const style = document.createElement('style');
+  style.textContent = LINEUP_BAR_CSS;
+  document.head.appendChild(style);
+}
+
+

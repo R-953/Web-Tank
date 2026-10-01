@@ -1,7 +1,7 @@
 # 033-lineup-bar:机库底部的编组栏,接上科技树
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:进行中
+- 状态:待审查
 - 分支:`task/033-lineup-bar`
 - 规模:M
 
@@ -71,10 +71,10 @@ profile?: {
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] `tests/lineup-bar.test.ts`(jsdom,存档用 030 的函数造):格子数 = 车组数、空格显示「+」、点格子触发 `onActiveVehicle`、点「+」触发 `onPickVehicle`、「×」清空最后一辆车时显示报错且存档不变、招募到 8 个后按钮置灰、切换国家 / 编组
-- [ ] 不传 `profile` 时 `MainMenu` 行为和原来一样(现有测试不改也能过)
-- [ ] 不改 `main.ts`
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] `tests/lineup-bar.test.ts`(jsdom,存档用 030 的函数造):格子数 = 车组数、空格显示「+」、点格子触发 `onActiveVehicle`、点「+」触发 `onPickVehicle`、「×」清空最后一辆车时显示报错且存档不变、招募到 8 个后按钮置灰、切换国家 / 编组
+- [x] 不传 `profile` 时 `MainMenu` 行为和原来一样(现有测试不改也能过)
+- [x] 不改 `main.ts`
 
 ## 不做
 
@@ -84,5 +84,15 @@ profile?: {
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 新增: `src/ui/menu/LineupBar.ts`
+  - 修改: `src/ui/menu/MainMenu.ts`
+  - 修改: `src/ui/menu/styles.ts`
+  - 新增: `tests/lineup-bar.test.ts`
+  - 新增: `changelog.d/2026-10-02-033-lineup-bar.md`
+  - 修改: `docs/tasks/033-lineup-bar.md`
 - 命令与结果:
-- 偏差 / 未完成 / 待决定:
+  - `npm run lint`: 全部通过 (tsc --noEmit 无错误)
+  - `npm test`: 全部通过 (43 个测试文件、450 个测试全部通过, 包含新增的 12 个测试)
+  - `npm run build`: 全部通过 (tsc && vite build 正常产出 dist)
+- 偏差 / 未完成 / 待决定: 无, 严格遵守任务卡定死接口与不做要求。
+
