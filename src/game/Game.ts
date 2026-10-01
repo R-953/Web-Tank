@@ -17,6 +17,7 @@ import { SURFACES } from '../data/surfaces';
 import { AI_PRESETS, type AIParams, type AIPresetId } from '../data/ai';
 import { Vegetation } from './Vegetation';
 import { defaultLoadout, randomLoadout } from './Loadout';
+import { applyCrewSkill } from './crew/progress';
 import type { AttachPart, CrewRole, Vec2, Vec3 } from '../data/types';
 
 const DEG2RAD = Math.PI / 180;
@@ -96,6 +97,8 @@ export interface GameConfig {
   seed?: number;
   /** 玩家载具(缺省用地图出生点里写的) */
   playerVehicleId?: string;
+  /** 玩家车组技能 ∈ [0, 1](= 车组成长进度 × 熟练度);缺省 0 = 新手数值(和现在一样) */
+  playerCrewSkill?: number;
   /** 玩家携弹方案;缺省见 defaultLoadout */
   playerLoadout?: Loadout;
   /** 敌方是否还击(缺省 true;各出生点还可以单独关) */
@@ -400,8 +403,11 @@ export class Game {
   }
 
   private spawn(id: string, s: SpawnSpec, loadout?: Loadout): Vehicle {
-    const spec = this.config.vehicles[s.vehicleId];
+    let spec = this.config.vehicles[s.vehicleId];
     if (!spec) throw new Error(`地图 ${this.config.map.id} 引用了不存在的载具 ${s.vehicleId}`);
+    if (id === 'player') {
+      spec = applyCrewSkill(spec, spec.crewAce, this.config.playerCrewSkill ?? 0);
+    }
     const [x, z] = s.position;
     const y = this.map.heightAt(x, z) + spec.hull.height / 2 + 0.5;
     const v = new Vehicle(id, spec, this.world, new THREE.Vector3(x, y, z), s.heading * DEG2RAD, loadout);

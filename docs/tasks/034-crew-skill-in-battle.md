@@ -1,7 +1,7 @@
 # 034-crew-skill-in-battle:开局按车组等级改玩家载具的装填和转速
 
 - 负责:Antigravity(3.8 Flash High;`src/game/Game.ts` 本归主程维护,本卡授权只做下面这一处)
-- 状态:进行中
+- 状态:已完成
 - 分支:`task/034-crew-skill-in-battle`
 - 规模:S
 
@@ -38,11 +38,11 @@ export function activeCrewSkill(p: Profile, vehicles: readonly ProfileVehicle[])
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] `tests/crew-skill.test.ts`:
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] `tests/crew-skill.test.ts`:
   - `activeCrewSkill`:正常、熟练度 0、存档里当前格子无效时返回 0
   - 用 `Game` 开一局(参照现有测试里创建 `Game` 的写法):`playerCrewSkill: 1` 时玩家载具的主炮装填 = `crewAce.reloadTime`、方向机 = `crewAce.turretRotationSpeed`;缺省时和 `VEHICLES` 里的数值一样;敌方载具不受影响
-- [ ] 不改 `main.ts`
+- [x] 不改 `main.ts`
 
 ## 不做
 
@@ -52,5 +52,13 @@ export function activeCrewSkill(p: Profile, vehicles: readonly ProfileVehicle[])
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 新增: `src/game/crew/skill.ts`
+  - 新增: `tests/crew-skill.test.ts`
+  - 新增: `changelog.d/2026-10-01-034-crew-skill-in-battle.md`
+  - 修改: `src/game/Game.ts`
+  - 修改: `docs/tasks/034-crew-skill-in-battle.md`
 - 命令与结果:
-- 偏差 / 未完成 / 待决定:
+  - `npm run lint`: 通过 (0 errors)
+  - `npm test`: 全部通过 (43 test files, 446 passed)
+  - `npm run build`: 通过 (tsc && vite build 正常构建)
+- 偏差 / 未完成 / 待决定: 无。完全按任务卡与接口要求实现。
