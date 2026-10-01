@@ -1,7 +1,7 @@
 # 023-death-killcam:玩家被击毁时的回放
 
 - 负责:Antigravity(Gemini 3.8 Flash High;车道:界面)
-- 状态:待领取
+- 状态:已完成
 - 分支:`task/023-death-killcam`
 - 规模:S–M
 
@@ -51,9 +51,9 @@ class KillCam {
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] 新测试 `tests/death-killcam.test.ts`:`killcamRect('corner', …)` 和现在的右上角位置一致;`killcamRect('full', 1920, 1080)` 覆盖画面中心、宽度至少占 80%;(能在 jsdom 里构造的话)播 corner 时再播 full,`layout` 变成 'full'、队列清空
-- [ ] 已有测试全部不变地通过(包括整局集成测试)
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] 新测试 `tests/death-killcam.test.ts`:`killcamRect('corner', …)` 和现在的右上角位置一致;`killcamRect('full', 1920, 1080)` 覆盖画面中心、宽度至少占 80%;(能在 jsdom 里构造的话)播 corner 时再播 full,`layout` 变成 'full'、队列清空
+- [x] 已有测试全部不变地通过(包括整局集成测试)
 
 ## 不做
 
@@ -64,5 +64,15 @@ class KillCam {
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 修改:`docs/tasks/023-death-killcam.md`
+  - 修改:`src/ui/KillCam.ts`
+  - 修改:`src/main.ts`
+  - 修改:`src/ui/Hud.ts`
+  - 新增:`tests/death-killcam.test.ts`
+  - 新增:`changelog.d/2026-10-01-023-death-killcam.md`
 - 命令与结果:
+  - `npm run lint`: 全部通过
+  - `npm test`: 26 个测试文件、263 个测试全部通过
+  - `npm run build`: 构建成功
 - 偏差 / 未完成 / 待决定:
+  - 无偏差, 任务卡全部需求均已实现并通过测试。

@@ -7,6 +7,38 @@ import { turretRingOffset } from '../game/damage/geometry';
 
 /** 回放窗口尺寸与位置(右上角) */
 export const KILLCAM = { width: 440, height: 270, margin: 16 };
+export const KILLCAM_FULL_MARGIN = 24;
+
+export type KillCamLayout = 'corner' | 'full';
+
+export interface KillCamOptions {
+  /** corner = 右上角小窗(击毁敌人,现状);full = 自己被击毁,铺满或接近铺满画面 */
+  layout?: KillCamLayout;
+  /** 标题,不传时用现在的「击毁回放 · <车名>」 */
+  title?: string;
+}
+
+/** 回放视口(CSS 像素,左上角原点),render() 和 main.ts 的瞄准镜挖洞共用 */
+export function killcamRect(layout: KillCamLayout, viewW: number, viewH: number): { x: number; y: number; w: number; h: number } {
+  if (layout === 'full') {
+    const margin = KILLCAM_FULL_MARGIN;
+    const w = Math.max(0, viewW - margin * 2);
+    const h = Math.max(0, viewH - margin * 2);
+    return {
+      x: Math.round((viewW - w) / 2),
+      y: Math.round((viewH - h) / 2),
+      w,
+      h,
+    };
+  }
+  return {
+    x: viewW - KILLCAM.width - KILLCAM.margin,
+    y: KILLCAM.margin,
+    w: KILLCAM.width,
+    h: KILLCAM.height,
+  };
+}
+
 /** 炮弹从画面外飞到击穿点的时长,秒 */
 const APPROACH = 0.8;
 /** 车内过程播完后停留、环绕展示的时长,秒 */
@@ -35,6 +67,11 @@ interface SegmentView {
   line: THREE.Line;
 }
 
+interface PlayItem {
+  replay: HitReplay;
+  opts?: KillCamOptions;
+}
+
 /**
  * 右上角击毁回放:X 光视角慢放「炮弹飞来 → 击穿 → 车内破片 / 爆炸 → 模块与乘员变色」。
  * 只依赖 HitReplay(车体本地坐标),用主渲染器在右上角开一个小视口渲染。
@@ -44,6 +81,7 @@ export class KillCam {
   readonly camera = new THREE.PerspectiveCamera(38, KILLCAM.width / KILLCAM.height, 0.05, 100);
   private root: THREE.Group | null = null;
   private replay: HitReplay | null = null;
+  private currentOpts?: KillCamOptions;
   private startMs = 0;
   private duration = 0;
   private parts: Part[] = [];
@@ -51,32 +89,28 @@ export class KillCam {
   private shell: THREE.Group | null = null;
   private flash: THREE.Mesh | null = null;
   private blast: THREE.Mesh | null = null;
-  private readonly queue: HitReplay[] = [];
+  private readonly queue: PlayItem[] = [];
   private readonly frame: HTMLDivElement;
   private readonly caption: HTMLDivElement;
   private camFrom = new THREE.Vector3();
   private camLook = new THREE.Vector3();
 
-  constructor(parent: HTMLElement) {
+  constructor(private readonly parent: HTMLElement) {
     this.scene.background = new THREE.Color(0x0d1116);
     this.scene.add(new THREE.AmbientLight(0xffffff, 1.2));
     this.frame = document.createElement('div');
     Object.assign(this.frame.style, {
       position: 'fixed',
-      right: `${KILLCAM.margin}px`,
-      top: `${KILLCAM.margin}px`,
-      width: `${KILLCAM.width}px`,
-      height: `${KILLCAM.height}px`,
       border: '1px solid rgba(255,255,255,.35)',
       borderRadius: '4px',
       pointerEvents: 'none',
       display: 'none',
-      font: '12px/1.4 system-ui, "PingFang SC", "Microsoft YaHei", sans-serif',
       color: '#f2f2f2',
       textShadow: '0 1px 2px #000',
+      zIndex: '6',
     });
     this.caption = document.createElement('div');
-    Object.assign(this.caption.style, { position: 'absolute', left: '8px', right: '8px', top: '6px' });
+    Object.assign(this.caption.style, { position: 'absolute' });
     this.frame.appendChild(this.caption);
     parent.appendChild(this.frame);
   }
@@ -85,16 +119,32 @@ export class KillCam {
     return this.replay !== null;
   }
 
+  get layout(): KillCamLayout {
+    return this.currentOpts?.layout ?? 'corner';
+  }
+
   /** 排队播放一段回放 */
-  play(replay: HitReplay): void {
-    this.queue.push(replay);
-    if (!this.replay) this.next(performance.now());
+  play(replay: HitReplay, opts?: KillCamOptions): void {
+    const item: PlayItem = { replay, opts };
+    if (opts?.layout === 'full') {
+      this.queue.length = 0;
+      this.startItem(item, performance.now());
+      return;
+    }
+    if (!this.replay) {
+      this.startItem(item, performance.now());
+    } else {
+      this.queue.push(item);
+    }
   }
 
   /** 清空队列并停止当前回放(离开战斗时) */
   stop(): void {
     this.queue.length = 0;
-    this.next(performance.now());
+    this.clear();
+    this.replay = null;
+    this.currentOpts = undefined;
+    this.updateFrame();
   }
 
   update(nowMs: number): void {
@@ -110,27 +160,66 @@ export class KillCam {
   render(renderer: THREE.WebGLRenderer): void {
     if (!this.replay) return;
     const size = renderer.getSize(new THREE.Vector2());
-    const { width: w, height: h, margin } = KILLCAM;
-    const x = size.x - w - margin;
-    const y = size.y - h - margin;
+    const rect = killcamRect(this.layout, size.x, size.y);
+    const x = rect.x;
+    const y = size.y - rect.h - rect.y;
     renderer.setScissorTest(true);
-    renderer.setScissor(x, y, w, h);
-    renderer.setViewport(x, y, w, h);
+    renderer.setScissor(x, y, rect.w, rect.h);
+    renderer.setViewport(x, y, rect.w, rect.h);
+    this.camera.aspect = rect.w / rect.h;
+    this.camera.updateProjectionMatrix();
     renderer.render(this.scene, this.camera);
     renderer.setScissorTest(false);
     renderer.setViewport(0, 0, size.x, size.y);
   }
 
-  private next(nowMs: number): void {
+  private startItem(item: PlayItem, nowMs: number): void {
     this.clear();
-    const r = this.queue.shift() ?? null;
-    this.replay = r;
-    this.frame.style.display = r ? 'block' : 'none';
-    if (!r) return;
-    this.build(r);
+    this.replay = item.replay;
+    this.currentOpts = item.opts;
+    this.updateFrame();
+    this.build(item.replay);
     this.startMs = nowMs;
-    this.duration = APPROACH + (r.penetration?.duration ?? 0.3) + HOLD;
-    this.caption.innerHTML = describe(r);
+    this.duration = APPROACH + (item.replay.penetration?.duration ?? 0.3) + HOLD;
+    this.caption.innerHTML = describe(item.replay, item.opts?.title);
+  }
+
+  private next(nowMs: number): void {
+    const item = this.queue.shift() ?? null;
+    if (!item) {
+      this.clear();
+      this.replay = null;
+      this.currentOpts = undefined;
+      this.updateFrame();
+      return;
+    }
+    this.startItem(item, nowMs);
+  }
+
+  private updateFrame(): void {
+    const active = this.active;
+    this.frame.style.display = active ? 'block' : 'none';
+    if (this.parent) {
+      this.parent.classList.toggle('killcam-full', active && this.layout === 'full');
+    }
+    if (!active) return;
+    const isFull = this.layout === 'full';
+    const rect = killcamRect(this.layout, window.innerWidth, window.innerHeight);
+    this.frame.style.left = `${rect.x}px`;
+    this.frame.style.top = `${rect.y}px`;
+    this.frame.style.width = `${rect.w}px`;
+    this.frame.style.height = `${rect.h}px`;
+    this.frame.style.right = 'auto';
+    this.frame.style.font = isFull
+      ? '14px/1.5 system-ui, "PingFang SC", "Microsoft YaHei", sans-serif'
+      : '12px/1.4 system-ui, "PingFang SC", "Microsoft YaHei", sans-serif';
+    this.caption.style.left = isFull ? '14px' : '8px';
+    this.caption.style.right = isFull ? '14px' : '8px';
+    this.caption.style.top = isFull ? '10px' : '6px';
+    if (rect.w > 0 && rect.h > 0) {
+      this.camera.aspect = rect.w / rect.h;
+      this.camera.updateProjectionMatrix();
+    }
   }
 
   private clear(): void {
@@ -297,8 +386,9 @@ export class KillCam {
 }
 
 /** 回放标题与结果摘要 */
-function describe(r: HitReplay): string {
-  const lines: string[] = [`<b>击毁回放 · ${r.spec.name}</b>`];
+function describe(r: HitReplay, titleOverride?: string): string {
+  const title = titleOverride ?? `击毁回放 · ${r.spec.name}`;
+  const lines: string[] = [`<b>${title}</b>`];
   if (r.armor) {
     lines.push(`击穿 · 等效 ${Math.round(r.armor.effectiveArmor)}mm / 穿深 ${Math.round(r.armor.penetration)}mm`);
   }
