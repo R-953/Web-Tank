@@ -3,6 +3,11 @@ import * as THREE from 'three';
 /** 第三人称视角的垂直视场,度 */
 export const THIRD_PERSON_FOV = 70;
 /**
+ * 第三人称放大后的垂直视场,度。
+ * 估算:按 2 倍放大取 70° 的一半。
+ */
+export const THIRD_PERSON_ZOOM_FOV = 35;
+/**
  * 瞄准镜视场 ≈ 该值 / 倍率(度)。取自实物:TZF 9d 2.5× 视场 25°、5× 视场 12.5°;TSh-16 4× 视场 16°。
  */
 export const SIGHT_FOV_AT_1X = 62.5;
@@ -28,6 +33,7 @@ export class OrbitCamera {
   maxPitch = 0.3;
   mode: 'third' | 'sight' = 'third';
   magnification = 1;
+  private _thirdZoomed = false;
   private userSensitivity = { mouse: 1, sight: 1, scaleWithZoom: true, invertY: false };
 
   private readonly pivot = new THREE.Vector3();
@@ -35,20 +41,45 @@ export class OrbitCamera {
 
   constructor(readonly camera: THREE.PerspectiveCamera) {}
 
+  /** 第三人称是否处于放大状态;setSight() / setThirdPerson() 时复位为 false */
+  get thirdZoomed(): boolean {
+    return this._thirdZoomed;
+  }
+
+  set thirdZoomed(val: boolean) {
+    this.setThirdZoom(val);
+  }
+
   /** 当前垂直视场,度 */
   get fov(): number {
-    return this.mode === 'sight' ? SIGHT_FOV_AT_1X / this.magnification : THIRD_PERSON_FOV;
+    if (this.mode === 'sight') return SIGHT_FOV_AT_1X / this.magnification;
+    return this._thirdZoomed ? THIRD_PERSON_ZOOM_FOV : THIRD_PERSON_FOV;
   }
 
   setThirdPerson(): void {
     this.mode = 'third';
+    this._thirdZoomed = false;
     this.applyFov();
   }
 
   setSight(magnification: number): void {
     this.mode = 'sight';
+    this._thirdZoomed = false;
     this.magnification = magnification;
     this.applyFov();
+  }
+
+  /** 设置第三人称放大状态;开镜时调用无效果 */
+  setThirdZoom(zoomed: boolean): void {
+    if (this.mode === 'sight') return;
+    if (this._thirdZoomed === zoomed) return;
+    this._thirdZoomed = zoomed;
+    this.applyFov();
+  }
+
+  /** 第三人称下切换放大;开镜时调用无效果 */
+  toggleThirdZoom(): void {
+    this.setThirdZoom(!this._thirdZoomed);
   }
 
   /**
@@ -65,8 +96,11 @@ export class OrbitCamera {
   rotate(dx: number, dy: number): void {
     const u = this.userSensitivity;
     let k = this.sensitivity;
-    if (this.mode === 'sight') k *= u.sight * (u.scaleWithZoom ? this.fov / THIRD_PERSON_FOV : 1 / Math.sqrt(this.magnification));
-    else k *= u.mouse;
+    if (this.mode === 'sight') {
+      k *= u.sight * (u.scaleWithZoom ? this.fov / THIRD_PERSON_FOV : 1 / Math.sqrt(this.magnification));
+    } else {
+      k *= u.mouse * (this._thirdZoomed && u.scaleWithZoom ? this.fov / THIRD_PERSON_FOV : 1);
+    }
     // 第二道保险:一次最多转 MAX_STEP(输入层已经过滤了尖峰)
     const dYaw = THREE.MathUtils.clamp(dx * k, -MAX_STEP, MAX_STEP);
     const dPitch = THREE.MathUtils.clamp(dy * k, -MAX_STEP, MAX_STEP) * (u.invertY ? -1 : 1);
