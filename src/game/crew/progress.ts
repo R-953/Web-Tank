@@ -3,8 +3,8 @@ import type { VehicleSpec } from '../../data/types';
 /** 成长常数 T:挂机 T 时长升到满级的 50%(负责人定为两周),毫秒 */
 export const CREW_HALF_TIME_MS = 14 * 24 * 60 * 60 * 1000; // 14 天 = 1,209,600,000 ms
 
-/** 显示给玩家的满级等级 */
-export const CREW_MAX_LEVEL = 100;
+/** 地面载具满级,与 War Thunder 一致;经验上限、溢出、不同模式折算等引入空中载具时再定 */
+export const CREW_MAX_LEVEL = 150;
 
 /** 最大成长进度(严格小于 1,保证永远 < 1) */
 const MAX_PROGRESS = 1 - Number.EPSILON / 2;

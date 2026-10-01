@@ -10,9 +10,9 @@ import {
 } from '../src/game/crew/progress';
 
 describe('车组成长曲线与等级', () => {
-  it('常数定义正确:半衰期为 14 天,满级等级为 100', () => {
+  it('常数定义正确:半衰期为 14 天,满级等级为 150', () => {
     expect(CREW_HALF_TIME_MS).toBe(14 * 24 * 60 * 60 * 1000);
-    expect(CREW_MAX_LEVEL).toBe(100);
+    expect(CREW_MAX_LEVEL).toBe(150);
   });
 
   it('负责人的规则:从 0 开始,2 周 → 50%,6 周 → 75%,14 周 → 87.5%(误差 < 1e-9)', () => {
@@ -83,17 +83,24 @@ describe('车组成长曲线与等级', () => {
     expect(progressAfter(0, Number.MAX_SAFE_INTEGER)).toBeLessThan(1);
   });
 
-  it('crewLevel:0 → 0,0.5 → 50,0.999 → 99', () => {
+  it('crewLevel:0 → 0,0.5 → 75,0.999 → 149', () => {
     expect(crewLevel(0)).toBe(0);
-    expect(crewLevel(0.5)).toBe(50);
-    expect(crewLevel(0.999)).toBe(99);
+    expect(crewLevel(0.5)).toBe(75);
+    expect(crewLevel(0.999)).toBe(149);
 
     // 边界与过渡检查
-    expect(crewLevel(0.009)).toBe(0);
+    expect(crewLevel(0.005)).toBe(0);
     expect(crewLevel(0.01)).toBe(1);
-    expect(crewLevel(0.75)).toBe(75);
-    expect(crewLevel(0.875)).toBe(87);
+    expect(crewLevel(0.75)).toBe(112);
     expect(crewLevel(-0.1)).toBe(0);
+  });
+
+  it('进度永远 < 1,所以显示等级最高 149,满级 150 是渐近线', () => {
+    // 即使挂机非常久的时间,等级也不会突破 149 到达 150
+    expect(crewLevel(progressAfter(0, 1e12))).toBeLessThanOrEqual(149);
+    expect(crewLevel(progressAfter(0, 1e25))).toBe(149);
+    expect(crewLevel(progressAfter(0.999999, 1e25))).toBe(149);
+    expect(crewLevel(1 - Number.EPSILON)).toBe(149);
   });
 });
 
