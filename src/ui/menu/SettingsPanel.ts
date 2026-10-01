@@ -196,6 +196,15 @@ export class SettingsPanel {
       (v) => this.update((d) => (d.game.minimapMarkers = v), true),
       '箭头的尖端指向车头方向',
     );
+    this.segmented(
+      '地图符号',
+      s.game.symbology,
+      [
+        { id: 'nato', name: '北约' },
+        { id: 'warsaw', name: '华约' },
+      ],
+      (v) => this.update((d) => (d.game.symbology = v), true),
+    );
     this.checkbox('显示操作提示', s.game.showHints, (v) => this.update((d) => (d.game.showHints = v)));
     this.checkbox('显示帧率', s.game.showFps, (v) => this.update((d) => (d.game.showFps = v)));
   }

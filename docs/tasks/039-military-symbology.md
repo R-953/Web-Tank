@@ -61,10 +61,10 @@ export function currentSymbology(): Symbology;
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] `tests/symbols.test.ts`:两套 × 四种类型共 8 个符号互不相同;传 / 不传 affiliation 时有 / 无识别框;友军 / 敌军 / 中立三种框的形状和颜色符合文档;`dead` 变灰;`aria-label` 正确;`setSymbology` 后 `classIcon` 跟着变
-- [ ] `docs/design/symbology.md`:每个符号都有出处(条目名 + 链接);版权说明;颜色偏差说明;待确认清单
-- [ ] 设置存取往返正确,旧设置没有这一项时缺省为北约
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] `tests/symbols.test.ts`:两套 × 四种类型共 8 个符号互不相同;传 / 不传 affiliation 时有 / 无识别框;友军 / 敌军 / 中立三种框的形状和颜色符合文档;`dead` 变灰;`aria-label` 正确;`setSymbology` 后 `classIcon` 跟着变
+- [x] `docs/design/symbology.md`:每个符号都有出处(条目名 + 链接);版权说明;颜色偏差说明;待确认清单
+- [x] 设置存取往返正确,旧设置没有这一项时缺省为北约
 
 ## 不做
 
@@ -73,6 +73,24 @@ export function currentSymbology(): Symbology;
 
 ## 结果(完成后由执行者填写)
 
+- 主程审查后返工:出处改为 MIL-STD-2525C 与 TM 30-430,符号按原图重画。
 - 改动文件:
+  - 新增:
+    - `src/ui/symbols.ts`
+    - `docs/design/symbology.md`
+    - `tests/symbols.test.ts`
+    - `changelog.d/2026-10-02-039-military-symbology.md`
+  - 修改:
+    - `src/ui/menu/classIcons.ts`
+    - `tests/class-icons.test.ts`
+    - `src/settings/Settings.ts`
+    - `src/ui/menu/SettingsPanel.ts`
+    - `docs/tasks/039-military-symbology.md`
 - 命令与结果:
+  - `npm run lint`: 通过 (TypeScript strict 检查无错误)
+  - `npm test`: 通过 (46 个测试套件，479 个测试全部通过)
+  - `npm run build`: 通过 (Vite 生产打包成功)
 - 偏差 / 未完成 / 待决定:
+  - 偏差: 苏军原版战术标图为红方友军、蓝方敌军，为保证游戏一致性与玩家直觉，北约与华约均统一采用游戏现有的友蓝敌红配色，并在 `docs/design/symbology.md` 中做明确说明。
+  - 待决定: 小地图与全屏战术地图界面的实际渲染替换留待后续任务卡统筹接入。
+

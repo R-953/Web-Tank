@@ -3,6 +3,7 @@ import type { VehicleClass, VehicleSpec } from '../src/data/types';
 import { VEHICLES } from '../src/data/vehicles';
 import { defaultProfile, recruitCrew, assignVehicle } from '../src/settings/Profile';
 import { classIcon } from '../src/ui/menu/classIcons';
+import { setSymbology } from '../src/ui/symbols';
 import { TechTree } from '../src/ui/menu/TechTree';
 import { LineupBar } from '../src/ui/menu/LineupBar';
 import { MainMenu, type MainMenuOptions } from '../src/ui/menu/MainMenu';
@@ -16,6 +17,10 @@ const profileVehicles = vehicleList.map((v) => ({
 }));
 
 describe('classIcon 基础单元测试', () => {
+  beforeEach(() => {
+    setSymbology('nato');
+  });
+
   it('四种类型生成的 SVG 互不相同', () => {
     const classes: VehicleClass[] = ['light', 'medium', 'heavy', 'td'];
     const svgs = classes.map((c) => classIcon(c));
@@ -39,7 +44,7 @@ describe('classIcon 基础单元测试', () => {
       const svg = classIcon(cls);
       expect(svg).toContain('currentColor');
       expect(svg).toContain('role="img"');
-      expect(svg).toContain(`aria-label="${label}"`);
+      expect(svg).toContain(`aria-label="北约 · ${label}"`);
     }
   });
 
@@ -68,6 +73,7 @@ describe('jsdom 集成测试: 科技树、编组栏、机库信息面板', () =>
   let container: HTMLElement;
 
   beforeEach(() => {
+    setSymbology('nato');
     container = document.createElement('div');
     document.body.appendChild(container);
     return () => {
@@ -93,38 +99,38 @@ describe('jsdom 集成测试: 科技树、编组栏、机库信息面板', () =>
 
     // 1. 类别行首
     const lightHeader = container.querySelector('.tt-lane[data-class="light"] .tt-lane-header');
-    expect(lightHeader?.querySelector('svg[aria-label="轻型坦克"]')).not.toBeNull();
+    expect(lightHeader?.querySelector('svg[aria-label="北约 · 轻型坦克"]')).not.toBeNull();
 
     const mediumHeader = container.querySelector('.tt-lane[data-class="medium"] .tt-lane-header');
-    expect(mediumHeader?.querySelector('svg[aria-label="中型坦克"]')).not.toBeNull();
+    expect(mediumHeader?.querySelector('svg[aria-label="北约 · 中型坦克"]')).not.toBeNull();
 
     const heavyHeader = container.querySelector('.tt-lane[data-class="heavy"] .tt-lane-header');
-    expect(heavyHeader?.querySelector('svg[aria-label="重型坦克"]')).not.toBeNull();
+    expect(heavyHeader?.querySelector('svg[aria-label="北约 · 重型坦克"]')).not.toBeNull();
 
     const tdHeader = container.querySelector('.tt-lane[data-class="td"] .tt-lane-header');
-    expect(tdHeader?.querySelector('svg[aria-label="坦克歼击车 / 突击炮"]')).not.toBeNull();
+    expect(tdHeader?.querySelector('svg[aria-label="北约 · 坦克歼击车 / 突击炮"]')).not.toBeNull();
 
     // 2. 单车卡片
     const l1Card = container.querySelector('.tt-vehicle-card[data-vehicle-id="l1"]');
-    expect(l1Card?.querySelector('svg[aria-label="轻型坦克"]')).not.toBeNull();
+    expect(l1Card?.querySelector('svg[aria-label="北约 · 轻型坦克"]')).not.toBeNull();
 
     const h1Card = container.querySelector('.tt-vehicle-card[data-vehicle-id="h1"]');
-    expect(h1Card?.querySelector('svg[aria-label="重型坦克"]')).not.toBeNull();
+    expect(h1Card?.querySelector('svg[aria-label="北约 · 重型坦克"]')).not.toBeNull();
 
     const t1Card = container.querySelector('.tt-vehicle-card[data-vehicle-id="t1"]');
-    expect(t1Card?.querySelector('svg[aria-label="坦克歼击车 / 突击炮"]')).not.toBeNull();
+    expect(t1Card?.querySelector('svg[aria-label="北约 · 坦克歼击车 / 突击炮"]')).not.toBeNull();
 
     // 3. 多车组标题与组内单车
     const groupCard = container.querySelector('.tt-group-card[data-family="m_fam"]');
     expect(groupCard).not.toBeNull();
     const groupHeader = groupCard?.querySelector('.tt-group-header');
-    expect(groupHeader?.querySelector('svg[aria-label="中型坦克"]')).not.toBeNull();
+    expect(groupHeader?.querySelector('svg[aria-label="北约 · 中型坦克"]')).not.toBeNull();
 
     const m1Item = groupCard?.querySelector('.tt-vehicle-item[data-vehicle-id="m1"]');
-    expect(m1Item?.querySelector('svg[aria-label="中型坦克"]')).not.toBeNull();
+    expect(m1Item?.querySelector('svg[aria-label="北约 · 中型坦克"]')).not.toBeNull();
 
     const m2Item = groupCard?.querySelector('.tt-vehicle-item[data-vehicle-id="m2"]');
-    expect(m2Item?.querySelector('svg[aria-label="中型坦克"]')).not.toBeNull();
+    expect(m2Item?.querySelector('svg[aria-label="北约 · 中型坦克"]')).not.toBeNull();
 
     tt.dispose();
   });
@@ -173,7 +179,7 @@ describe('jsdom 集成测试: 科技树、编组栏、机库信息面板', () =>
     expect(slots.length).toBeGreaterThanOrEqual(1);
 
     const slot0 = slots[0];
-    const heavyIcon = slot0.querySelector('svg[aria-label="重型坦克"]');
+    const heavyIcon = slot0.querySelector('svg[aria-label="北约 · 重型坦克"]');
     expect(heavyIcon).not.toBeNull();
 
     // 招募并分一辆 T-34-85 (medium) 或 SU-100 (td) 到苏联
@@ -184,8 +190,8 @@ describe('jsdom 集成测试: 科技树、编组栏、机库信息面板', () =>
     bar.refresh();
 
     const ussrSlots = container.querySelectorAll('.mm-lineup-slot');
-    expect(ussrSlots[0].querySelector('svg[aria-label="中型坦克"]')).not.toBeNull();
-    expect(ussrSlots[1].querySelector('svg[aria-label="坦克歼击车 / 突击炮"]')).not.toBeNull();
+    expect(ussrSlots[0].querySelector('svg[aria-label="北约 · 中型坦克"]')).not.toBeNull();
+    expect(ussrSlots[1].querySelector('svg[aria-label="北约 · 坦克歼击车 / 突击炮"]')).not.toBeNull();
 
     bar.dispose();
   });
@@ -224,15 +230,15 @@ describe('jsdom 集成测试: 科技树、编组栏、机库信息面板', () =>
     // 检查左侧信息面板 h2
     const infoPanel = container.querySelector('.mm-info');
     expect(infoPanel).not.toBeNull();
-    const infoIcon = infoPanel?.querySelector('h2 svg[aria-label="重型坦克"]');
+    const infoIcon = infoPanel?.querySelector('h2 svg[aria-label="北约 · 重型坦克"]');
     expect(infoIcon).not.toBeNull();
 
     // 检查旧载具栏 renderSlots
     const slots = container.querySelectorAll('.mm-slot');
     expect(slots.length).toBe(3);
-    expect(slots[0].querySelector('.name svg[aria-label="重型坦克"]')).not.toBeNull();
-    expect(slots[1].querySelector('.name svg[aria-label="中型坦克"]')).not.toBeNull();
-    expect(slots[2].querySelector('.name svg[aria-label="坦克歼击车 / 突击炮"]')).not.toBeNull();
+    expect(slots[0].querySelector('.name svg[aria-label="北约 · 重型坦克"]')).not.toBeNull();
+    expect(slots[1].querySelector('.name svg[aria-label="北约 · 中型坦克"]')).not.toBeNull();
+    expect(slots[2].querySelector('.name svg[aria-label="北约 · 坦克歼击车 / 突击炮"]')).not.toBeNull();
 
     // 2. 无 vehicleClass 的车辆测试，不报错且不显示图标
     const noClassSpec: VehicleSpec = {
