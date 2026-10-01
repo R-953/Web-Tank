@@ -1,0 +1,10 @@
+{
+  "name": "round8c",
+  "base": "origin/task/037-crew-wiring",
+  "permissions": "scoped",
+  "timeoutMin": 60,
+  "maxPerAgent": 2,
+  "jobs": [
+    { "id": "038", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/038-class-icons.md", "branch": "task/038-class-icons", "commit": "ui: 载具类型图标(轻型 / 中型 / 重型 / 坦克歼击车)" }
+  ]
+}
