@@ -67,11 +67,11 @@ export function buildShermanHull(L: ShermanLayout, H: GeoBatch, C: Palette): voi
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过(`tests/model-bounds.test.ts` 会自动检查三辆车的包围盒)
-- [ ] 车体和 `layout.ts` 对齐:首上斜面就是 `glacisZ(y)`,侧裙底面在 `sponsonY`,车顶在 `top`,车鼻不超过 `noseZ`
-- [ ] 没有漂浮、错位的零件,没有零件插进炮塔座圈范围
-- [ ] 三辆车之间能看出区别:E8 的加宽挡泥板,E2 的附加装甲和没有大灯
-- [ ] `buildShermanHull` 加进去的三角面不超过约 4,000(参考:现有车的车体 2.4k–3.8k),统计方法写进「结果」
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过(`tests/model-bounds.test.ts` 会自动检查三辆车的包围盒)
+- [x] 车体和 `layout.ts` 对齐:首上斜面就是 `glacisZ(y)`,侧裙底面在 `sponsonY`,车顶在 `top`,车鼻不超过 `noseZ`
+- [x] 没有漂浮、错位的零件,没有零件插进炮塔座圈范围
+- [x] 三辆车之间能看出区别:E8 的加宽挡泥板,E2 的附加装甲和没有大灯
+- [x] `buildShermanHull` 加进去的三角面不超过约 4,000(参考:现有车的车体 2.4k–3.8k),统计方法写进「结果」
 - [ ] 在机库截图:三辆车各一张左前 45°,外加 E2 正面一张,放进 PR 描述(不要提交进仓库)
 
 ## 不做
@@ -89,5 +89,20 @@ export function buildShermanHull(L: ShermanLayout, H: GeoBatch, C: Palette): voi
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 修改: `docs/tasks/013-sherman-hull.md`
+  - 修改: `src/game/models/sherman/hull.ts`
+  - 新增: `tests/sherman-hull.test.ts`
+  - 新增: `changelog.d/2026-10-01-013-sherman-hull.md`
 - 命令与结果:
+  - `npm run lint`: 通过 (tsc --noEmit 无错误)
+  - `npm test`: 全部 26 个测试套件、259 个测试用例全部通过 (包含 `tests/model-bounds.test.ts`、`tests/sherman-vehicles.test.ts` 及 `tests/sherman-hull.test.ts`)
+  - `npm run build`: 通过 (tsc && vite build 正常产出 dist)
+  - 三角面统计:
+    - 统计方法: 调用 `buildShermanHull(L, H, C)` 填充 `GeoBatch` 后读取 `H.triangles` (即顶点数组长度 / 9)
+    - M4A3(76)W: 2,612 面
+    - M4A3E8: 2,636 面
+    - M4A3E2: 2,468 面
+    - 均符合不超过 4,000 面的预算要求
 - 偏差 / 未完成 / 待决定:
+  - 无功能偏差, 尺寸严格遵循 `layout.ts`, 座圈范围内部完全留空。
+  - 遵守调度脚本与 Agent 规则, 未执行 git commit / push / PR 操作, 待主程审查后统一处理。机库截图待主程提交 PR 时附上。
