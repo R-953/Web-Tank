@@ -1,4 +1,4 @@
-import type { CrewSpec, ModuleSpec, VehicleSpec } from './types';
+import type { CrewSpec, ModuleSpec, VehicleSpec, WeaponSpec } from './types';
 import { hePenetration } from './shells';
 
 /*
@@ -377,10 +377,208 @@ export const ISU_122: VehicleSpec = {
   color: 0x535e36,
 };
 
+/*
+ * 谢尔曼 M4A3 系列(三辆共用 47° 单块首上的焊接车体,数据与出处见 docs/physics-validation.md 第 11 节、docs/research/m4a3-76w.md):
+ *   M4A3(76)W  —— T23 炮塔 + 76 mm M1A1(无制退器),VVSS 悬挂
+ *   M4A3E8     —— 同上的车体和炮塔,76 mm M1A2(带制退器),HVSS 悬挂(Easy Eight)
+ *   M4A3E2     —— 「Jumbo」突击坦克:车体加焊附加装甲、厚壁炮塔,75 mm M3,VVSS 悬挂
+ * 车体盒高 1.93 + 炮塔盒高 0.72:炮耳轴离地 1.93 + 0.36 = 2.29 m,等于资料的火线高;炮塔顶 2.65 m,加指挥塔约 0.3 m 等于全高 2.97 m。
+ * 炮塔盒以座圈中心为中心、座圈在车体中部(offset 0),炮塔盒长 2.5 m 按座圈 1.75 m 估算。
+ */
+
+/** 76 mm M1 系列火炮(M4A3(76)W / M4A3E8 共用) */
+function gun76(name: string): WeaponSpec {
+  return {
+    id: 'm1_76',
+    name,
+    reloadTime: 7.6, // War Thunder 值(新手乘员;满级 5.9 s);公开资料没查到实测射速
+    ammo: [
+      // 被帽 + 风帽,7.00 kg;装药 77 g Explosive D(TM 9-1904,按 TNT 1:1);BD M66A1 延时引信,延时距离沿用 1.2 m(估算)
+      // 125/116/106/89 mm @ 100/500/1000/2000 m(Bird & Livingston,90° RHA)→ 炮口 127,阻力系数按表拟合
+      { id: 'm62', name: 'M62', type: 'APCBC-HE', caliber: 76.2, mass: 7.0, muzzleVelocity: 792, penetration: 127, explosiveMass: 77, fuseDelay: 1.2, fuseSensitivity: 15, dragCoefficient: 0.32 },
+      // 整体实心弹,6.80 kg;154/131/107/72 mm @ 100/500/1000/2000 m,掉得快 → 炮口 160,阻力系数 0.70
+      { id: 'm79', name: 'M79', type: 'AP', caliber: 76.2, mass: 6.8, muzzleVelocity: 792, penetration: 160, explosiveMass: 0, fuseDelay: 0, fuseSensitivity: 0, dragCoefficient: 0.7 },
+      // 钨芯硬芯弹,3.45 kg(另说 4.24 kg,未核实);239/208/175/124 mm @ 100/500/1000/2000 m → 炮口 247
+      { id: 'm93', name: 'M93', type: 'APCR', caliber: 76.2, mass: 3.45, muzzleVelocity: 1036, penetration: 247, explosiveMass: 0, fuseDelay: 0, fuseSensitivity: 0, dragCoefficient: 0.31 },
+      // 5.84 kg,390 g TNT
+      { id: 'm42a1', name: 'M42A1', type: 'HE', caliber: 76.2, mass: 5.84, muzzleVelocity: 823, penetration: hePenetration(0.39), explosiveMass: 390, fuseDelay: 0, fuseSensitivity: 0.1 },
+    ],
+  };
+}
+
+/** M1919A4 同轴机枪(三辆共用) */
+function m1919a4Coax(): WeaponSpec {
+  return {
+    id: 'm1919a4_coax',
+    name: 'M1919A4 同轴机枪',
+    kind: 'mg',
+    reloadTime: 10.4, // 换弹链,War Thunder 值(新手乘员;满级 8 s)
+    rateOfFire: 500, // 400–600
+    beltSize: 250,
+    rounds: 3000, // 全车 .30 弹与航向机枪共用(76 mm 车 6,250 发、E2 4,750 发),同轴份额用 War Thunder 的 3,000
+    // .30-06 穿甲弹 M2:弹头约 10.8 g;穿深 13 mm@10m 为 War Thunder 值;初速暂用 M2 普通弹的 853 m/s
+    ammo: [
+      { id: 'm2_ap', name: '.30 M2 AP', type: 'AP', caliber: 7.62, mass: 0.0108, muzzleVelocity: 853, penetration: 13, explosiveMass: 0, fuseDelay: 0, fuseSensitivity: 0, dragCoefficient: 0.3 },
+    ],
+  };
+}
+
+/**
+ * 三辆共用的内部布局(位置全部估算,见 docs/research/m4a3-76w.md 第 9 节):
+ * 后置发动机、前置变速箱;弹药在车底传动轴两侧的湿式弹药箱里,炮塔地板上有待发弹架。
+ * 谢尔曼从左侧装填:装填手在左,炮手、车长在右。
+ */
+function shermanInternals(o: {
+  ready: number;
+  floor: readonly [left: number, right: number];
+  floorLength: readonly [left: number, right: number];
+  track: { x: number; width: number };
+  barrelLength: number;
+  breech: { z: number; length: number };
+}): VehicleSpec['internals'] {
+  const bl = o.barrelLength;
+  return {
+    modules: [
+      { id: 'engine', type: 'engine', part: 'hull', center: [0, 0.05, 2.0], size: [1.2, 1.0, 1.5] },
+      { id: 'transmission', type: 'transmission', part: 'hull', center: [0, -0.2, -2.7], size: [1.6, 0.6, 0.7] },
+      ...pair('fuel', 'fuel', 'hull', [1.0, 0.4, 1.8], [0.35, 0.6, 1.4]),
+      rack('ammo_ready', 'turret', [-0.6, 0.0, 0.5], [0.4, 0.4, 0.5], o.ready, 1),
+      rack('ammo_floor_l', 'hull', [-0.45, -0.2, -0.6], [0.6, 0.5, o.floorLength[0]], o.floor[0], 2),
+      rack('ammo_floor_r', 'hull', [0.45, -0.2, -0.6], [0.6, 0.5, o.floorLength[1]], o.floor[1], 3),
+      // 履带盒底边贴地(车体盒高 1.93 → 地面 y = −0.965),从前主动轮到后诱导轮约 5.6 m
+      ...pair('track', 'track', 'hull', [o.track.x, -0.59, 0], [o.track.width, 0.75, 5.6]),
+      { id: 'traverse', type: 'traverse', part: 'turret', center: [0.3, -0.2, -0.2], size: [0.3, 0.3, 0.3] },
+      { id: 'elevation', type: 'elevation', part: 'turret', center: [0.3, 0.3, -0.8], size: [0.25, 0.3, 0.25] },
+      { id: 'breech', type: 'breech', part: 'gun', center: [0, 0, o.breech.z], size: [0.3, 0.3, o.breech.length] },
+      { id: 'barrel', type: 'barrel', part: 'gun', center: [0, 0, -bl / 2], size: [0.16, 0.16, bl] },
+    ],
+    crew: [
+      crew('driver', 'hull', -0.55, 0.05, -2.3),
+      crew('radio', 'hull', 0.55, 0.05, -2.3),
+      crew('gunner', 'turret', 0.45, 0.05, -0.45),
+      crew('commander', 'turret', 0.5, 0.35, 0.45),
+      crew('loader', 'turret', -0.5, 0.0, 0.2),
+    ],
+  };
+}
+
+/** M4A3(76)W(VVSS,1944 年 3 月起):T23 炮塔、76 mm M1A1、湿式弹药架 */
+export const M4A3_76W: VehicleSpec = {
+  id: 'm4a3_76w',
+  name: 'M4A3(76)W',
+  // 首上 63.5@47° → 93(首下铸造传动罩 108@0°–50.8@56°,未单独建模);侧面 38.1 垂直;后部 38.1@10–22° ≈ 40
+  armor: { front: 93, side: 38, rear: 40 },
+  // 炮盾 88.9 垂直(炮盾外的正面 63.5@40–45° ≈ 83–90);侧面 63.5@0–13° ≈ 64;后部 63.5 垂直
+  turretArmor: { front: 89, side: 64, rear: 64 },
+  maxSpeed: 42, // 26 mph 持续公路速度
+  turretRotationSpeed: 24, // 液压方向机
+  weapons: [gun76('76 mm M1A1'), m1919a4Coax()],
+  // 车长 6.29(不含炮)/ 宽 2.68(带挡泥板)/ 全高 2.97,战斗全重 32.3 t(《Catalogue of Standard Ordnance Items》)
+  // 转向按固定半径转向估算;加速度按功重比 13.9 hp/t 比照 T-34-85 估算(5.5 × 13.9 / 15.6)
+  hull: { length: 6.29, width: 2.68, height: 1.93, turnRate: 15, acceleration: 4.9 },
+  // 俯仰 −12° / +25°;炮口伸出车首 47 in = 1.19 m → barrelLength = 1.19 − 2.5/2 + 6.29/2 ≈ 3.09(真实身管 52 倍径 3.96 m)
+  // 高低机 2.8°/s 为 War Thunder 值(历史满改、新手乘员)
+  turret: { length: 2.5, width: 2.2, height: 0.72, barrelLength: 3.09, elevation: [-12, 25], elevationSpeed: 2.8 },
+  // M71D 望远镜:倍率用 War Thunder 值 4.3–5×;美式分划要给 SightSpec.reticle 加 'us'(改核心类型,待定),暂用苏式
+  sight: { magnifications: [4.3, 5], reticle: 'soviet' },
+  // 共 71 发:炮塔待发弹架 6 发(最先取空),传动轴两侧湿式弹药箱 35 + 30 发;T48 / T51 履带宽 0.42,履带中心距 2.11
+  internals: shermanInternals({
+    ready: 6,
+    floor: [35, 30],
+    floorLength: [1.4, 1.2],
+    track: { x: 1.055, width: 0.42 },
+    barrelLength: 3.09,
+    breech: { z: 0.9, length: 1.0 },
+  }),
+  color: 0x4b5320, // 橄榄绿,估算
+};
+
+/** M4A3E8(M4A3(76)W HVSS,1944 年 8 月起):车体、炮塔同 M4A3(76)W,换水平螺旋弹簧悬挂和宽履带,76 mm M1A2 带制退器 */
+export const M4A3E8: VehicleSpec = {
+  id: 'm4a3e8',
+  name: 'M4A3E8',
+  armor: { front: 93, side: 38, rear: 40 },
+  turretArmor: { front: 89, side: 64, rear: 64 },
+  maxSpeed: 42,
+  turretRotationSpeed: 24,
+  weapons: [gun76('76 mm M1A2'), m1919a4Coax()],
+  // 车长 6.27(不含炮)/ 宽 3.00(带挡泥板)/ 全高 2.97,战斗全重 33.7 t(Hunnicutt 1994)
+  // 加速度按功重比 13.4 hp/t 比照 T-34-85 估算(5.5 × 13.4 / 15.6)
+  hull: { length: 6.27, width: 3.0, height: 1.93, turnRate: 15, acceleration: 4.7 },
+  // 炮口伸出车首 50 in = 1.27 m(比 VVSS 型多出的 3 in 是制退器)→ barrelLength = 1.27 − 2.5/2 + 6.27/2 ≈ 3.16
+  turret: { length: 2.5, width: 2.2, height: 0.72, barrelLength: 3.16, elevation: [-12, 25], elevationSpeed: 2.8 },
+  sight: { magnifications: [4.3, 5], reticle: 'soviet' },
+  // 共 71 发,布局同 M4A3(76)W;T66 履带宽 0.58,履带中心距 2.26
+  internals: shermanInternals({
+    ready: 6,
+    floor: [35, 30],
+    floorLength: [1.4, 1.2],
+    track: { x: 1.13, width: 0.58 },
+    barrelLength: 3.16,
+    breech: { z: 0.9, length: 1.0 },
+  }),
+  color: 0x4b5320,
+};
+
+/**
+ * M4A3E2「Jumbo」突击坦克(1944 年 6 月起,254 辆):首上、侧面加焊附加装甲,单块加厚传动罩,厚壁炮塔(T23 改),
+ * 75 mm M3(T110 炮架)。按出厂状态做 75 mm 型;战地换装 76 mm 的车不做。
+ */
+export const M4A3E2: VehicleSpec = {
+  id: 'm4a3e2',
+  name: 'M4A3E2',
+  // 首上 101.6@47° → 149(首下 140→114 @0°–56°,未单独建模);上部侧面 76.2 垂直(下部 38.1,藏在行走机构后面);后部 38.1@10–22° ≈ 40
+  armor: { front: 149, side: 76, rear: 40 },
+  // 炮盾 177.8 垂直;炮塔正面 152.4@12° ≈ 156(炮盾覆盖大部分,取炮盾值);侧面 152.4@6° ≈ 153;后部 152.4@2° ≈ 152
+  turretArmor: { front: 178, side: 153, rear: 152 },
+  maxSpeed: 35, // 22 mph 持续公路速度(改了最终传动比)
+  turretRotationSpeed: 24,
+  weapons: [
+    {
+      id: 'm3_75',
+      name: '75 mm M3',
+      reloadTime: 6.5, // War Thunder 值(新手乘员;满级 5 s)
+      ammo: [
+        // 被帽 + 风帽,6.63 kg;装药没查到,用 War Thunder 值 65 g Explosive D(TNT 当量 64 g)、引信延时 1.2 m、灵敏度 14 mm
+        // 88/81/73/59 mm @ 100/500/1000/2000 m(Bird & Livingston,90° RHA)→ 炮口 90,阻力系数按表拟合
+        { id: 'm61', name: 'M61', type: 'APCBC-HE', caliber: 75, mass: 6.63, muzzleVelocity: 618, penetration: 90, explosiveMass: 64, fuseDelay: 1.2, fuseSensitivity: 14, dragCoefficient: 0.37 },
+        // 整体实心弹,6.32 kg;109/92/76/51 mm @ 100/500/1000/2000 m → 炮口 113,阻力系数 0.67
+        { id: 'm72', name: 'M72', type: 'AP', caliber: 75, mass: 6.32, muzzleVelocity: 619, penetration: 113, explosiveMass: 0, fuseDelay: 0, fuseSensitivity: 0, dragCoefficient: 0.67 },
+        // 6.76 kg,680 g TNT;初速按普通装药 463 m/s(加强装药 594 m/s,War Thunder 也取 463)
+        { id: 'm48', name: 'M48', type: 'HE', caliber: 75, mass: 6.76, muzzleVelocity: 463, penetration: hePenetration(0.68), explosiveMass: 680, fuseDelay: 0, fuseSensitivity: 0.1 },
+      ],
+    },
+    m1919a4Coax(),
+  ],
+  // 车长 6.27(不含炮)/ 宽 2.94(带挡泥板)/ 全高 2.95,战斗全重 38.0 t(Hunnicutt 1994)
+  // 最小转向直径 74 ft(76 mm 车 62 ft),转向速度按同样方法缩小到 13°/s;加速度按功重比 11.8 hp/t 比照 T-34-85 估算(5.5 × 11.8 / 15.6)
+  hull: { length: 6.27, width: 2.94, height: 1.93, turnRate: 13, acceleration: 4.2 },
+  // 俯仰 −10° / +25°;炮口伸出车首 0 in → barrelLength = 0 − 2.5/2 + 6.27/2 ≈ 1.89(真实身管 40 倍径 3.0 m)
+  // 炮塔盒比 T23 宽 0.15 m(侧壁 152 mm 对 64 mm);火线高资料为 2.24 m,模型按同一车体 / 炮塔盒高取 2.29 m
+  // 高低机 2.8°/s 为 War Thunder 值
+  turret: { length: 2.5, width: 2.35, height: 0.72, barrelLength: 1.89, elevation: [-10, 25], elevationSpeed: 2.8 },
+  // M71G 望远镜:倍率用 War Thunder 值 4.3–5×
+  sight: { magnifications: [4.3, 5], reticle: 'soviet' },
+  // 共 104 发:炮塔待发弹架 4 发,车底 10 个湿式弹药箱 100 发(按同厂 M4A3(75)W 的布局,两侧各算 50 发)
+  // T48 履带加宽端联器(鸭嘴)后宽 0.51,履带中心距 2.11;鸭嘴装在外侧,履带盒中心外移 0.045
+  internals: shermanInternals({
+    ready: 4,
+    floor: [50, 50],
+    floorLength: [1.6, 1.6],
+    track: { x: 1.1, width: 0.51 },
+    barrelLength: 1.89,
+    breech: { z: 0.7, length: 0.8 },
+  }),
+  color: 0x4b5320,
+};
+
 export const VEHICLES: Readonly<Record<string, VehicleSpec>> = {
   [TIGER_I.id]: TIGER_I,
   [T34_85.id]: T34_85,
   [TIGER_II.id]: TIGER_II,
   [SU_100.id]: SU_100,
   [ISU_122.id]: ISU_122,
+  [M4A3_76W.id]: M4A3_76W,
+  [M4A3E8.id]: M4A3E8,
+  [M4A3E2.id]: M4A3E2,
 };

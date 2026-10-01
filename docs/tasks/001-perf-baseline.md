@@ -1,7 +1,7 @@
 # 001-perf-baseline:本机帧率基线
 
 - 负责:Claude Code(原定 Antigravity;2026-09-29 负责人决定本轮由 Claude Code 代做,要用真实的 Chrome:桌面版内置浏览器隐藏时不出帧,显示时疑似锁 30 帧)
-- 状态:待审查
+- 状态:已合并
 - 分支:`task/001-perf-baseline`
 - 规模:S(不改代码)
 

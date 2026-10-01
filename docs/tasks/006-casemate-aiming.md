@@ -1,7 +1,7 @@
 # 006-casemate-aiming:固定战斗室(无炮塔)车辆的瞄准逻辑
 
 - 负责:Claude Code(主程)
-- 状态:待审查
+- 状态:已合并
 - 分支:`task/006-casemate-aiming`
 - 规模:M
 

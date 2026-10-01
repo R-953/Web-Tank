@@ -1,7 +1,7 @@
 # 008-freelook-reverse-steer:C 键自由视角;倒车时转向按汽车习惯
 
 - 负责:Claude Code(主程)
-- 状态:待审查(分支基于 task/007,006 → 007 → 008 依次合并)
+- 状态:已合并
 - 分支:`task/008-freelook-reverse-steer`
 - 规模:S
 

@@ -1,7 +1,7 @@
 # 007-casemate-vehicles:两辆代表性的固定战斗室车辆(数据)
 
 - 负责:Claude Code(主程)
-- 状态:待审查(分支基于 task/006,006 先合并)
+- 状态:已合并
 - 分支:`task/007-casemate-vehicles`
 - 规模:M
 
