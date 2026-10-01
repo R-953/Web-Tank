@@ -30,6 +30,6 @@
 
 ## 结果(完成后由执行者填写)
 
-- 改动文件:
-- 命令与结果:
-- 偏差 / 未完成 / 待决定:
+- 改动文件:`vite.config.ts`、`tests/vite-watch.test.ts`、`changelog.d/2026-10-02-043-vite-watch-worktree.md`、本任务卡。
+- 命令与结果:`npm run lint` 通过;`npm test` 通过(46 个测试文件、468 个测试);`npm run build` 通过(有 bundle 体积提示)。
+- 偏差 / 未完成 / 待决定:无;`test.exclude` 未改,未新增依赖。
