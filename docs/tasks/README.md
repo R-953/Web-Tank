@@ -9,8 +9,9 @@
 最后更新:2026-10-01(第六轮收尾)
 
 - **刚完成:** 第六轮 013–026 全部合并(谢尔曼三车模型与涂装、美式分划、固定半径转向、湿式弹药架、第三人称放大、方位角与距离读数、击毁回放、机库镜头);仓库搬到 `D:\Web Tank`,旧 worktree 和已合并分支已清理,GitHub 开了「合并后自动删除分支」。
-- **进行中:** 020 车体正面分首上 / 首下(Antigravity);Antigravity 上 Claude Opus 4.6 的 B2 补测(结果写进 `docs/research/model-bench-2026-10.md`)。
-- **等负责人决定:** 科技树与成员组设计稿里标「待确认」的几处([docs/design/tech-tree-and-crew.md](../design/tech-tree-and-crew.md)),定了再开卡。
+- **进行中:** 020 车体正面分首上 / 首下(Antigravity 做,主程接 `Game.ts`)。
+- **下一步:** 科技树、编组与成员组。负责人 10-01 已答复设计稿里的待确认问题,稿子已按答复改好([docs/design/tech-tree-and-crew.md](../design/tech-tree-and-crew.md)),主程拆卡后派给 Antigravity。
+- **已出结果:** Antigravity 上 Claude Opus 4.6 的 B2 补测 7/7,外观和 3.8 Flash 相当、token 最省,结论见 [docs/research/model-bench-2026-10.md](../research/model-bench-2026-10.md)。
 - **排队:**
   - 10 月 3 日 Copilot 权益生效后,重测 Copilot 可用的模型;OpenAI 工单解决后,把 Codex CLI 加进调度脚本。
   - 候选车辆(见下文)型号确认后开卡。
