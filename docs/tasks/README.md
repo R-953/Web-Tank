@@ -6,22 +6,19 @@
 
 > 每个对话之间不共享上下文。新开的会话先读这一节,再看下面的看板和 Changelog「路线与进度」;主程每轮收尾时更新这一节。
 
-最后更新:2026-10-02(第九轮第一波合并后,换新会话前)
+最后更新:2026-10-02(第九轮收尾)
 
-- **刚完成:** 第九轮第一波全部合并:
-  - 039:北约 / 华约军标。出处是 MIL-STD-2525C 和 TM 30-430(1946),由主程逐条核实;设置里新增「地图符号」。
-  - 040:机库底栏按 WT 布局重排。
-  - 041:悬停信息卡组件。
-  - 042:地图界面组件,并抽出了携弹面板和地形底图。
-  - 043:worktree 里的 dev server 能自动刷新了。
-
-  四张 Flash 卡审查后有三张返工,经过见各卡「结果」和 [docs/research/multi-agent-efficiency-2026-10.md](../research/multi-agent-efficiency-2026-10.md)。
+- **刚完成:** 第九轮全部合并:
+  - 第一波(039–043):北约 / 华约军标、机库底栏重排、悬停信息卡、地图界面、worktree 里 dev server 自动刷新。
+  - 第二波:044(M 键操作、小地图和地图界面换军标)、045(机库去掉携弹面板,信息卡挂到编组栏和科技树)、046(主程接线:开局先进地图界面、战斗中按 M、标记换军标、符号体系同步)。
+  - 044、045 审查后只由主程小修(测试里的 `as any`、科技树悬停的车组下标),没有返工给 Flash;两张卡一共用了约 198 万输入 / 24 万输出 token(多数是缓存读)。
+  - 汇总:`changelog.d/` 里 020、028–046 已汇总进 [Changelog.md](../../Changelog.md)(第七、八、九轮)。
 - **下一步(新会话从这里接):**
-  1. 派第九轮第二波:`node scripts/agents/dispatch.mjs run scripts/agents/jobs/round9b.json`(044、045 两张 Flash 卡并行,改的文件不重叠)。
-  2. 审查 044 / 045:代码 + 浏览器里看。启动 worktree 的 dev server 时,在 `.claude/launch.json` 加一条 `node <worktree>/node_modules/vite/bin/vite.js <worktree> --port 518x --strictPort`。返工用 `agy --conversation <id>` 续跑原对话,id 在 `Archive/agent-runs/<run>/<id>.log` 最后一个 `conversation_id`。
-  3. 两张合并后,主程做 [046](046-round9-wiring.md)(main.ts 接线):开局先进地图界面、战斗中按 M、标记换军标、符号体系同步。
-  4. 第九轮收尾:`changelog.d/` 汇总进 Changelog、更新路线清单和本节;可以派 Flash 做,参考 027。
-- **额度(10-02):** Antigravity 每周限额还剩 71%,五小时限额刚用完一轮(派大轮次时注意分批);第三方额度剩 63% / 54%;Copilot 10-03 起权益生效。
+  1. 请负责人在真实 Chrome 里把第九轮流程玩一遍:机库 → 地图界面 → 出战 → M → 返回战斗 → Esc 菜单 → 重开 → 回机库,切换北约 / 华约。重点看 Esc 退出鼠标锁定后,再按 Esc / M 能不能重新锁(开发时的内置浏览器不支持鼠标锁,是用脚本模拟的)。有问题记到 Changelog 第九轮的「待确认」。
+  2. 10 月 3 日 Copilot 权益生效后,重测 Copilot 可用的模型;OpenAI 工单解决后,把 Codex CLI 加进调度脚本。
+  3. 候选车辆(见下文)型号确认后开卡。
+  4. 清理:`MainMenu` 的 `saveLoadout` 选项机库里已经没人用了,删它要改十几处测试的构造参数。
+- **额度:** 以 Antigravity / Copilot 应用里显示的为准;10-02 第二波之前 Antigravity 每周限额还剩 71%,第二波两张卡用量很小。
 - **已定的细节:**
   - 车组与编组:
     - 每个国家默认 1 个初级车组,招募上限 8 个车位;同一编组一辆车只分给一个车组。
@@ -32,15 +29,18 @@
     - 两套都用游戏的友蓝敌红(苏军原本是红友蓝敌)。
     - 华约不画识别框,友军单粗线、敌军双细线。
     - 德国国旗用 Balkenkreuz。
+  - 地图界面:
+    - M 打开;小地图方形 / 圆形的键默认不绑,在设置里绑。
+    - 战斗中打开时对局继续跑,玩家车不受控;战斗中改的携弹在下一局生效。
   - 不做 WT 的后备载具次数、BR、价格。
 - **排队:**
-  - 10 月 3 日 Copilot 权益生效后,重测 Copilot 可用的模型;OpenAI 工单解决后,把 Codex CLI 加进调度脚本。
-  - 候选车辆(见下文)型号确认后开卡。
+  - 候选车辆(见下文)。
   - 自定义瞄具(后期)。
 - **派活方式:**
   - 默认 Antigravity + Gemini 3.8 Flash High,用 `scripts/agents/dispatch.mjs` 派发(说明见 [scripts/agents/README.md](../../scripts/agents/README.md))。
   - 小而边界清楚的卡派 Copilot。
   - Claude Code 当主程:写卡、审查(带出处的逐条核实,界面类在浏览器里看)、解决冲突。
+  - 浏览器里审查 worktree 里的分支:在 `.claude/launch.json` 加一条 `node <worktree>/node_modules/vite/bin/vite.js <worktree> --port 518x --strictPort`;worktree 没有 node_modules 时先 `npm ci`。内置浏览器窗格隐藏时 `requestAnimationFrame` 不跑,游戏循环要靠截图驱动几帧。
 
 | 编号 | 任务 | 负责 | 车道 | 状态 |
 |---|---|---|---|---|
@@ -88,9 +88,9 @@
 | [041](041-vehicle-info-card.md) | 鼠标悬停的载具信息卡片 | Antigravity(3.8 Flash High) | 界面 | 已合并 |
 | [042](042-map-screen.md) | 地图界面(编组 + 携弹 + 大地图),独立组件 | Antigravity(3.8 Flash High,返工一次) | 界面 | 已合并 |
 | [043](043-vite-watch-worktree.md) | worktree 里跑 dev server 时改代码不刷新 | Copilot CLI(主程审查) | 杂务 | 已合并 |
-| [044](044-mapscreen-key-and-symbols.md) | M 键操作、小地图和地图界面换成军标 | Antigravity(3.8 Flash High) | 界面 | 待领取 |
-| [045](045-hangar-info-card-hooks.md) | 机库去掉携弹面板,信息卡挂到编组栏和科技树 | Antigravity(3.8 Flash High) | 界面 | 待领取 |
-| [046](046-round9-wiring.md) | main.ts 接上地图界面、军标和符号体系 | Claude Code | 主程 | 待领取(等 044、045) |
+| [044](044-mapscreen-key-and-symbols.md) | M 键操作、小地图和地图界面换成军标 | Antigravity(3.8 Flash High,主程小修) | 界面 | 已合并 |
+| [045](045-hangar-info-card-hooks.md) | 机库去掉携弹面板,信息卡挂到编组栏和科技树 | Antigravity(3.8 Flash High,主程小修) | 界面 | 已合并 |
+| [046](046-round9-wiring.md) | main.ts 接上地图界面、军标和符号体系 | Claude Code | 主程 | 已合并 |
 
 ### 候选车辆(负责人 2026-09-29 提出方向,型号待确认后再开卡)
 
