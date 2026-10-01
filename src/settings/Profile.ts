@@ -3,6 +3,9 @@
  * 对应设计稿 docs/design/tech-tree-and-crew.md 第 2.1、3.1、3.2 节。
  */
 
+/** 每个国家的车位上限(游戏里俗称车位,负责人 10-01 暂定) */
+export const CREW_SLOT_LIMIT = 8;
+
 /** 本卡需要的载具信息(由调用方从 VehicleSpec 里取;测试里用假数据) */
 export interface ProfileVehicle {
   id: string;
@@ -56,7 +59,7 @@ function cloneProfile(p: Profile): Profile {
   return JSON.parse(JSON.stringify(p)) as Profile;
 }
 
-/** 默认存档:每个国家的车组数 = 该国载具数;一个名为「编组 1」的编组,按 vehicles 顺序每个车组分一辆车并已训练;进度 0 */
+/** 默认存档:每个国家只有 1 个初级车组(progress 0),训练过该国在 vehicles 里的第一辆车;「编组 1」只有 1 格,分的就是这辆车,selected 0 */
 export function defaultProfile(vehicles: readonly ProfileVehicle[], now: number): Profile {
   const nationsList: string[] = [];
   for (const v of vehicles) {
@@ -68,16 +71,19 @@ export function defaultProfile(vehicles: readonly ProfileVehicle[], now: number)
   const nations: Record<string, NationProfile> = {};
   for (const nation of nationsList) {
     const nationVehs = vehicles.filter((v) => v.nation === nation);
-    const crews: CrewState[] = nationVehs.map((v) => ({
-      progress: 0,
-      trained: [v.id],
-    }));
+    const firstVeh = nationVehs[0];
+    const crews: CrewState[] = [
+      {
+        progress: 0,
+        trained: firstVeh ? [firstVeh.id] : [],
+      },
+    ];
     const lineupId = 'lineup-1';
     const lineups: Lineup[] = [
       {
         id: lineupId,
         name: '编组 1',
-        slots: nationVehs.map((v) => v.id),
+        slots: [firstVeh ? firstVeh.id : null],
         selected: 0,
       },
     ];
@@ -138,7 +144,6 @@ export function sanitizeProfile(raw: unknown, vehicles: readonly ProfileVehicle[
 
     for (const nation of validNationList) {
       const nationVehs = vehicles.filter((v) => v.nation === nation);
-      const expectedCrewCount = nationVehs.length;
       const rn = rawNations[nation];
 
       if (typeof rn !== 'object' || rn === null) {
@@ -148,10 +153,13 @@ export function sanitizeProfile(raw: unknown, vehicles: readonly ProfileVehicle[
 
       const rnObj = rn as Record<string, unknown>;
 
-      // 1. 清洗 crews
+      // 1. 车组数取存档里的 crews 长度, 夹到 [1, CREW_SLOT_LIMIT]
       const rawCrews = Array.isArray(rnObj.crews) ? rnObj.crews : [];
+      const crewCount = Math.max(1, Math.min(CREW_SLOT_LIMIT, rawCrews.length));
+
+      // 2. 清洗 crews
       const cleanCrews: CrewState[] = [];
-      for (let i = 0; i < expectedCrewCount; i++) {
+      for (let i = 0; i < crewCount; i++) {
         const rc = rawCrews[i];
         if (typeof rc === 'object' && rc !== null) {
           const rcObj = rc as Record<string, unknown>;
@@ -169,14 +177,15 @@ export function sanitizeProfile(raw: unknown, vehicles: readonly ProfileVehicle[
             trained: cleanTrained,
           });
         } else {
+          // 缺失的车组补齐默认车组
           cleanCrews.push({
             progress: 0,
-            trained: nationVehs[i] ? [nationVehs[i].id] : [],
+            trained: nationVehs[0] ? [nationVehs[0].id] : [],
           });
         }
       }
 
-      // 2. 清洗 lineups
+      // 3. 清洗 lineups
       const rawLineups = Array.isArray(rnObj.lineups) ? rnObj.lineups : [];
       const cleanLineups: Lineup[] = [];
 
@@ -192,7 +201,7 @@ export function sanitizeProfile(raw: unknown, vehicles: readonly ProfileVehicle[
         const cleanSlots: (string | null)[] = [];
         const seenInLineup = new Set<string>();
 
-        for (let i = 0; i < expectedCrewCount; i++) {
+        for (let i = 0; i < crewCount; i++) {
           const vid = rawSlots[i];
           if (typeof vid === 'string' && vehMap.get(vid)?.nation === nation && !seenInLineup.has(vid)) {
             seenInLineup.add(vid);
@@ -203,13 +212,15 @@ export function sanitizeProfile(raw: unknown, vehicles: readonly ProfileVehicle[
         }
 
         // 空编组修正: 不能让编组全为空
-        if (expectedCrewCount > 0 && !cleanSlots.some((s) => s !== null)) {
-          cleanSlots[0] = nationVehs[0].id;
+        if (crewCount > 0 && !cleanSlots.some((s) => s !== null)) {
+          if (nationVehs.length > 0) {
+            cleanSlots[0] = nationVehs[0].id;
+          }
         }
 
         // selected 修正: 必须指向非空格子
         let selected = typeof rlObj.selected === 'number' ? Math.floor(rlObj.selected) : 0;
-        if (expectedCrewCount > 0) {
+        if (crewCount > 0) {
           if (selected < 0 || selected >= cleanSlots.length || cleanSlots[selected] === null) {
             const firstValid = cleanSlots.findIndex((s) => s !== null);
             selected = firstValid >= 0 ? firstValid : 0;
@@ -227,7 +238,31 @@ export function sanitizeProfile(raw: unknown, vehicles: readonly ProfileVehicle[
       }
 
       if (cleanLineups.length === 0) {
-        cleanLineups.push(...def.nations[nation].lineups);
+        const defaultSlots: (string | null)[] = Array(crewCount).fill(null);
+        if (nationVehs.length > 0) {
+          defaultSlots[0] = nationVehs[0].id;
+        }
+        cleanLineups.push({
+          id: 'lineup-1',
+          name: '编组 1',
+          slots: defaultSlots,
+          selected: 0,
+        });
+      }
+
+      // 4. 格子里分了车、但对应车组熟练度为 0(没训练过同车族)时, 把这辆车补进该车组的 trained
+      for (const lineup of cleanLineups) {
+        for (let i = 0; i < crewCount; i++) {
+          const vehId = lineup.slots[i];
+          if (vehId !== null) {
+            const crew = cleanCrews[i];
+            if (proficiency(crew, vehId, vehicles) === 0) {
+              if (!crew.trained.includes(vehId)) {
+                crew.trained.push(vehId);
+              }
+            }
+          }
+        }
       }
 
       const rawActiveLineup = typeof rnObj.activeLineup === 'string' ? rnObj.activeLineup : '';
@@ -361,6 +396,28 @@ export function selectCrew(p: Profile, nation: string, lineupId: string, crewInd
   const next = cloneProfile(p);
   const nextLineup = next.nations[nation].lineups.find((l) => l.id === lineupId)!;
   nextLineup.selected = crewIndex;
+  return next;
+}
+
+/** 新招募:车组数 < 上限时加一个初级车组,所有编组末尾补一个 null 格;到上限抛错,中文消息 */
+export function recruitCrew(p: Profile, nation: string): Profile {
+  const nationProfile = p.nations[nation];
+  if (!nationProfile) {
+    throw new Error(`国家不存在: ${nation}`);
+  }
+  if (nationProfile.crews.length >= CREW_SLOT_LIMIT) {
+    throw new Error(`车组数量已达上限(${CREW_SLOT_LIMIT})，无法继续招募`);
+  }
+
+  const next = cloneProfile(p);
+  const nextNation = next.nations[nation];
+  nextNation.crews.push({
+    progress: 0,
+    trained: [],
+  });
+  for (const lineup of nextNation.lineups) {
+    lineup.slots.push(null);
+  }
   return next;
 }
 
