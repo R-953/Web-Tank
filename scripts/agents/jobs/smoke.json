@@ -1,0 +1,26 @@
+{
+  "name": "smoke",
+  "base": "origin/main",
+  "permissions": "scoped",
+  "timeoutMin": 10,
+  "jobs": [
+    {
+      "id": "smoke-agy",
+      "agent": "antigravity",
+      "model": "gemini-3.8-flash-low",
+      "card": "scripts/agents/bench/smoke.md",
+      "worktree": "Main-bench/smoke-agy",
+      "branch": "bench/smoke-agy",
+      "commit": "test: 冒烟测试"
+    },
+    {
+      "id": "smoke-copilot",
+      "agent": "copilot",
+      "model": "auto",
+      "card": "scripts/agents/bench/smoke.md",
+      "worktree": "Main-bench/smoke-copilot",
+      "branch": "bench/smoke-copilot",
+      "commit": "test: 冒烟测试"
+    }
+  ]
+}
