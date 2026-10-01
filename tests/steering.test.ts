@@ -6,6 +6,7 @@ import { defaultBindings, findConflicts } from '../src/data/controls';
 import { FreeLook } from '../src/engine/FreeLook';
 import type { Vehicle } from '../src/game/Vehicle';
 import { SHOOTER } from './fixtures';
+import { M4A3_76W } from '../src/data/vehicles';
 import { drivingRig } from './sim';
 
 const DEG = Math.PI / 180;
@@ -94,3 +95,49 @@ describe('自由视角', () => {
     expect(findConflicts(b).size).toBe(0);
   });
 });
+
+describe('受控差速器固定半径转向(谢尔曼)', () => {
+  it('谢尔曼静止时按住转向 3 秒,航向变化 < 1°(不能原地转)', () => {
+    const { v, run } = drivingRig(M4A3_76W);
+    run(0.5);
+    const h0 = heading(v);
+    run(3, { throttle: 0, steer: 1 });
+    const h1 = heading(v);
+    expect(Math.abs(h1 - h0)).toBeLessThan(1 * DEG);
+  });
+
+  it('未设 turnRadius 的车仍能原地转(其他车行为不变)', () => {
+    const { h } = drive(SHOOTER, { throttle: 0, steer: -1 }, 1.5);
+    expect(h).toBeLessThan(-5 * DEG);
+  });
+
+  it('以 10 km/h 行驶时的转弯半径在 19 m 直径 ±15% 以内', () => {
+    const { v, run, step } = drivingRig(M4A3_76W);
+    run(0.5);
+    const throttle10 = 10 / M4A3_76W.maxSpeed;
+    // 先行驶并进入转向稳态
+    run(2, { throttle: throttle10, steer: 1 });
+
+    // 瞬时运动学直径: 2 * v / omega
+    const speed = v.body.linvel();
+    const linearSpeed = Math.hypot(speed.x, speed.z);
+    const yawRate = Math.abs(v.body.angvel().y);
+    const kinematicDiameter = (2 * linearSpeed) / yawRate;
+    expect(kinematicDiameter).toBeGreaterThanOrEqual(19 * 0.85);
+    expect(kinematicDiameter).toBeLessThanOrEqual(19 * 1.15);
+
+    // 轨迹实测直径: 沿圆周运动采样
+    let minX = Infinity;
+    let maxX = -Infinity;
+    for (let i = 0; i < Math.round(25 / (1 / 60)); i++) {
+      step({ throttle: throttle10, steer: 1 });
+      const p = v.physicsPosition();
+      minX = Math.min(minX, p.x);
+      maxX = Math.max(maxX, p.x);
+    }
+    const pathDiameter = maxX - minX;
+    expect(pathDiameter).toBeGreaterThanOrEqual(19 * 0.85);
+    expect(pathDiameter).toBeLessThanOrEqual(19 * 1.15);
+  });
+});
+

@@ -372,7 +372,8 @@ export class DamageModel {
       const rack = this.rackOf(m);
       const rounds = rack ? this.rackRounds(rack) : 1;
       const fill = rack ? rounds / rack.capacity : 1;
-      const p = DAMAGE.ammo.detonationChance * fill;
+      const wetMult = m.spec.wet ? DAMAGE.ammo.wetFactor : 1;
+      const p = DAMAGE.ammo.detonationChance * fill * wetMult;
       if (rounds > 0 && (rng ? rng() < p : p >= 0.5)) {
         this.detonated = true;
         for (const c of this.crew) if (c.alive) this.killCrew(c);
@@ -522,7 +523,8 @@ export class DamageModel {
         const rack = this.rackOf(m);
         const rounds = rack ? this.rackRounds(rack) : 0;
         if (rounds > 0 && fire.burning >= f.cookOffDelay) {
-          const p = f.cookOffChance * (rounds / (rack?.capacity ?? 1)) * dt;
+          const wetMult = m.spec.wet ? DAMAGE.ammo.wetFactor : 1;
+          const p = f.cookOffChance * (rounds / (rack?.capacity ?? 1)) * dt * wetMult;
           if (rng ? rng() < p : false) {
             this.detonated = true;
             for (const c of this.crew) if (c.alive) this.killCrew(c);

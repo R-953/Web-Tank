@@ -398,7 +398,7 @@ async function start(): Promise<void> {
   const key = (a: ActionId) => bindingShort(cfg().controls.bindings[a][0] ?? cfg().controls.bindings[a][1]);
   const hints = () => {
     const move = [key('forward'), key('left'), key('back'), key('right')].join('');
-    return `${move} 移动 · ${key('fireMain')} 主炮 · ${key('fireMg')} 机枪 · 1–4 弹种 · ${key('scope')} 开镜 · ${key('zoomCycle')} 倍率 · 表尺 ${key('rangeUp')} / ${key('rangeDown')} · ${key('repair')} 维修 · ${key('extinguish')} 灭火 · 按住 ${key('freeLook')} 自由视角 · 按住 ${key('cursor')} 操作小地图 · Esc 暂停`;
+    return `${move} 移动 · ${key('fireMain')} 主炮 · ${key('fireMg')} 机枪 · 1–4 弹种 · ${key('scope')} 开镜 · ${key('zoomCycle')} 放大 / 倍率 · 表尺 ${key('rangeUp')} / ${key('rangeDown')} · ${key('repair')} 维修 · ${key('extinguish')} 灭火 · 按住 ${key('freeLook')} 自由视角 · 按住 ${key('cursor')} 操作小地图 · Esc 暂停`;
   };
 
   let last = performance.now();
@@ -474,9 +474,15 @@ async function start(): Promise<void> {
         zoomIndex = THREE.MathUtils.clamp(i, 0, magnifications.length - 1);
         if (scoped) orbit.setSight(magnifications[zoomIndex]);
       };
-      if (actions.pressed('zoomCycle') && magnifications.length > 1) setZoom((zoomIndex + 1) % magnifications.length);
-      if (actions.pressed('zoomIn')) setZoom(zoomIndex + 1);
-      if (actions.pressed('zoomOut')) setZoom(zoomIndex - 1);
+      if (scoped) {
+        if (actions.pressed('zoomCycle') && magnifications.length > 1) setZoom((zoomIndex + 1) % magnifications.length);
+        if (actions.pressed('zoomIn')) setZoom(zoomIndex + 1);
+        if (actions.pressed('zoomOut')) setZoom(zoomIndex - 1);
+      } else {
+        if (actions.pressed('zoomCycle')) orbit.toggleThirdZoom();
+        if (actions.pressed('zoomIn')) orbit.setThirdZoom(true);
+        if (actions.pressed('zoomOut')) orbit.setThirdZoom(false);
+      }
       const steps = actions.count('rangeUp') - actions.count('rangeDown');
       if (steps !== 0) sightRange = THREE.MathUtils.clamp(sightRange + steps * SIGHT_RANGE.step, 0, SIGHT_RANGE.max);
       (['shell1', 'shell2', 'shell3', 'shell4'] as const).forEach((a, i) => {
@@ -485,7 +491,7 @@ async function start(): Promise<void> {
       if (actions.pressed('nextShell')) g.nextShell();
       if (actions.pressed('repair')) g.toggleRepair();
       if (actions.pressed('extinguish')) g.extinguish();
-    } else if (!alive && scoped) {
+    } else if (!alive && (scoped || orbit.thirdZoomed)) {
       scoped = false;
       orbit.setThirdPerson();
     }

@@ -51,7 +51,16 @@ export const DAMAGE = {
   crewMinEfficiency: 0,
 
   /** 弹药架被打坏时的殉爆概率 = detonationChance × 该架剩余弹数 / 容量;空架不会炸,没炸的弹药报废 */
-  ammo: { detonationChance: 0.9 },
+  ammo: {
+    detonationChance: 0.9,
+    /**
+     * 湿式弹药架(带水套)的殉爆与起火殉爆概率折减系数。
+     * 出处:Wikipedia「M4 Sherman」(Armor / Ammunition stowage 节)引 1945 年美军战损统计(Steven Zaloga《Armored Thunderbolt》2008 p.118):
+     * 干式弹药架被击穿后起火率为 60–80%(中位数 70%),湿式弹药架降至 10–15%(中位数 12.5%),
+     * 折扣系数定为 12.5% / 70% ≈ 0.18。
+     */
+    wetFactor: 0.18,
+  },
 
   /**
    * 化学能弹没击穿时在车外起爆,冲击波波及外挂模块(履带、炮管):
