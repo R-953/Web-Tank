@@ -240,9 +240,26 @@ export class MessageQueue {
   }
 }
 
+/** 将秒数格式化为 mm:ss */
+export function formatClock(seconds: number): string {
+  const totalSeconds = Math.max(0, Math.ceil(seconds));
+  const minutes = Math.floor(totalSeconds / 60);
+  const remainingSeconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+}
+
 /** 维修倒计时文案 */
 export function repairLabel(remainingSec: number): string {
-  return `正在修理,剩余:${Math.ceil(remainingSec)}秒`;
+  return `修复车辆还需 ${formatClock(remainingSec)}`;
+}
+
+/** 倒计时独占一行,不计入普通状态提示的行数上限 */
+export function statusDisplayRows(
+  messages: StatusMsg[],
+  repairCountdown: StatusMsg | null,
+  limit = 4
+): { messages: StatusMsg[]; repairCountdown: StatusMsg | null } {
+  return { messages: messages.slice(0, limit), repairCountdown };
 }
 
 export interface ActionHint {
@@ -269,7 +286,7 @@ export interface HintKeys {
 /**
  * 操作提示行纯函数:
  * - 优先级 1: 灭火提示。着火且有灭火器且未在灭火中 -> `[keys.extinguish] 灭火`
- * - 优先级 2: 维修提示。没在维修、没着火、有可修模块 -> `[keys.repair] 按住开始维修`
+ * - 优先级 2: 维修提示。没在维修、没着火、有可修模块 -> `[keys.repair] 开始维修车辆`
  * - 其余情况返回 null
  */
 export function hintLine(cond: HintConditions, keys: HintKeys): ActionHint | null {
@@ -277,7 +294,7 @@ export function hintLine(cond: HintConditions, keys: HintKeys): ActionHint | nul
     return { key: keys.extinguish, text: '灭火' };
   }
   if (!cond.isRepairing && !cond.fire && cond.hasRepairable) {
-    return { key: keys.repair, text: '按住开始维修' };
+    return { key: keys.repair, text: '开始维修车辆' };
   }
   return null;
 }
@@ -397,4 +414,3 @@ export class KillFeedTracker {
     this.recentKills.clear();
   }
 }
-

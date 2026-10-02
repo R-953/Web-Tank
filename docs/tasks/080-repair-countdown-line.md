@@ -39,8 +39,8 @@
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] 回报里写清:倒计时现在是哪一行、有没有被别的行挤掉(可以在 `npm run dev` + `?debug` 里用 `__debug.game().player.damage.startRepair()` 看,同时让几个模块受损 / 起火)
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] 回报里写清:倒计时现在是哪一行、有没有被别的行挤掉(可以在 `npm run dev` + `?debug` 里用 `__debug.game().player.damage.startRepair()` 看,同时让几个模块受损 / 起火)
 
 ## 不做
 
@@ -48,6 +48,6 @@
 
 ## 结果(完成后由执行者填写)
 
-- 改动文件:
-- 命令与结果:
-- 偏差 / 未完成 / 待决定:
+- 改动文件: `src/ui/Hud.ts`、`src/ui/hud/hudStatus.ts`、`tests/hud-status.test.ts`、`docs/design/hud-status.md`、`docs/tasks/080-repair-countdown-line.md`、`changelog.d/2026-10-03-080-repair-countdown-line.md`。
+- 命令与结果: `npm run lint` 通过; `npm test` 通过(96 个测试文件、1055 个测试); `npm run build` 通过(构建工具提示 bundle 超过 500 kB 的既有体积警告)。维修倒计时为状态文字块最后一行,琥珀色显示「修复车辆还需 mm:ss」;它使用独立 DOM 节点,不会被最多 4 行的其他提示挤掉。普通提示仍最多 4 行。
+- 偏差 / 未完成 / 待决定: 未在浏览器中进行可视化实测;单元测试覆盖了 mm:ss 格式及倒计时不占普通提示行数。无其他待决定事项。

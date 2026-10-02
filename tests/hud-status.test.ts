@@ -7,6 +7,8 @@ import {
   getCrewIncapacitatedMessage,
   getCrewRoleName,
   repairLabel,
+  formatClock,
+  statusDisplayRows,
   hintLine,
   formatActionHintHtml,
   formatActionHintText,
@@ -315,12 +317,33 @@ describe('hudStatus 单元测试', () => {
   });
 
   describe('维修倒计时 repairLabel', () => {
-    it('正确格式化维修倒计时文案', () => {
-      expect(repairLabel(30)).toBe('正在修理,剩余:30秒');
-      expect(repairLabel(29.4)).toBe('正在修理,剩余:30秒');
-      expect(repairLabel(1)).toBe('正在修理,剩余:1秒');
-      expect(repairLabel(0.2)).toBe('正在修理,剩余:1秒');
-      expect(repairLabel(0)).toBe('正在修理,剩余:0秒');
+    it('两位补零并向上取整秒数', () => {
+      expect(repairLabel(30)).toBe('修复车辆还需 00:30');
+      expect(repairLabel(29.4)).toBe('修复车辆还需 00:30');
+      expect(repairLabel(1)).toBe('修复车辆还需 00:01');
+      expect(repairLabel(0.2)).toBe('修复车辆还需 00:01');
+      expect(repairLabel(0)).toBe('修复车辆还需 00:00');
+    });
+
+    it('超过一分钟时格式化为 mm:ss', () => {
+      expect(formatClock(65)).toBe('01:05');
+      expect(repairLabel(125)).toBe('修复车辆还需 02:05');
+    });
+
+    it('维修倒计时不占用普通提示行数上限且单独保留', () => {
+      const messages = [
+        { text: '提示1', cls: 'red' as const },
+        { text: '提示2', cls: 'red' as const },
+        { text: '提示3', cls: 'red' as const },
+        { text: '提示4', cls: 'red' as const },
+        { text: '提示5', cls: 'red' as const },
+      ];
+      const countdown = { text: repairLabel(10), cls: 'amber' as const };
+
+      expect(statusDisplayRows(messages, countdown)).toEqual({
+        messages: messages.slice(0, 4),
+        repairCountdown: countdown,
+      });
     });
   });
 
@@ -340,9 +363,9 @@ describe('hudStatus 单元测试', () => {
         { fire: null, extinguishers: 2, isRepairing: false, hasRepairable: true },
         keys
       );
-      expect(hint).toEqual({ key: 'F', text: '按住开始维修' });
-      expect(formatActionHintText(hint!)).toBe('[F] 按住开始维修');
-      expect(formatActionHintHtml(hint!)).toBe('<span class="hud-hint-key">F</span><span>按住开始维修</span>');
+      expect(hint).toEqual({ key: 'F', text: '开始维修车辆' });
+      expect(formatActionHintText(hint!)).toBe('[F] 开始维修车辆');
+      expect(formatActionHintHtml(hint!)).toBe('<span class="hud-hint-key">F</span><span>开始维修车辆</span>');
     });
 
     it('按键名自定义时正确反映按键', () => {
@@ -351,8 +374,8 @@ describe('hudStatus 单元测试', () => {
         { fire: null, extinguishers: 2, isRepairing: false, hasRepairable: true },
         customKeys
       );
-      expect(hint).toEqual({ key: 'R', text: '按住开始维修' });
-      expect(formatActionHintText(hint!)).toBe('[R] 按住开始维修');
+      expect(hint).toEqual({ key: 'R', text: '开始维修车辆' });
+      expect(formatActionHintText(hint!)).toBe('[R] 开始维修车辆');
     });
 
     it('正在维修中时不显示维修提示', () => {
