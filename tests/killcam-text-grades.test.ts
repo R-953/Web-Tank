@@ -352,7 +352,7 @@ describe('killcamCaption 纯函数分级与时间线', () => {
     expect(killcamCaption(replay, tContact + 0.3, tContact)).toEqual({ text: '引燃', tone: 'fire' });
   });
 
-  it('点着火 + 击伤成员返回 致命攻击 (tone: severe)', () => {
+  it('点着火 + 击伤成员返回 重创 (tone: severe)', () => {
     const replay = makeBaseReplay();
     replay.ignited = true;
     replay.penetration!.hits = [
@@ -385,11 +385,11 @@ describe('killcamCaption 纯函数分级与时间线', () => {
     expect(killcamCaption(replay, tContact + 0.05, tContact)).toEqual({ text: '命中', tone: 'hit' });
     // 0.1s: 油箱起火但乘员尚未受伤 -> 引燃
     expect(killcamCaption(replay, tContact + 0.1, tContact)).toEqual({ text: '引燃', tone: 'fire' });
-    // 0.2s: 乘员受伤且已起火 -> 致命攻击
-    expect(killcamCaption(replay, tContact + 0.2, tContact)).toEqual({ text: '致命攻击', tone: 'severe' });
+    // 0.2s: 乘员受伤且已起火 -> 重创
+    expect(killcamCaption(replay, tContact + 0.2, tContact)).toEqual({ text: '重创', tone: 'severe' });
   });
 
-  it('完整升级时间线只升不降:击穿 / 命中 → 命中 → 引燃 → 致命攻击 → 乘员昏迷 → 弹药殉爆', () => {
+  it('完整升级时间线只升不降:击穿 / 命中 → 命中 → 引燃 → 重创 → 乘员昏迷 → 弹药殉爆', () => {
     const replay = makeBaseReplay();
     replay.ignited = true;
     replay.destroyed = true;
@@ -467,9 +467,9 @@ describe('killcamCaption 纯函数分级与时间线', () => {
     expect(killcamCaption(replay, tContact + 0.2, tContact)).toEqual({ text: '引燃', tone: 'fire' });
     expect(killcamCaption(replay, tContact + 0.25, tContact)).toEqual({ text: '引燃', tone: 'fire' });
 
-    // 4. 0.3s 伤及乘员: 致命攻击 (severe)
-    expect(killcamCaption(replay, tContact + 0.3, tContact)).toEqual({ text: '致命攻击', tone: 'severe' });
-    expect(killcamCaption(replay, tContact + 0.35, tContact)).toEqual({ text: '致命攻击', tone: 'severe' });
+    // 4. 0.3s 伤及乘员: 重创 (severe)
+    expect(killcamCaption(replay, tContact + 0.3, tContact)).toEqual({ text: '重创', tone: 'severe' });
+    expect(killcamCaption(replay, tContact + 0.35, tContact)).toEqual({ text: '重创', tone: 'severe' });
 
     // 5. 0.4s 乘员阵亡导致失去战斗力: 乘员昏迷 (severe)
     expect(killcamCaption(replay, tContact + 0.4, tContact)).toEqual({ text: '乘员昏迷', tone: 'severe' });
@@ -480,7 +480,7 @@ describe('killcamCaption 纯函数分级与时间线', () => {
     expect(killcamCaption(replay, tContact + 0.6, tContact)).toEqual({ text: '弹药殉爆', tone: 'severe' });
   });
 
-  it('先伤乘员后引燃:命中 → 致命攻击 (跳过纯引燃)', () => {
+  it('先伤乘员后引燃:命中 → 重创 (跳过纯引燃)', () => {
     const replay = makeBaseReplay();
     replay.ignited = true;
     replay.penetration!.hits = [
@@ -511,7 +511,7 @@ describe('killcamCaption 纯函数分级与时间线', () => {
     ];
 
     expect(killcamCaption(replay, tContact + 0.1, tContact)).toEqual({ text: '命中', tone: 'hit' });
-    expect(killcamCaption(replay, tContact + 0.2, tContact)).toEqual({ text: '致命攻击', tone: 'severe' });
+    expect(killcamCaption(replay, tContact + 0.2, tContact)).toEqual({ text: '重创', tone: 'severe' });
   });
 
   it('起火但无发动机/油箱/弹药架记录时，引燃时间取接触时刻', () => {

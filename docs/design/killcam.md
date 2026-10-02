@@ -34,16 +34,16 @@
 
 ## 回放文字对照表(第十二轮 069、075)
 
-下表使用 War Thunder 公开语言文件 [`menu.csv`](https://github.com/gszabi99/War-Thunder-Datamine/blob/master/lang.vromfs.bin_u/lang/menu.csv) 的 `hitcamera/result/*` 词条。游戏保留 `penetrated` 和 `hit` 两个分档及其升级时刻,但击穿且无损伤时也显示「命中」。
+下表使用游戏语言文件(社区 datamine) [`menu.csv`](https://github.com/gszabi99/War-Thunder-Datamine/blob/master/lang.vromfs.bin_u/lang/menu.csv) 的 `hitcamera/result/*` 词条。游戏保留 `penetrated` 和 `hit` 两个分档及其升级时刻,但击穿且无损伤时也显示「命中」。
 
 | 情形 | 键 | English | 简体 | 我们用的文字 | 说明 |
 |---|---|---|---|---|---|
 | 跳弹 | [`hitcamera/result/ricochet`](https://github.com/gszabi99/War-Thunder-Datamine/blob/master/lang.vromfs.bin_u/lang/menu.csv) | Ricochet | 跳弹 | 跳弹 | 入射角导致弹丸弹开。 |
 | 未击穿 | [`hitcamera/result/bounce`](https://github.com/gszabi99/War-Thunder-Datamine/blob/master/lang.vromfs.bin_u/lang/menu.csv) | Non-penetration | 未击穿 | 未击穿 | 弹丸未能穿透目标装甲。 |
-| 击穿但没伤到成员和模块 | [`hitcamera/result/hit`](https://github.com/gszabi99/War-Thunder-Datamine/blob/master/lang.vromfs.bin_u/lang/menu.csv) | Hit | 命中 | 命中 | `penetrated` 分档仍保留,只将顶部文案改为官方 `hit` 用语。 |
-| 击伤成员,或损坏模块 | [`hitcamera/result/damage`](https://github.com/gszabi99/War-Thunder-Datamine/blob/master/lang.vromfs.bin_u/lang/menu.csv) | Damage | 击伤 | 命中 | 负责人指定沿用「命中」,不按官方「击伤」改动。 |
+| 击穿但没伤到成员和模块 | [`hitcamera/result/hit`](https://github.com/gszabi99/War-Thunder-Datamine/blob/master/lang.vromfs.bin_u/lang/menu.csv) | Hit | 命中 | 命中 | `penetrated` 分档仍保留,只将顶部文案改为游戏语言文件的 `hit` 用语。 |
+| 击伤成员,或损坏模块 | [`hitcamera/result/damage`](https://github.com/gszabi99/War-Thunder-Datamine/blob/master/lang.vromfs.bin_u/lang/menu.csv) | Damage | 击伤 | 命中 | 负责人指定沿用「命中」,不按语言文件「击伤」改动。 |
 | 打中发动机 / 油箱 / 弹药架并起火 | [`hitcamera/result/burn`](https://github.com/gszabi99/War-Thunder-Datamine/blob/master/lang.vromfs.bin_u/lang/menu.csv) | Fire | 引燃 | 引燃 | 沿用负责人指定的「引燃」。 |
-| 起火且击伤成员 | [`hitcamera/result/critical`](https://github.com/gszabi99/War-Thunder-Datamine/blob/master/lang.vromfs.bin_u/lang/menu.csv) | Critical Hit | 重创 | **致命攻击** | 负责人指定使用「致命攻击」;与官方简体「重创」不同(官方繁体为「致命攻擊」)。 |
+| 起火且击伤成员 | [`hitcamera/result/critical`](https://github.com/gszabi99/War-Thunder-Datamine/blob/master/lang.vromfs.bin_u/lang/menu.csv) | Critical Hit | 重创 | 重创 | 按语言文件写法(负责人 10-03 同意)。 |
 | 击毁:乘员 | [`hitcamera/result/crew`](https://github.com/gszabi99/War-Thunder-Datamine/blob/master/lang.vromfs.bin_u/lang/menu.csv) | Crew knocked out | 乘员昏迷 | 乘员昏迷 | 乘员阵亡导致载具失去战斗力时显示。 |
 | 击毁:弹药殉爆 | [`hitcamera/result/ammo`](https://github.com/gszabi99/War-Thunder-Datamine/blob/master/lang.vromfs.bin_u/lang/menu.csv) | Ammunition exploded | 弹药殉爆 | 弹药殉爆 | 弹药架殉爆时显示。 |
 | 击毁:燃油爆炸 | [`hitcamera/result/fuel`](https://github.com/gszabi99/War-Thunder-Datamine/blob/master/lang.vromfs.bin_u/lang/menu.csv) | Fuel exploded | 燃油爆炸 | - | 当前未建模燃油爆炸,暂无此回放结果。 |
@@ -51,7 +51,7 @@
 | 火烧致死 / 烤炸弹药 | [`hitcamera/result/burn`](https://github.com/gszabi99/War-Thunder-Datamine/blob/master/lang.vromfs.bin_u/lang/menu.csv) | Fire | 引燃 | - | `burn` 只表示引燃,不是火灾蔓延后的乘员烧死或弹药烤炸;此类持续性间接伤害不是直接击毁,当前不作为回放击毁标题。 |
 
 ### 升级规则与时间线说明
-- **只升不降**: 击穿档 / 命中档（两档文案均为「命中」）→ 引燃 → 致命攻击 → 击毁原因（乘员昏迷 / 弹药殉爆），每一档在对应事件发生的时刻切换。
+- **只升不降**: 击穿档 / 命中档（两档文案均为「命中」）→ 引燃 → 重创 → 击毁原因（乘员昏迷 / 弹药殉爆），每一档在对应事件发生的时刻切换。
 - **引燃时刻**: 取这一发中最早伤及发动机 / 油箱 / 弹药架的时刻（若无内部伤害记录则取接触时刻 `tContact`）。
-- **致命攻击时刻**: 当且仅当这一发同时满足「点着了火」与「击伤乘员」时触发，切换时刻为 `max(tIgnited, tCrewWounded)`。
+- **重创时刻**: 当且仅当这一发同时满足「点着了火」与「击伤乘员」时触发，切换时刻为 `max(tIgnited, tCrewWounded)`。
 - **乘员昏迷**: 仅当载具被判定击毁（且非弹药殉爆）时触发，切换时刻为致死乘员中弹时刻。

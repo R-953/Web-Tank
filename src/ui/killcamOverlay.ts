@@ -42,8 +42,8 @@ const STYLE_ID = 'kco-style';
 
 const CAPTION_PENETRATED = '命中';
 const CAPTION_HIT = '命中';
-// 官方简中为「重创」；负责人指定「致命攻击」，要改文案只需改此常量。
-const CAPTION_CRITICAL = '致命攻击';
+// 来自 hitcamera/result/critical 的简体「重创」(繁体为「致命攻擊」),负责人 10-03 同意按仓库写法。
+const CAPTION_CRITICAL = '重创';
 const CAPTION_CREW_OUT = '乘员昏迷';
 
 const GROUP_TYPES: Record<ModuleGroup, string[]> = {

@@ -86,9 +86,9 @@
    - 当玩家驶离占领点、起步移动或车内所有弹药架全部装满时, 调用 `hud.setResupply(null)`。
    - HUD 自动隐藏补给圆环并收起展示容器。
 
-## 官方用语对照
+## 游戏语言文件用语对照
 
-以下战斗中己方损伤提示对应 War Thunder 公开语言文件 [`menu.csv`](https://github.com/gszabi99/War-Thunder-Datamine/blob/master/lang.vromfs.bin_u/lang/menu.csv) 中的词条:
+以下战斗中己方损伤提示对应游戏语言文件(社区 datamine) [`menu.csv`](https://github.com/gszabi99/War-Thunder-Datamine/blob/master/lang.vromfs.bin_u/lang/menu.csv) 中的词条:
 
 | 键 | English | 简体 | 我们现在用的文字 |
 |---|---|---|---|
@@ -105,4 +105,8 @@
 | `hud_gun_barell_malfunction` | Caution, the gun barrel is damaged; continued firing may cause a breech explosion | 注意,炮管已受损,继续发射弹药可能会导致炸膛 | 炮管受损,击发失败 |
 | `hud_gun_breech_malfunction` | Caution, the gun breech is damaged; continued firing may cause a fighting compartment explosion | 注意,炮闩已受损,继续发射弹药可能会导致战斗室爆炸 | 炮闩受损,击发失败 |
 
-我们沿用负责人 10-03 指定的文案,只有「炮闩受损,击发失败」这类官方没有的才算我们自己的设计。
+语言文件仅有炸膛警告,未提供击发失败文案;击发失败是负责人 10-03 的设计(依据:游戏实战中多次遇到、现实中炮管 / 炮闩故障也会造成哑火或炸膛),概率是估算。
+
+## 后续可选:炸膛
+
+游戏语言文件的警告是「继续发射可能炸膛」(炮管) /「可能导致战斗室爆炸」(炮闩)。如果负责人以后想加入,可以在炮管 / 炮闩受损时,让开火有小概率造成炸膛后果(伤及乘员或炸坏模块);当前不实现,仅记录为后续可选设计。
