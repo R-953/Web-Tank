@@ -190,6 +190,10 @@ export class MainMenu {
             this.vehicleCard.show(spec, skill, rect);
           }
         },
+        onOpenModifications: opts.onOpenModifications,
+        onOpenCustomization: opts.onOpenCustomization,
+        onTestDrive: opts.onTestDrive,
+        onOpenCrew: opts.onOpenCrew,
         onUiSound: opts.onUiSound,
       });
     } else {
