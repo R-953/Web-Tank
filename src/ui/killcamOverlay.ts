@@ -88,13 +88,6 @@ function ensureStyles(): void {
   user-select: none;
 }
 
-@media (max-width: 480px) {
-  .kco-caption {
-    font-size: 22px;
-    top: 10px;
-  }
-}
-
 @container (max-width: 480px) {
   .kco-caption {
     font-size: 22px;
