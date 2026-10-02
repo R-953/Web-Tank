@@ -1,7 +1,7 @@
 # 053-lineup-context-menu:编组栏右键菜单改成换车 / 改装 / 涂装 / 试驾 / 乘员
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待领取
+- 状态:待审查
 - 分支:`task/053-lineup-context-menu`
 - 规模:S–M
 
@@ -49,5 +49,15 @@
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - `src/ui/menu/LineupBar.ts`: 选项接口增加 4 个可选界面回调；导出 `contextMenuPosition`；`showContextMenu` 更新为 5 个功能项 + 细分隔线 + 清空；集成内联 SVG 图标与新手车组感叹号提示。
+  - `src/ui/menu/styles.ts`: 在 `.mm-lineup-context-menu` 规则段补充图标、文本、感叹号、禁用态和细分隔线样式。
+  - `tests/lineup-bar.test.ts`: 调整旧有依赖「载具信息」的测试断言，验证新右键菜单六项及移出后重新悬停卡片的逻辑。
+  - `tests/lineup-context-menu.test.ts`: 新增针对 `contextMenuPosition` 纯函数翻转边界与右键菜单完整交互/回调/置灰/感叹号的全面单元测试。
+  - `changelog.d/2026-10-02-053-lineup-context-menu.md`: 新增本卡开发日志。
+  - `docs/tasks/053-lineup-context-menu.md`: 更新状态与结果。
 - 命令与结果:
+  - `npm run lint`: 全部通过 (tsc --noEmit 0 错误)。
+  - `npm test`: 62 个测试文件全部通过 (617/617 通过)。
+  - `npm run build`: 全部通过 (tsc && vite build 构建成功)。
 - 偏差 / 未完成 / 待决定:
+  - 无偏差，全部验收标准与要求均已实现。

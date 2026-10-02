@@ -35,7 +35,78 @@ export interface LineupBarOptions {
   onShowInfo?(vehicleId: string, rect: DOMRect): void;
   /** 点了「科技树」把手 */
   onOpenTechTree?(nation: string): void;
+  /** 打开改装界面 (053/055) */
+  onOpenModifications?(vehicleId: string, crewIndex: number): void;
+  /** 打开涂装界面 (053/056) */
+  onOpenCustomization?(vehicleId: string, crewIndex: number): void;
+  /** 开始试驾 (053) */
+  onTestDrive?(vehicleId: string, crewIndex: number): void;
+  /** 打开乘员界面 (053/057) */
+  onOpenCrew?(nation: string, crewIndex: number): void;
 }
+
+export interface ContextMenuRootRect {
+  width: number;
+  height: number;
+  left?: number;
+  top?: number;
+}
+
+/**
+ * 计算右键菜单在根元素内的位置:
+ * 默认显示在鼠标右下方; 若右边或下边越界, 则翻到鼠标另一侧, 且最终位置限制在根元素内部.
+ */
+export function contextMenuPosition(
+  clickX: number,
+  clickY: number,
+  menuW: number,
+  menuH: number,
+  rootRect: ContextMenuRootRect,
+): { left: number; top: number } {
+  let left = clickX;
+  let top = clickY;
+
+  // 右边越界时翻到鼠标另一侧
+  if (rootRect.width > 0 && clickX + menuW > rootRect.width) {
+    left = clickX - menuW;
+  }
+  // 下边越界时翻到鼠标另一侧
+  if (rootRect.height > 0 && clickY + menuH > rootRect.height) {
+    top = clickY - menuH;
+  }
+
+  // 不超出根元素边界
+  if (rootRect.width > 0) {
+    if (left + menuW > rootRect.width) {
+      left = Math.max(0, rootRect.width - menuW);
+    }
+    if (left < 0) {
+      left = 0;
+    }
+  } else {
+    left = Math.max(0, left);
+  }
+
+  if (rootRect.height > 0) {
+    if (top + menuH > rootRect.height) {
+      top = Math.max(0, rootRect.height - menuH);
+    }
+    if (top < 0) {
+      top = 0;
+    }
+  } else {
+    top = Math.max(0, top);
+  }
+
+  return { left, top };
+}
+
+const ICON_ARROWS = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mm-lineup-menu-icon"><path d="M7 3v14M3 7l4-4 4 4M17 21V7m4 10-4 4-4-4"/></svg>`;
+const ICON_WRENCH = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mm-lineup-menu-icon"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`;
+const ICON_BRUSH = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="mm-lineup-menu-icon"><path d="M7 14c-1.66 0-3 1.34-3 3 0 1.31-1.16 2-2 2 .92 1.22 2.49 2 4 2 2.21 0 4-1.79 4-4 0-1.66-1.34-3-3-3zm13.71-9.71-2-2a1 1 0 0 0-1.41 0L8.71 8.88l3.41 3.41 8.59-8.58a1 1 0 0 0 0-1.42z"/></svg>`;
+const ICON_TANK = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mm-lineup-menu-icon"><rect x="2" y="14" width="20" height="6" rx="3"/><path d="M6 14l2-5h7l2 5M2 8h7"/></svg>`;
+const ICON_CREW = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="mm-lineup-menu-icon"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
+const ICON_CLOSE = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="mm-lineup-menu-icon"><path d="M18 6 6 18M6 6l12 12"/></svg>`;
 
 /** 载具侧视剪影(按车体 / 炮塔尺寸画的示意图, 与 MainMenu 保持一致) */
 export function silhouette(v: VehicleSpec, width = 150): string {
@@ -436,43 +507,121 @@ export class LineupBar {
     const menu = h('div', 'mm-panel mm-lineup-context-menu', this.root);
     this.activeContextMenu = menu;
 
-    const rootRect = this.root.getBoundingClientRect();
-    let left = clientX !== undefined && rootRect.left ? clientX - rootRect.left : slot.offsetLeft;
-    let top = clientY !== undefined && rootRect.top ? clientY - rootRect.top : slot.offsetTop;
+    const p = this.opts.getProfile();
+    const activeNation = p.activeNation;
+    const nationProfile = p.nations[activeNation];
+    const crew = nationProfile?.crews[crewIndex];
 
-    if (rootRect.width > 0 && left + 120 > rootRect.width) {
-      left = Math.max(0, rootRect.width - 125);
-    }
-    if (rootRect.height > 0 && top + 90 > rootRect.height) {
-      top = Math.max(0, top - 90);
-    }
-    menu.style.left = `${left}px`;
-    menu.style.top = `${top}px`;
-
-    // 1. 更换载具
-    const changeBtn = h('button', 'mm-lineup-menu-item mm-lineup-menu-change', menu, '更换载具');
+    // 1. 换车 (+)
+    const changeBtn = h('button', 'mm-lineup-menu-item mm-lineup-menu-change', menu);
+    changeBtn.innerHTML = `${ICON_ARROWS}<span class="mm-lineup-menu-text">换车 (+)</span>`;
     changeBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       this.closeMenus();
       this.opts.onUiSound?.();
-      const p = this.opts.getProfile();
-      this.opts.onPickVehicle(p.activeNation, crewIndex);
+      const currentP = this.opts.getProfile();
+      this.opts.onPickVehicle(currentP.activeNation, crewIndex);
     });
 
-    // 2. 清空
-    const clearBtn = h('button', 'mm-lineup-menu-item mm-lineup-menu-clear', menu, '清空');
+    // 2. 改装
+    const modsBtn = h(
+      'button',
+      'mm-lineup-menu-item mm-lineup-menu-modifications mm-lineup-menu-mods',
+      menu,
+    );
+    modsBtn.innerHTML = `${ICON_WRENCH}<span class="mm-lineup-menu-text">改装</span>`;
+    if (this.opts.onOpenModifications) {
+      modsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.closeMenus();
+        this.opts.onUiSound?.();
+        this.opts.onOpenModifications?.(vehicleId, crewIndex);
+      });
+    } else {
+      modsBtn.disabled = true;
+      modsBtn.classList.add('disabled');
+      modsBtn.title = '暂未开放';
+    }
+
+    // 3. 涂装
+    const customBtn = h(
+      'button',
+      'mm-lineup-menu-item mm-lineup-menu-customization mm-lineup-menu-custom',
+      menu,
+    );
+    customBtn.innerHTML = `${ICON_BRUSH}<span class="mm-lineup-menu-text">涂装</span>`;
+    if (this.opts.onOpenCustomization) {
+      customBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.closeMenus();
+        this.opts.onUiSound?.();
+        this.opts.onOpenCustomization?.(vehicleId, crewIndex);
+      });
+    } else {
+      customBtn.disabled = true;
+      customBtn.classList.add('disabled');
+      customBtn.title = '暂未开放';
+    }
+
+    // 4. 试驾
+    const testDriveBtn = h(
+      'button',
+      'mm-lineup-menu-item mm-lineup-menu-testdrive mm-lineup-menu-test-drive',
+      menu,
+    );
+    testDriveBtn.innerHTML = `${ICON_TANK}<span class="mm-lineup-menu-text">试驾</span>`;
+    if (this.opts.onTestDrive) {
+      testDriveBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.closeMenus();
+        this.opts.onUiSound?.();
+        this.opts.onTestDrive?.(vehicleId, crewIndex);
+      });
+    } else {
+      testDriveBtn.disabled = true;
+      testDriveBtn.classList.add('disabled');
+      testDriveBtn.title = '暂未开放';
+    }
+
+    // 5. 乘员
+    const crewBtn = h('button', 'mm-lineup-menu-item mm-lineup-menu-crew', menu);
+    const isRookie = (crew?.progress ?? 0) === 0;
+    const alertHtml = isRookie
+      ? `<span class="mm-lineup-menu-alert" title="新手车组:挂机成长或在线游玩后会提升">!</span>`
+      : '';
+    crewBtn.innerHTML = `${ICON_CREW}<span class="mm-lineup-menu-text">乘员</span>${alertHtml}`;
+    if (this.opts.onOpenCrew) {
+      crewBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.closeMenus();
+        this.opts.onUiSound?.();
+        const currentP = this.opts.getProfile();
+        this.opts.onOpenCrew?.(currentP.activeNation, crewIndex);
+      });
+    } else {
+      crewBtn.disabled = true;
+      crewBtn.classList.add('disabled');
+      crewBtn.title = '暂未开放';
+    }
+
+    // 细分隔线
+    h('div', 'mm-lineup-menu-sep', menu);
+
+    // 6. 清空
+    const clearBtn = h('button', 'mm-lineup-menu-item mm-lineup-menu-clear', menu);
+    clearBtn.innerHTML = `${ICON_CLOSE}<span class="mm-lineup-menu-text">清空</span>`;
     clearBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       this.closeMenus();
       this.opts.onUiSound?.();
-      const p = this.opts.getProfile();
-      const nation = p.activeNation;
-      const currentLineupId = p.nations[nation]?.activeLineup;
+      const currentP = this.opts.getProfile();
+      const nation = currentP.activeNation;
+      const currentLineupId = currentP.nations[nation]?.activeLineup;
       if (!currentLineupId) return;
       try {
-        const prevActive = activeVehicleId(p);
+        const prevActive = activeVehicleId(currentP);
         const nextP = assignVehicle(
-          p,
+          currentP,
           nation,
           currentLineupId,
           crewIndex,
@@ -490,14 +639,15 @@ export class LineupBar {
       }
     });
 
-    // 3. 载具信息
-    const infoBtn = h('button', 'mm-lineup-menu-item mm-lineup-menu-info', menu, '载具信息');
-    infoBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.closeMenus();
-      this.opts.onUiSound?.();
-      this.opts.onShowInfo?.(vehicleId, slot.getBoundingClientRect());
-    });
+    // 计算实际位置并防越界
+    const rootRect = this.root.getBoundingClientRect();
+    const clickX = clientX !== undefined ? clientX - rootRect.left : slot.offsetLeft;
+    const clickY = clientY !== undefined ? clientY - rootRect.top : slot.offsetTop;
+    const menuW = menu.offsetWidth || 140;
+    const menuH = menu.offsetHeight || 190;
+    const pos = contextMenuPosition(clickX, clickY, menuW, menuH, rootRect);
+    menu.style.left = `${pos.left}px`;
+    menu.style.top = `${pos.top}px`;
   }
 
   private toggleGearMenu(
