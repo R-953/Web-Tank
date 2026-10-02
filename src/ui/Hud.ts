@@ -493,7 +493,7 @@ export class Hud {
       }
       this.resupplyRing.set({ progress: this.resupplyProgress, icon: 'ammo' });
     } else {
-      this.repairRing?.hide();
+      this.resupplyRing?.hide();
     }
 
     this.updateRingsVisibility();

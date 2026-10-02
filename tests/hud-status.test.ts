@@ -147,9 +147,24 @@ describe('hudStatus 单元测试', () => {
       radio.swap = { to: 'gunner', remaining: 3.5 };
 
       const msgs = statusMessages(state);
-      // 炮手正在被顶替, 不应出「炮手昏迷」; 机电员位置空出来, 会出「机电员昏迷」
+      // 炮手正在被顶替, 不应出「炮手昏迷」; 机电员活着、只是去顶替别人, 空出来的岗位也不报「昏迷」
       expect(msgs.some((m) => m.text.includes('炮手昏迷'))).toBe(false);
-      expect(msgs.some((m) => m.text.includes('机电员昏迷'))).toBe(true);
+      expect(msgs.some((m) => m.text.includes('机电员昏迷'))).toBe(false);
+    });
+
+    it('顶替者随后也阵亡时,两个岗位都报昏迷', () => {
+      const state = makeBaseStatus();
+      const gunner = state.crew.find((c) => c.homeRole === 'gunner')!;
+      gunner.alive = false;
+      gunner.seat = null;
+      const radio = state.crew.find((c) => c.homeRole === 'radio')!;
+      radio.alive = false;
+      radio.seat = null;
+      radio.swap = null;
+
+      const texts = statusMessages(state).map((m) => m.text);
+      expect(texts.some((t) => t.includes('炮手昏迷'))).toBe(true);
+      expect(texts.some((t) => t.includes('机电员昏迷'))).toBe(true);
     });
 
     it('顶替完成后不出昏迷提示', () => {

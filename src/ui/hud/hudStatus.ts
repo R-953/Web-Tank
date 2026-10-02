@@ -135,7 +135,9 @@ export function statusMessages(damage: DamageStatusSource, limit = 3): StatusMsg
     if (!presentRoles.has(role)) continue;
     const hasOccupant = damage.crew.some((c) => c.alive && c.seat === role);
     const hasSwap = damage.crew.some((c) => c.alive && c.swap?.to === role);
-    if (!hasOccupant && !hasSwap) {
+    // 只有这个岗位原来的乘员阵亡才算「昏迷」;乘员活着只是去顶替别的岗位时,原岗位空着不报
+    const homeDead = damage.crew.some((c) => !c.alive && c.homeRole === role);
+    if (!hasOccupant && !hasSwap && homeDead) {
       out.push({ text: getCrewIncapacitatedMessage(role), cls: 'red' });
     }
   }
