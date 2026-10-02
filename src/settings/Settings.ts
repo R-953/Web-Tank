@@ -14,8 +14,10 @@ export interface GameSettings {
   game: {
     /** 敌方 AI 强度:训练(宽松)/ 守卫(原第四轮参数,很准) */
     aiPreset: AIPresetId;
-    /** 击毁目标后播放右上角回放 */
+    /** 命中回放总开关:击中 / 被击中后在右上角回放这一发(自己被击毁时全屏) */
     killCam: boolean;
+    /** 所有命中都回放(跳弹、未击穿、击穿没击毁);关掉后只回放击毁 */
+    killCamAll: boolean;
     minimapShape: 'square' | 'circle';
     /** 小地图上其他车辆的标记:圆点 / 箭头(尖端指向车头)/ 军标 */
     minimapMarkers: 'dot' | 'arrow' | 'symbol';
@@ -64,7 +66,7 @@ export const GRAPHICS_PRESETS: Readonly<Record<GraphicsPreset, Omit<GameSettings
 
 export function defaultSettings(): GameSettings {
   return {
-    game: { aiPreset: 'training', killCam: true, minimapShape: 'square', minimapMarkers: 'symbol', symbology: 'nato', showHints: true, showFps: false, offlineGrowth: false },
+    game: { aiPreset: 'training', killCam: true, killCamAll: true, minimapShape: 'square', minimapMarkers: 'symbol', symbology: 'nato', showHints: true, showFps: false, offlineGrowth: false },
     graphics: { preset: 'medium', ...GRAPHICS_PRESETS.medium, antialias: true },
     sound: { ...DEFAULT_SOUND_SETTINGS },
     controls: { mouseSensitivity: 1, sightSensitivity: 1, scaleWithZoom: true, invertY: false, bindings: defaultBindings() },
@@ -106,6 +108,7 @@ export function sanitize(raw: unknown): GameSettings {
     game: {
       aiPreset: pick(g.aiPreset, ['training', 'guard'] as const, d.game.aiPreset),
       killCam: bool(g.killCam, d.game.killCam),
+      killCamAll: bool(g.killCamAll, d.game.killCamAll),
       minimapShape: pick(g.minimapShape, ['square', 'circle'] as const, d.game.minimapShape),
       minimapMarkers: pick(g.minimapMarkers, ['dot', 'arrow', 'symbol'] as const, d.game.minimapMarkers),
       symbology: pick(g.symbology, ['nato', 'warsaw'] as const, d.game.symbology),
