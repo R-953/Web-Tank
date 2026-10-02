@@ -1,7 +1,7 @@
 # 080-repair-countdown-line:维修倒计时放在状态文字的最后一行,文案改成「修复车辆还需 mm:ss」
 
 - 负责:Copilot(`auto`,即 mai-code)
-- 状态:待领取
+- 状态:已合并(第十二轮)
 - 分支:`task/080-repair-countdown-line`
 - 规模:S
 - 前置:077(底部提示布局)已合进 `integration/round12`;本卡只改 077 做完的那一块,不动别的

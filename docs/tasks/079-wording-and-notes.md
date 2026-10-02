@@ -1,7 +1,7 @@
 # 079-wording-and-notes:「致命攻击」改回语言文件的「重创」,更正对击发失败和出处的措辞
 
 - 负责:Copilot(`auto`,即 mai-code)
-- 状态:待领取
+- 状态:已合并(第十二轮)
 - 分支:`task/079-wording-and-notes`
 - 规模:S
 - 主程授权的例外(负责人 10-03「主程只审查」):可以改 `src/game/damage/DamageModel.ts` 里 `MISFIRE_MAX_CHANCE` 上方的**注释**,不改代码

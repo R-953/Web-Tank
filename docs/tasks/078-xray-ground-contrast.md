@@ -1,7 +1,7 @@
 # 078-xray-ground-contrast:残骸 / X 光外壳的颜色随脚下地面的颜色调整
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待领取
+- 状态:已合并(第十二轮)
 - 分支:`task/078-xray-ground-contrast`
 - 规模:S–M
 - 主程授权的例外(负责人 10-03「主程只审查」):本卡可以改 `src/main.ts` 里**创建 / 调用 `WorldXray`、`WorldReplay` 的几处**,把「脚下地面颜色」传进去;别的地方不要动

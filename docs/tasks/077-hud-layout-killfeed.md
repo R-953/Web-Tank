@@ -1,7 +1,7 @@
 # 077-hud-layout-killfeed:底部提示的布局(圆环同高、按参考图排)+ 击毁提示带车型和弹种
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待领取
+- 状态:已合并(第十二轮)
 - 分支:`task/077-hud-layout-killfeed`
 - 规模:M
 - 主程授权的例外(负责人 10-03「主程只审查」):本卡可以改 `src/game/Game.ts` **构造 `hit` 事件的那一行**,给事件加一个**可选**字段 `shooterName?: string`(开炮车的车名);别的地方不要动
