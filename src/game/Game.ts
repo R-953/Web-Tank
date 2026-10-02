@@ -103,6 +103,8 @@ export interface GameConfig {
   playerLoadout?: Loadout;
   /** 敌方是否还击(缺省 true;各出生点还可以单独关) */
   enemyAi?: boolean;
+  /** 试驾:靶车全部被击毁也不判胜利,对局不会自己结束(配合 enemyAi: false 用) */
+  practice?: boolean;
   /** 敌方 AI 强度预设(缺省 'training') */
   aiPreset?: AIPresetId;
   /** 植被:密度 0..1、草丛渲染半径 m;false = 完全不要植被(测试提速)。缺省 { density: 1, grassDistance: 100 } */
@@ -329,7 +331,7 @@ export class Game {
     if (this.state === 'playing' && this.player.isDead) {
       this.state = 'defeat';
       this.events.push({ type: 'defeat' });
-    } else if (this.state === 'playing' && this.targets.length > 0 && this.targets.every((t) => t.isDead)) {
+    } else if (this.state === 'playing' && !this.config.practice && this.targets.length > 0 && this.targets.every((t) => t.isDead)) {
       this.state = 'victory';
       this.events.push({ type: 'victory' });
     }

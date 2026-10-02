@@ -1,0 +1,10 @@
+{
+  "name": "round10c",
+  "base": "origin/integration/round10b",
+  "permissions": "scoped",
+  "timeoutMin": 90,
+  "maxPerAgent": 2,
+  "jobs": [
+    { "id": "053", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/053-lineup-context-menu.md", "branch": "task/053-lineup-context-menu", "commit": "ui: 编组栏右键菜单改成换车 / 改装 / 涂装 / 试驾 / 乘员" }
+  ]
+}
