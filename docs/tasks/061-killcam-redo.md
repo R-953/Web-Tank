@@ -1,7 +1,7 @@
 # 061-killcam-redo:命中回放按负责人的描述重做(规范化方向、环绕相机、内构淡入淡出)
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待领取
+- 状态:待审查
 - 分支:`task/061-killcam-redo`
 - 规模:M–L
 - 和 054–060、062–063 并行;只改 `src/ui/KillCam.ts`(052 的内构窗口只 `import { healthColor }`,不受影响)
@@ -46,8 +46,8 @@
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] 测试:`killcamNormalizeYaw`(四个方向、竖直向下、带俯仰)、`killcamOrbitAngle`(入射前为 0、结束为目标角度、单调、端点斜率平滑)、`killcamInternalsOpacity`(接触前 0、淡入、中间 1、淡出、结束后 0、`fadeIn / fadeOut` 为 0 时不除零)
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] 测试:`killcamNormalizeYaw`(四个方向、竖直向下、带俯仰)、`killcamOrbitAngle`(入射前为 0、结束为目标角度、单调、端点斜率平滑)、`killcamInternalsOpacity`(接触前 0、淡入、中间 1、淡出、结束后 0、`fadeIn / fadeOut` 为 0 时不除零)
 - [ ] 主程会在浏览器里打一发看回放;负责人可能再给录屏微调方向和时长
 
 ## 不做
@@ -57,5 +57,14 @@
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 修改: `docs/tasks/061-killcam-redo.md`
+  - 修改: `src/ui/KillCam.ts`
+  - 新增: `tests/killcam-redo.test.ts`
+  - 新增: `changelog.d/2026-10-02-061-killcam-redo.md`
 - 命令与结果:
+  - `npm run lint`: 通过，0 错误
+  - `npm test`: 61 个测试套件，620 个测试全部通过（包含已有测试与新覆盖测试）
+  - `npm run build`: 构建成功
 - 偏差 / 未完成 / 待决定:
+  - 无偏差。已有 `tests/death-killcam.test.ts` 与 `tests/internals-view.test.ts` 无需修改即全数通过。
+  - 常量 `KILLCAM_ORBIT_DEGREES = 90` 与 `KILLCAM_ORBIT_DIRECTION = 1` 已导出并带有完整坐标说明注释，便于主程对照负责人录屏微调。
