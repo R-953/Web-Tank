@@ -218,6 +218,12 @@ export interface VehicleSpec {
   /** 车族 id:同车族的车在科技树里叠成一组,车组换车保留熟练度 */
   family?: string;
   crewAce?: CrewAceSpec;
+  /** 战斗全重,kg(只用于信息卡显示,不参与物理计算) */
+  mass?: number;
+  /** 发动机功率(公制马力 PS)和对应转速 rpm(只用于信息卡显示;物理里的功率由 maxSpeed 反推) */
+  enginePower?: { hp: number; rpm: number };
+  /** 最大倒车速度,km/h(只用于信息卡显示) */
+  reverseSpeed?: number;
   /** 车体装甲 */
   armor: ArmorSpec;
   /** 炮塔装甲(炮塔碰撞盒按自身朝向判定受击面) */
