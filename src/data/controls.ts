@@ -29,6 +29,7 @@ export type ActionId =
   | 'freeLook'
   | 'repair'
   | 'extinguish'
+  | 'internals'
   | 'cursor'
   | 'mapScreen'
   | 'minimapShape'
@@ -75,6 +76,7 @@ export const ACTIONS: readonly ActionDef[] = [
 
   { id: 'repair', name: '维修 / 取消维修', group: '车辆', wt: 'ID_REPAIR_TANK', defaults: ['KeyF', null] },
   { id: 'extinguish', name: '灭火', group: '车辆', defaults: ['Digit6', null] },
+  { id: 'internals', name: '显示内构', group: '车辆', hint: '再按一次关闭', defaults: ['KeyO', null] },
 
   { id: 'cursor', name: '显示光标(按住,操作小地图)', group: '界面', hint: '此时鼠标不再控制视角和开火', defaults: ['AltLeft', null] },
   { id: 'mapScreen', name: '地图界面', group: '界面', hint: '战斗前调整携弹;战斗中查看大地图', defaults: ['KeyM', null] },

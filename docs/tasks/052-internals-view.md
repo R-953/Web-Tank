@@ -1,7 +1,7 @@
 # 052-internals-view:战斗中按 O 显示当前车辆的内构
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待领取
+- 状态:已完成
 - 分支:`task/052-internals-view`
 - 规模:M
 - 和 047、048、049、050、051 并行;改的文件不重叠
@@ -54,8 +54,8 @@
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] 测试:`internalsSnapshot`(模块 / 乘员数量与 `ratio`;乘员死亡时 `ratio` 为 0、`alive` 为 false;换位后的岗位用 `homeRole` 还是当前岗位——用**当前座位的岗位**,和 `damage.crew` 的字段为准,在结果里说明取的哪个);`InternalsView` 的显示 / 隐藏、`update` 不抛错、换车时重建;`internals` 操作的默认键和老存档
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] 测试:`internalsSnapshot`(模块 / 乘员数量与 `ratio`;乘员死亡时 `ratio` 为 0、`alive` 为 false;换位后的岗位用 `homeRole` 还是当前岗位——用**当前座位的岗位**,和 `damage.crew` 的字段为准,在结果里说明取的哪个);`InternalsView` 的显示 / 隐藏、`update` 不抛错、换车时重建;`internals` 操作的默认键和老存档
 - [ ] 主程会在浏览器里看:按 O 出现、再按关闭、被打坏的模块变色
 
 ## 不做
@@ -65,5 +65,15 @@
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 修改: `src/data/controls.ts`
+  - 修改测试: `tests/controls-migration.test.ts`、`tests/settings.test.ts`
+  - 新增: `src/game/internalsSnapshot.ts`、`src/ui/InternalsView.ts`、`tests/internals-snapshot.test.ts`、`tests/internals-view.test.ts`、`changelog.d/2026-10-02-052-internals-view.md`
+  - 任务卡: `docs/tasks/052-internals-view.md`
 - 命令与结果:
+  - `npm run lint`: 全部通过 (0 错误)
+  - `npm test`: 全部通过 (55 个测试套件, 551 个测试全数通过)
+  - `npm run build`: 全部通过 (客户端打包成功)
 - 偏差 / 未完成 / 待决定:
+  - 乘员换位岗位采用 `c.seat ?? c.homeRole` 作为当前岗位(以 `damage.crew` 的 `seat` 字段为准),当乘员完成换位时使用新岗位 `c.seat`,阵亡或换位途中 `c.seat` 为 null 时退回初始岗位 `c.homeRole`。
+  - 按任务卡要求,不修改 `main.ts` / `Game.ts` / `Vehicle.ts`,后续由主程在 `main.ts` 中接入 O 键控制 `internalsView.setVisible` 与每帧更新渲染。
+
