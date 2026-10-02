@@ -61,6 +61,6 @@ export function killcamPlan(i: KillcamPolicyInput): KillcamPlan;
 
 ## 结果(完成后由执行者填写)
 
-- 改动文件:
-- 命令与结果:
-- 偏差 / 未完成 / 待决定:
+- 改动文件:新增 `src/ui/killcamPolicy.ts`、`tests/killcam-policy.test.ts`、`changelog.d/2026-10-03-074-killcam-trigger-policy.md`;修改 `src/main.ts`、`docs/design/killcam.md`、本任务卡。
+- 命令与结果:`npm run lint` 通过;`npm test` 通过(83 个测试文件、882 项测试);`npm run build` 通过。
+- 偏差 / 未完成 / 待决定:无。
