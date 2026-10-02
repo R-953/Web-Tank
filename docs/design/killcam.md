@@ -31,3 +31,27 @@
 ## 修改方向
 
 - 环绕角度、方向、时长是常量(`KILLCAM_ORBIT_DEGREES`、`KILLCAM_ORBIT_DIRECTION`、`APPROACH` 等),不满意直接调。
+
+## 回放文字对照表(第十二轮 069)
+
+参照 War Thunder 官方本地化词条、官方伤害机制 Wiki 与实机录屏，回放顶部文字随损伤程度分级，并在时间线上按事件发生时刻切换（只升不降）。
+
+| 情形 | 文字 | 语气 | War Thunder 英文 / 多语言原文 | 出处与取舍说明 |
+|---|---|---|---|---|
+| 跳弹 | 跳弹 | info(白) | Ricochet | [War Thunder Damage Mechanics Wiki](https://wiki.warthunder.com/Damage_mechanics)。入射角过大且穿深未能转正击穿时的弹开反馈。 |
+| 未击穿 | 未击穿 | info(白) | Non-penetration / Target undamaged | [War Thunder Damage Mechanics Wiki](https://wiki.warthunder.com/Damage_mechanics)。炮弹等效穿深低于目标等效装甲未能穿透。 |
+| 击穿但没伤到成员和模块 | 击穿 | hit(黄) | Penetration / Hit | [War Thunder Damage Mechanics Wiki](https://wiki.warthunder.com/Damage_mechanics)。炮弹穿透装甲但车内破片未波及乘员与内构模块。 |
+| 击伤成员, 或损坏模块 | **命中** | hit(黄) | Hit (录屏法文: COUP) | War Thunder 实机命中提示及录屏。炮弹击穿并造成乘员受伤或内部模块血量下降（未起火、未击毁）。 |
+| 打中发动机 / 油箱 / 弹药架, 把目标点着了 | **引燃** | fire(橙 / severe) | Target set on fire / Tank on fire | War Thunder 官方伤害机制与本地化文件（`lang.vromfs.bin_u`）。官方词条有「引燃」与「点燃」，按负责人 10-03 要求统一采用「引燃」。 |
+| 点着了火, **并且**击伤成员 | **致命攻击** | severe(红) | Critical hit | War Thunder 官方战斗结算与击杀回放。对载具关键部位造成毁灭性破坏（起火并击伤乘员）。 |
+| 击毁: 成员组失去战斗力 | **乘员组失去战斗力** | severe(红) | Crew knocked out (录屏法文: ÉQUIPAGE HORS DE COMBAT) | War Thunder 官方简中本地化标准原文。065 中误译为「乘员失去战斗力」，现修正为官方规范「乘员组失去战斗力」。 |
+| 击毁: 弹药殉爆 | **弹药殉爆** | severe(红) | Ammunition load exploded (录屏法文: LES MUNITIONS ONT EXPLOSÉ) | [War Thunder Damage Mechanics Wiki](https://wiki.warthunder.com/Damage_mechanics) 及官方简中本地化。弹药架血量耗尽触发殉爆瞬间摧毁全车。 |
+| 击毁: 燃油爆炸 / 超压 / 结构断裂 | - | - | Fuel tank explosion / Overpressure / Hull break | [War Thunder Damage Mechanics Wiki](https://wiki.warthunder.com/Damage_mechanics)。当前游戏未建模燃油爆炸与超压机制，故不在回放中处理（未建模）。 |
+| 击毁: 火灾蔓延 / 延时烧死 / 烤炸弹药 | - | - | Burnt out / Cook-off after fire | [War Thunder Damage Mechanics Wiki](https://wiki.warthunder.com/Damage_mechanics)。火灾持续数秒后烧死乘员或引爆弹药属于起火后的持续性间接伤害，非炮弹直接穿透造成的即时击毁，回放中不予处理（非直接击毁）。 |
+
+### 升级规则与时间线说明
+- **只升不降**: 击穿 → 命中 → 引燃 → 致命攻击 → 击毁原因（乘员组失去战斗力 / 弹药殉爆），每一档在对应事件发生的时刻切换。
+- **引燃时刻**: 取这一发中最早伤及发动机 / 油箱 / 弹药架的时刻（若无内部伤害记录则取接触时刻 `tContact`）。
+- **致命攻击时刻**: 当且仅当这一发同时满足「点着了火」与「击伤乘员」时触发，切换时刻为 `max(tIgnited, tCrewWounded)`。
+- **乘员组失去战斗力**: 仅当载具被判定击毁（且非弹药殉爆）时触发，切换时刻为致死乘员中弹时刻。
+
