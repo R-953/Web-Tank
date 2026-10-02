@@ -10,6 +10,7 @@ import {
   transientFromHit,
   MessageQueue,
   repairLabel,
+  statusDisplayRows,
   hintLine,
   formatActionHintHtml,
   killFeedName,
@@ -113,6 +114,7 @@ const CSS = `
 .hud-action-hint { display: flex; align-items: center; gap: 6px; min-height: 24px; font-size: 15px; font-weight: 600; color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,.9); pointer-events: none; }
 .hud-action-hint .hud-hint-key { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 5px; background: rgba(14,17,20,.7); border: 1px solid rgba(255,255,255,.6); border-radius: 3px; font-size: 13px; font-weight: 700; color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.8); }
 .hud-msgs { display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 18px; font-size: 14px; font-weight: 600; }
+.hud-msg-rows { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .hud-msgs .red { color: #ff5a4a; }
 .hud-msgs .amber { color: #ffcf5a; }
 .hud-msgs .white { color: #f2f2f2; font-weight: 500; }
@@ -189,6 +191,8 @@ export class Hud {
   private readonly crewEl: HTMLDivElement;
   private readonly actionHint: HTMLDivElement;
   private readonly msgs: HTMLDivElement;
+  private readonly statusRows: HTMLDivElement;
+  private readonly repairCountdown: HTMLDivElement;
   private readonly ringsContainer: HTMLDivElement;
   private readonly bar: HTMLDivElement;
   private readonly feed: HTMLDivElement;
@@ -246,6 +250,8 @@ export class Hud {
     this.ringsContainer = el('div', 'hud-rings', bottom);
     this.ringsContainer.style.display = 'none';
     this.msgs = el('div', 'hud-msgs', bottom);
+    this.statusRows = el('div', 'hud-msg-rows', this.msgs);
+    this.repairCountdown = el('div', 'amber', this.msgs);
     this.bar = el('div', 'hud-box hud-bar', bottom);
 
     this.feed = el('div', 'hud-feed', this.root);
@@ -355,7 +361,9 @@ export class Hud {
     this.feedItems = [];
     this.killTracker.clear();
     this.lastMsgs = '';
-    this.msgs.innerHTML = '';
+    this.statusRows.innerHTML = '';
+    this.repairCountdown.textContent = '';
+    this.repairCountdown.style.display = 'none';
     this.lastActionHint = '';
     this.actionHint.innerHTML = '';
     this.actionHint.style.display = 'none';
@@ -478,21 +486,22 @@ export class Hud {
   private updateMessages(s: HudState, now: number): void {
     const d = s.damage;
     const out: StatusMsg[] = [];
+    let repairCountdown: StatusMsg | null = null;
     if (!s.alive) out.push({ text: '已被击毁', cls: 'red' });
     else {
-      // 1. 维修倒计时作为第一行(琥珀色,居中在圆环行正下方)
+      // 维修倒计时独占状态区最后一行,不参与普通提示的行数限制
       if (d.repair) {
         const remainingSec = Math.ceil(d.repair.remaining / Math.max(d.repairRate, 1e-6));
-        out.push({ text: repairLabel(remainingSec), cls: 'amber' });
+        repairCountdown = { text: repairLabel(remainingSec), cls: 'amber' };
       }
 
-      // 2. 状态型提示
+      // 状态型提示
       out.push(...statusMessages(d));
 
-      // 3. 瞬时提示
+      // 瞬时提示
       out.push(...this.transientQueue.get(now));
 
-      // 4. 装填与弹药提示
+      // 装填与弹药提示
       const selected = s.ammo.find((a) => a.selected);
       if (d.canFire && !s.loaded) {
         if (selected && selected.count === 0) {
@@ -502,14 +511,16 @@ export class Hud {
         }
       }
     }
-    const html = out
-      .slice(0, 4)
+    const rows = statusDisplayRows(out, repairCountdown);
+    const html = rows.messages
       .map((m) => `<div class="${m.cls}">${m.text}</div>`)
       .join('');
     if (html !== this.lastMsgs) {
-      this.msgs.innerHTML = html;
+      this.statusRows.innerHTML = html;
       this.lastMsgs = html;
     }
+    this.repairCountdown.textContent = rows.repairCountdown?.text ?? '';
+    this.repairCountdown.style.display = rows.repairCountdown ? '' : 'none';
   }
 
   // ------------------------------------------------------------------ 正下方:圆环进度
