@@ -1,7 +1,7 @@
 # 063-map-snow-forest:新地图——雪地森林
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待领取
+- 状态:已完成
 - 分支:`task/063-map-snow-forest`
 - 规模:M
 - 和 054–061 以及另一张地图卡并行;每张地图卡**只新增自己的地图文件**,不改 `maps.ts`(两张卡都往 `MAPS` 里注册会冲突,注册由主程合并时一次加好)
@@ -35,8 +35,8 @@
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] 第 2 条的测试都有
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] 第 2 条的测试都有
 - [ ] 主程会注册后在浏览器里开一局,看地形、障碍物、AI 巡逻、小地图 / 地图界面底图是否合理
 
 ## 不做
@@ -46,5 +46,13 @@
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 新增 `src/data/mapspecs/snow_forest.ts`
+  - 新增 `tests/snow-forest-map.test.ts`
+  - 新增 `changelog.d/2026-10-02-063-map-snow-forest.md`
+  - 修改 `docs/tasks/063-map-snow-forest.md`
 - 命令与结果:
+  - `npm run lint`: 通过 (TypeScript 校验 0 错误)
+  - `npm test`: 全部通过 (61 个测试文件, 618 个用例全部 PASS)
+  - `npm run build`: 通过 (生产构建成功)
 - 偏差 / 未完成 / 待决定:
+  - 无偏差。未修改 `maps.ts` 和机库下拉菜单, 等候主程合并两张地图卡后统一注册与实机联调。
