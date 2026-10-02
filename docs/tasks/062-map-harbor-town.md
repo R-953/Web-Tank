@@ -36,8 +36,8 @@
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] 第 2 条的测试都有
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] 第 2 条的测试都有
 - [ ] 主程会注册后在浏览器里开一局,看地形、障碍物、AI 巡逻、小地图 / 地图界面底图是否合理
 
 ## 不做
@@ -47,5 +47,13 @@
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 新增: `src/data/mapspecs/harbor_town.ts`
+  - 新增: `tests/harbor-town-map.test.ts`
+  - 新增: `changelog.d/2026-10-02-062-map-harbor-town.md`
+  - 修改: `docs/tasks/062-map-harbor-town.md`
 - 命令与结果:
+  - `npm run lint`: 全部通过 (`tsc --noEmit` 无报错)
+  - `npm test`: 全部通过 (61 个测试文件共 613 个用例全部通过)
+  - `npm run build`: 全部通过 (`tsc && vite build` 构建成功)
 - 偏差 / 未完成 / 待决定:
+  - 无偏差，严格按规范未修改 `maps.ts`，待主程合并时统一注册至 `MAPS` 及机库地图下拉。
