@@ -29,6 +29,9 @@ import { Hud, type HudState } from './ui/Hud';
 import { SightOverlay, azimuthFromYaw } from './ui/SightOverlay';
 import { KillCam, killcamRect } from './ui/KillCam';
 import { killcamPlan } from './ui/killcamPolicy';
+import { WorldReplay } from './ui/WorldReplay';
+import { WorldXray } from './ui/WorldXray';
+import { canShowResult, useWorldReplay, xrayFadeTarget } from './ui/worldReplayFlow';
 import { Minimap, type MapLike, type MinimapMarker } from './ui/Minimap';
 import { InternalsView } from './ui/InternalsView';
 import { internalsSnapshot } from './game/internalsSnapshot';
@@ -172,6 +175,9 @@ async function start(): Promise<void> {
   const sight = new SightOverlay(document.body);
   const hud = new Hud(document.body);
   const killcam = new KillCam(document.body);
+  const worldReplay = new WorldReplay(scene, camera, document.body);
+  let worldXray: WorldXray | null = null;
+  let worldReplayFinishAt: number | null = null;
   const internalsView = new InternalsView(document.body);
   /** 玩家按 O 想看内构(地图界面开着时临时藏起来) */
   let internalsOn = false;
@@ -380,6 +386,7 @@ async function start(): Promise<void> {
   function openBattleMap(): void {
     if (!game || mapScreen.isOpen) return;
     mapScreen.open(mapViewOf(game.map.spec), 'battle');
+    worldXray?.disable();
     // 地图界面的遮罩是半透明的,不藏小地图和 HUD 会透出来
     minimap.setVisible(false);
     hud.setVisible(false);
@@ -490,8 +497,12 @@ async function start(): Promise<void> {
     orbit.setThirdPerson();
     orbit.snapFov();
     internalsOn = false;
+    worldXray?.disable();
+    worldXray = new WorldXray(game.player);
     hud.reset();
     killcam.stop();
+    worldReplay.stop();
+    worldReplayFinishAt = null;
     minimap.setMap(game.map);
     stepper.reset();
     appState = 'battle';
@@ -510,6 +521,10 @@ async function start(): Promise<void> {
     pause.hide();
     mapScreen.close();
     killcam.stop();
+    worldReplay.stop();
+    worldReplayFinishAt = null;
+    worldXray?.disable();
+    worldXray = null;
     internalsOn = false;
     internalsView.setVisible(false);
     hud.setVisible(false);
@@ -549,12 +564,16 @@ async function start(): Promise<void> {
       showResult();
     } else {
       cursor = null;
+      worldXray?.disable();
       pause.show('pause');
     }
   });
   // 重新锁鼠标失败(比如在地图界面按 Esc 回来:Esc 不算用户操作,浏览器不让锁):弹暂停菜单,点「继续」再锁
   document.addEventListener('pointerlockerror', () => {
-    if (appState === 'battle' && game && game.state === 'playing' && !mapScreen.isOpen && document.pointerLockElement !== canvas) pause.show('pause');
+    if (appState === 'battle' && game && game.state === 'playing' && !mapScreen.isOpen && document.pointerLockElement !== canvas) {
+      worldXray?.disable();
+      pause.show('pause');
+    }
   });
   // 地图界面里按 Esc:出战前回机库,战斗中回战斗
   window.addEventListener('keydown', (e) => {
@@ -579,6 +598,8 @@ async function start(): Promise<void> {
         orbit,
         camera,
         killcam,
+        worldReplay,
+        worldXray: () => worldXray,
         minimap,
         mapScreen,
         internalsView,
@@ -604,6 +625,7 @@ async function start(): Promise<void> {
   const heightAt = (x: number, z: number) => game!.map.heightAt(x, z);
   /** dt 只在每帧第一次调用时传,让视场过渡每帧只推进一次;同一帧里再调用传 0 */
   const updateCamera = (dt: number) => {
+    if (worldReplay.active) return;
     const g = game!;
     g.player.root.visible = !scoped;
     orbit.update(g.player.root.position, heightAt, scoped ? g.player.sightWorldPosition(sightPos) : undefined, dt);
@@ -756,6 +778,10 @@ async function start(): Promise<void> {
       scoped = false;
       orbit.setThirdPerson();
     }
+    if (!alive) {
+      internalsOn = false;
+      if (worldXray?.enabled) worldXray.disable();
+    }
 
     // 2. 鼠标转动视角(光标模式下不转)。自由视角:按住时瞄准点冻结,松开后视角复原(开镜时不可用)
     const looking = freeLook.update(locked && alive && !scoped && !cursorMode && actions.isDown('freeLook'), orbit);
@@ -778,6 +804,18 @@ async function start(): Promise<void> {
     if (simulate) stepper.advance(dt, (step) => g.fixedUpdate(step));
     g.syncVisuals(stepper.alpha);
     updateCamera(0);
+    if (worldReplay.active) {
+      worldReplay.update(now);
+      if (worldReplay.finished) {
+        worldReplayFinishAt ??= now;
+        if (now - worldReplayFinishAt >= 500) {
+          worldReplay.stop();
+          worldReplayFinishAt = null;
+        }
+      } else {
+        worldReplayFinishAt = null;
+      }
+    }
     g.updateVisuals(dt, camera.position);
     const pp = player.root.position;
     sun.position.set(pp.x + 60, pp.y + 120, pp.z + 40);
@@ -802,12 +840,22 @@ async function start(): Promise<void> {
           killCam: settings.killCam,
           killCamAll: settings.killCamAll,
         });
-        if (plan) killcam.play(e.replay, plan);
+        if (plan) {
+          if (useWorldReplay(plan, settings.deathReplayStyle)) {
+            if (worldXray?.enabled) worldXray.disable();
+            killcam.stop();
+            worldReplay.play(player, e.replay, now);
+            worldReplayFinishAt = null;
+          } else {
+            worldReplay.stop();
+            killcam.play(e.replay, plan);
+          }
+        }
       }
     }
     if (g.state !== 'playing') {
       resultAt ??= now;
-      if (!resultShown && now - resultAt > RESULT_DELAY * 1000 && !killcam.active) {
+      if (!resultShown && canShowResult({ gameState: g.state, resultAt, now, delaySec: RESULT_DELAY, killcamActive: killcam.active, worldReplayActive: worldReplay.active })) {
         if (document.pointerLockElement === canvas) document.exitPointerLock();
         else showResult();
       }
@@ -836,6 +884,8 @@ async function start(): Promise<void> {
       const behind = ndc.z > 1 || mp.clone().sub(camera.position).dot(camera.getWorldDirection(new THREE.Vector3())) < 0;
       markerState = { distance, screen: behind ? null : { x: ((ndc.x + 1) / 2) * window.innerWidth, y: ((1 - ndc.y) / 2) * window.innerHeight } };
     }
+    const showHud = !mapScreen.isOpen && !worldReplay.active;
+    hud.setVisible(showHud);
     hud.update(
       {
         spec: player.spec,
@@ -895,7 +945,7 @@ async function start(): Promise<void> {
       g.time,
     );
     sight.draw({
-      active: scoped,
+      active: scoped && !worldReplay.active,
       fovDeg: orbit.displayFov,
       magnification: magnifications[zoomIndex],
       range: sightRange,
@@ -911,12 +961,37 @@ async function start(): Promise<void> {
       const f = new THREE.Vector3(0, 0, -1).applyQuaternion(t.physicsQuaternion());
       return { x: p.x, z: p.z, team: 'enemy', dead: t.isDead, heading: Math.atan2(-f.x, -f.z), vehicleClass: t.spec.vehicleClass };
     });
+    minimap.setVisible(showHud);
     minimap.draw({ x: pos.x, z: pos.z, heading, view: orbit.yaw }, markers);
     if (mapScreen.isOpen) {
       mapScreen.draw({ player: { x: pos.x, z: pos.z, heading }, markers, objective: `摧毁全部靶车 ${g.targetsDestroyed} / ${g.targets.length}` });
     }
-    internalsView.setVisible(internalsOn && !mapScreen.isOpen);
-    if (internalsView.visible) internalsView.update(internalsSnapshot(player));
+
+    const internalsStyle = cfg().game.internalsStyle;
+    const canShowInternals = internalsOn && !mapScreen.isOpen && !pause.visible && alive && !worldReplay.active;
+
+    if (internalsStyle === 'world') {
+      internalsView.setVisible(false);
+      if (canShowInternals && worldXray) {
+        const snap = internalsSnapshot(player);
+        if (!worldXray.enabled) {
+          worldXray.enable(snap);
+        } else {
+          worldXray.update(snap);
+        }
+        worldXray.setFade(xrayFadeTarget({ enabled: true, scoped }));
+      } else {
+        if (worldXray?.enabled) {
+          worldXray.disable();
+        }
+      }
+    } else {
+      if (worldXray?.enabled) {
+        worldXray.disable();
+      }
+      internalsView.setVisible(canShowInternals);
+      if (internalsView.visible) internalsView.update(internalsSnapshot(player));
+    }
 
     renderer.render(scene, camera);
     killcam.update(now);
