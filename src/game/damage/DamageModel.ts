@@ -86,9 +86,10 @@ const EXTERNAL: ReadonlySet<ModuleType> = new Set(['barrel', 'track']);
 
 /**
  * 炮闩 / 炮管受损（未报废）时，每次击发的最大失败概率。
- * 估算：模块只剩一点血时约一半概率哑火。War Thunder 公开语言文件
+ * 估算：模块只剩一点血时约一半概率哑火。游戏语言文件(社区 datamine)
  * menu.csv 的 hud_gun_barell_malfunction / hud_gun_breech_malfunction
- * 提示继续开火可能炸膛 / 战斗室爆炸,没有给出哑火概率。「击发失败」是负责人 10-03 的设计。
+ * 只有继续开火可能炸膛 / 战斗室爆炸的警告,未提供击发失败文案。击发失败是负责人 10-03 的设计
+ * (依据:游戏实战中多次遇到、现实中炮管 / 炮闩故障也会造成哑火或炸膛),概率是估算。
  * 实际概率 P = MISFIRE_MAX_CHANCE × (1 − 模块血量比例)。
  */
 export const MISFIRE_MAX_CHANCE = 0.5;

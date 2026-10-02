@@ -600,7 +600,7 @@
 
 ### 14.1 哑火概率公式（估算）
 
-War Thunder 公开语言文件 [`menu.csv`](https://github.com/gszabi99/War-Thunder-Datamine/blob/master/lang.vromfs.bin_u/lang/menu.csv) 中,`hud_gun_barell_malfunction` 提示炮管受损后继续开火可能炸膛,`hud_gun_breech_malfunction` 提示炮闩受损后继续开火可能导致战斗室爆炸;这些词条没有给出哑火概率。「击发失败」是负责人 10-03 指定的设计,概率仍按下述方法估算。
+游戏语言文件(社区 datamine) [`menu.csv`](https://github.com/gszabi99/War-Thunder-Datamine/blob/master/lang.vromfs.bin_u/lang/menu.csv) 中,`hud_gun_barell_malfunction` 提示炮管受损后继续开火可能炸膛,`hud_gun_breech_malfunction` 提示炮闩受损后继续开火可能导致战斗室爆炸。语言文件仅有炸膛警告,未提供击发失败文案;击发失败是负责人 10-03 的设计(依据:游戏实战中多次遇到、现实中炮管 / 炮闩故障也会造成哑火或炸膛),概率为估算,公式与方法保持不变。
 
 本项目采用以下估算公式：
 

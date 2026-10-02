@@ -38,6 +38,6 @@
 
 ## 结果(完成后由执行者填写)
 
-- 改动文件:
-- 命令与结果:
-- 偏差 / 未完成 / 待决定:
+- 改动文件:`src/ui/killcamOverlay.ts`、`tests/killcam-text-grades.test.ts`、`docs/design/killcam.md`、`docs/design/hud-status.md`、`docs/physics-validation.md`、`src/game/damage/DamageModel.ts`(仅注释)、本卡、`changelog.d/2026-10-03-079-wording-and-notes.md`。`tests/killcam-overlay.test.ts` 没有对应的「致命攻击」文案断言,未改。
+- 命令与结果:`npm run lint` 通过;`npm test` 通过(92 个测试文件、1003 个测试);`npm run build` 通过(有既存的大体积 chunk 提示)。目标文档和源码中的错误断言检查无命中;全 `docs/src` 搜索仍命中 075 任务卡中的旧表述及本卡对旧表述的引用。
+- 偏差 / 未完成 / 待决定:未修改允许列表之外的 `docs/tasks/075-official-wording.md`,其中仍有「没有击发失败」的错误断言;`DamageModel.ts` 中 MISFIRE_MAX_CHANCE 之外的 getter 注释仍称「官方语言文件」,受本卡限定的注释修改范围约束未动。因此全仓库旧措辞 / 来源检查未完全通过,需主程决定是否在后续任务中修订。
