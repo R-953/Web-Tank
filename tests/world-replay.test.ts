@@ -302,4 +302,20 @@ describe('WorldReplay 类冒烟测试', () => {
     // 载具材质原样换回
     expect(vehicle.hullMesh.material).toBe(origMaterial);
   });
+
+  it('车不在原点时,相机仍然贴着车(回归:包围盒曾把世界坐标混进本地坐标,相机飞到千米外)', () => {
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, 16 / 9, 0.1, 100);
+    const vehicle = makeTestVehicle();
+    vehicle.root.position.set(0, 1, 1200);
+    scene.add(vehicle.root);
+
+    const worldReplay = new WorldReplay(scene, camera, host);
+    worldReplay.play(vehicle, makeTestReplay(), 1000);
+    for (const ms of [1000, 1400, 2000, 3000]) {
+      worldReplay.update(ms);
+      expect(camera.position.distanceTo(vehicle.root.position)).toBeLessThan(60);
+    }
+    worldReplay.stop();
+  });
 });

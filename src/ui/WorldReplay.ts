@@ -295,7 +295,8 @@ export class WorldReplay {
     }
 
     // 计算世界包围盒中心和半径
-    const localBounds = computeVehicleBounds(replay.spec, replay.turretYaw, replay.gunPitch, vehicle.root);
+    // 不传 vehicle.root:网格合并那一步用的是 matrixWorld(世界坐标),而车在世界里不在原点,会把包围盒撑到几百米外
+    const localBounds = computeVehicleBounds(replay.spec, replay.turretYaw, replay.gunPitch);
     const worldCenter = vehicle.root.localToWorld(localBounds.center.clone());
     this.worldBounds = { center: worldCenter, radius: localBounds.radius };
 
