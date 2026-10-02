@@ -1,7 +1,7 @@
 # 069-killcam-text-grades:命中回放的文字按损伤程度分级(引燃 / 致命攻击 / 击毁原因)
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待领取
+- 状态:已合并(第十二轮)
 - 分支:`task/069-killcam-text-grades`
 - 规模:M
 - 并行:068、070、071、072、073 与本卡互不依赖;`HitReplay.ignited?` 字段已经由主程加好(见下),本卡负责在游戏里把它填对

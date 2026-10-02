@@ -1,7 +1,7 @@
 # 074-killcam-trigger-policy:回放触发规则——己方被击中不弹小窗,只有被击毁才播
 
 - 负责:Copilot(`auto`,即 mai-code)
-- 状态:待领取
+- 状态:已合并(第十二轮)
 - 分支:`task/074-killcam-trigger-policy`
 - 规模:S
 - 主程授权的例外(负责人 10-03「主程只审查」):本卡可以改 `src/main.ts` 里**命中回放触发**那一小段(约 786–805 行的 `for (const e of g.drainEvents())` 里 `e.type === 'hit'` 分支),别的地方不要动

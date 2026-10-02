@@ -1,7 +1,7 @@
 # 070-misfire:炮闩 / 炮管受损时概率击发失败
 
 - 负责:Antigravity(Opus 4.6,`claude-opus-4-6-thinking`)
-- 状态:待领取
+- 状态:已合并(第十二轮)
 - 分支:`task/070-misfire`
 - 规模:S–M
 - 并行:068(HUD 消费 `misfire` 事件)、069、071、072、073 与本卡互不依赖

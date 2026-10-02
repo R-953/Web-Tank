@@ -1,7 +1,7 @@
 # 073-settings-world-replay:设置里加「内构显示方式」和「死亡回放方式」
 
 - 负责:Copilot(`auto`,即 mai-code)
-- 状态:待领取
+- 状态:已合并(第十二轮)
 - 分支:`task/073-settings-world-replay`
 - 规模:S
 - 只改设置相关文件;`main.ts` 怎么读这两项由下一波的 074 接

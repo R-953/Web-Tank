@@ -1,7 +1,7 @@
 # 076-world-xray-wiring:把世界内 X 光(O 键)和叠在世界里的死亡回放接进游戏
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待审查
+- 状态:已合并(第十二轮)
 - 分支:`task/076-world-xray-wiring`
 - 规模:M
 - 前置(都已合进 `integration/round12`):071 共用内构模型 `src/ui/internalsModel.ts`、072 `WorldXray` / `WorldReplay`(`src/ui/WorldXray.ts`、`src/ui/WorldReplay.ts`,接口和注意事项见 `docs/tasks/072-world-xray-replay.md` 的「结果」)、073 设置项 `game.internalsStyle` / `game.deathReplayStyle`、074 回放触发规则 `killcamPlan`(`src/ui/killcamPolicy.ts`)

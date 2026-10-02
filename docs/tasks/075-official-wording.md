@@ -1,7 +1,7 @@
 # 075-official-wording:回放文字和出处按 War Thunder 官方本地化文件更正
 
 - 负责:Copilot(`auto`,即 mai-code)
-- 状态:待领取
+- 状态:已合并(第十二轮)
 - 分支:`task/075-official-wording`
 - 规模:S
 - 主程授权的例外(负责人 10-03「主程只审查」):本卡可以改 `src/game/damage/DamageModel.ts` 里 `MISFIRE_MAX_CHANCE` 上方那段**注释**,不改代码

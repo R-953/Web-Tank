@@ -1,7 +1,7 @@
 # 071-internals-model:把车内 X 光模型(模块盒子 + 坐姿人形乘员)抽成共用组件
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待审查
+- 状态:已合并(第十二轮)
 - 分支:`task/071-internals-model`
 - 规模:M
 - 并行:072(世界内 X 光 / 死亡回放)按**主程已放好的接口**(`src/ui/internalsModel.ts`,现在是占位实现)写代码,本卡把占位换成真实实现,**签名不要改**
