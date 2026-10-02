@@ -1,7 +1,7 @@
 # 055-modifications-screen:改装界面
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待领取
+- 状态:待审查
 - 分支:`task/055-modifications-screen`
 - 规模:M–L
 - 和 054 并行:界面按 `src/data/modifications.ts` 里定死的类型写,测试里 mock 数据函数
@@ -49,8 +49,8 @@
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] 上面第 3 条的测试都有
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] 上面第 3 条的测试都有
 - [ ] 主程会在浏览器里看布局和交互
 
 ## 不做
@@ -60,5 +60,13 @@
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - `src/ui/menu/ModificationsScreen.ts`: 实现改装界面组件、黑金主题及独立样式注入 `injectModificationsStyles()`
+  - `tests/modifications-screen.test.ts`: 覆盖全部交互与界面渲染的单元测试
+  - `changelog.d/2026-10-02-055-modifications-screen.md`: 新增开发日志
+  - `docs/tasks/055-modifications-screen.md`: 任务卡更新状态与结果
 - 命令与结果:
+  - `npm run lint`: 通过 (tsc --noEmit 0 错误)
+  - `npm test`: 通过 (61 个测试套件, 615 个测试全部通过)
+  - `npm run build`: 通过 (生产产物构建成功)
 - 偏差 / 未完成 / 待决定:
+  - 无偏差, 严格按任务卡和接口约定完成。
