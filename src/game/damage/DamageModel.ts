@@ -85,6 +85,15 @@ const SEAT_PRIORITY: CrewRole[] = ['gunner', 'driver', 'loader', 'commander', 'r
 const EXTERNAL: ReadonlySet<ModuleType> = new Set(['barrel', 'track']);
 
 /**
+ * 炮闩 / 炮管受损（未报废）时，每次击发的最大失败概率。
+ * 估算：模块只剩一点血时约一半概率哑火。War Thunder wiki
+ * （https://wiki.warthunder.com/）没有找到炮闩 / 炮管受损对开火的
+ * 具体概率数值，按「受损越重越难击发」的通用设计取 0.5。
+ * 实际概率 P = MISFIRE_MAX_CHANCE × (1 − 模块血量比例)。
+ */
+export const MISFIRE_MAX_CHANCE = 0.5;
+
+/**
  * 一辆车的模块 + 乘员状态:血量、换位、维修,以及由此得到的性能系数。
  * 不依赖渲染和物理,只关心数据,方便单测。
  */
@@ -291,6 +300,38 @@ export class DamageModel {
 
   get canFire(): boolean {
     return !this.knockedOut && !!this.occupant('gunner') && this.efficiency('barrel') > 0 && this.efficiency('breech') > 0;
+  }
+
+  /**
+   * 炮闩 / 炮管受损（未报废）时击发失败的概率。
+   * P = MISFIRE_MAX_CHANCE × (1 − 模块血量比例),取炮闩和炮管中较大的一个。
+   * 模块满血时为 0；模块报废（hp ≤ 0）时 canFire = false，走不到这里。
+   * 估算值：War Thunder wiki 没有找到具体的哑火概率数值。
+   */
+  get misfireChance(): number {
+    if (!this.canFire) return 0;
+    let maxDamageRatio = 0;
+    for (const m of this.modules) {
+      if (m.type === 'breech' || m.type === 'barrel') {
+        const damageRatio = 1 - m.hp / m.maxHp;
+        if (damageRatio > maxDamageRatio) maxDamageRatio = damageRatio;
+      }
+    }
+    return MISFIRE_MAX_CHANCE * maxDamageRatio;
+  }
+
+  /**
+   * 哑火时应归因于哪个模块：概率更大（损伤比例更高）的那个；两者相同取炮闩。
+   */
+  get misfirePart(): 'breech' | 'barrel' {
+    let breechDamage = 0;
+    let barrelDamage = 0;
+    for (const m of this.modules) {
+      if (m.type === 'breech') breechDamage = Math.max(breechDamage, 1 - m.hp / m.maxHp);
+      if (m.type === 'barrel') barrelDamage = Math.max(barrelDamage, 1 - m.hp / m.maxHp);
+    }
+    // 两者损伤比例相同取炮闩
+    return barrelDamage > breechDamage ? 'barrel' : 'breech';
   }
 
   /**

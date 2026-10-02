@@ -46,6 +46,11 @@ const MIN_UPRIGHT = 0.35;
 const ANGULAR_DAMPING = 0.8;
 /** 炮管完全损坏前的最大额外散布(1σ),毫弧度:散布 = (1 − 炮管效率) × 该值 */
 const BARREL_DAMAGE_DISPERSION_MRAD = 3;
+/**
+ * 哑火后的冷却时间,秒。
+ * 估算：防止按住开火键时每帧重新掷骰,哑火后需等待一秒才能再次击发。
+ */
+export const MISFIRE_COOLDOWN = 1;
 
 export interface VehicleControls {
   /** -1 倒车 .. 1 前进 */
@@ -127,6 +132,10 @@ export class Vehicle {
   surface: SurfaceSpec = SURFACES.grass;
   /** 同轴机枪状态:当前弹链剩余、备用发数、射击间隔计时、换弹链剩余时间 */
   readonly mg: { weapon: WeaponSpec | null; inBelt: number; reserve: number; cooldown: number; reloading: number };
+  /** 哑火冷却计时,秒:哑火后 MISFIRE_COOLDOWN 秒内不能再次击发主炮 */
+  misfireCooldown = 0;
+  /** 本步发生的哑火(Game 读取后由 Game 清空);null = 本步没有哑火 */
+  lastMisfire: { part: 'breech' | 'barrel' } | null = null;
 
   private wreck = false;
   private flashTimer = 0;
@@ -293,8 +302,8 @@ export class Vehicle {
     return d.clone().applyQuaternion(this.physicsQuaternion().invert());
   }
 
-  /** 固定步更新:驾驶、炮塔、装填。满足开火条件时返回开火请求。 */
-  fixedUpdate(dt: number, world: RAPIER.World): FireRequest[] {
+  /** 固定步更新:驾驶、炮塔、装填、开火。满足开火条件时返回开火请求。 */
+  fixedUpdate(dt: number, world: RAPIER.World, rng?: () => number): FireRequest[] {
     const shots: FireRequest[] = [];
     if (this.flashTimer > 0) {
       this.flashTimer -= dt;
@@ -316,16 +325,28 @@ export class Vehicle {
     this.turretCollider.setRotationWrtParent({ x: yawQ.x, y: yawQ.y, z: yawQ.z, w: yawQ.w });
     this.updateBarrelCollider();
 
+    // 哑火冷却
+    if (this.misfireCooldown > 0) this.misfireCooldown = Math.max(0, this.misfireCooldown - dt);
+    this.lastMisfire = null;
+
     const weapon = this.primaryWeapon;
-    if (this.controls.fire && weapon && this.loaded && this.damage.canFire) {
-      const shell = this.loaded.shell;
-      this.loaded = null;
-      this.reloadRemaining = weapon.reloadTime;
-      const { origin, dir } = this.muzzle();
-      // 炮管受损 → 散布变大
-      const sigma = (1 - this.damage.barrelFactor) * BARREL_DAMAGE_DISPERSION_MRAD * 1e-3;
-      if (sigma > 0) jitter(dir, sigma);
-      shots.push({ weapon, shell, origin, dir });
+    if (this.controls.fire && weapon && this.loaded && this.damage.canFire && this.misfireCooldown <= 0) {
+      // 炮闩 / 炮管受损时掷骰判定是否哑火（只对主炮,机枪不管）
+      const misfireP = this.damage.misfireChance;
+      if (misfireP > 0 && rng && rng() < misfireP) {
+        // 哑火：不发射炮弹、不消耗炮膛里的弹、没有后坐力和炮口焰
+        this.lastMisfire = { part: this.damage.misfirePart };
+        this.misfireCooldown = MISFIRE_COOLDOWN;
+      } else {
+        const shell = this.loaded.shell;
+        this.loaded = null;
+        this.reloadRemaining = weapon.reloadTime;
+        const { origin, dir } = this.muzzle();
+        // 炮管受损 → 散布变大
+        const sigma = (1 - this.damage.barrelFactor) * BARREL_DAMAGE_DISPERSION_MRAD * 1e-3;
+        if (sigma > 0) jitter(dir, sigma);
+        shots.push({ weapon, shell, origin, dir });
+      }
     }
     this.updateMachineGun(dt, shots);
     return shots;

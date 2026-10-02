@@ -296,7 +296,11 @@ export class Game {
 
     // 3. 载具:驾驶、炮塔、装填、开火
     for (const v of this.vehicles) {
-      for (const req of v.fixedUpdate(dt, this.world)) this.fire(v, req);
+      for (const req of v.fixedUpdate(dt, this.world, this.rng)) this.fire(v, req);
+      // 哑火事件（炮闩 / 炮管受损时击发失败）
+      if (v.lastMisfire) {
+        this.events.push({ type: 'misfire', vehicleId: v.id, part: v.lastMisfire.part });
+      }
     }
 
     // 4. 车辆压灌木、撞树、压草;倒下的树在物理步之前去掉碰撞体
