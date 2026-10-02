@@ -191,6 +191,7 @@ export class SettingsPanel {
     }
     this.checkbox('命中回放', s.game.killCam, (v) => this.update((d) => (d.game.killCam = v)), '击中或被击中后在右上角回放这一发(自己被击毁时全屏回放)');
     this.checkbox('命中敌方时都回放', s.game.killCamAll, (v) => this.update((d) => (d.game.killCamAll = v)), '关闭后只回放击毁');
+    this.checkbox('显示帧率和对局信息', s.game.showStats, (v) => this.update((d) => (d.game.showStats = v)));
     this.select(
       '内构显示方式',
       s.game.internalsStyle,

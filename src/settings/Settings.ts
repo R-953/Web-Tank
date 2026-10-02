@@ -31,6 +31,8 @@ export interface GameSettings {
     showHints: boolean;
     /** 显示帧率 */
     showFps: boolean;
+    /** 显示帧率和对局信息 */
+    showStats: boolean;
     /** 离线挂机成长(关闭页面期间车组按时间成长,默认关闭) */
     offlineGrowth: boolean;
   };
@@ -70,7 +72,7 @@ export const GRAPHICS_PRESETS: Readonly<Record<GraphicsPreset, Omit<GameSettings
 
 export function defaultSettings(): GameSettings {
   return {
-    game: { aiPreset: 'training', killCam: true, killCamAll: true, internalsStyle: 'world', deathReplayStyle: 'world', minimapShape: 'square', minimapMarkers: 'symbol', symbology: 'nato', showHints: true, showFps: false, offlineGrowth: false },
+    game: { aiPreset: 'training', killCam: true, killCamAll: true, internalsStyle: 'world', deathReplayStyle: 'world', minimapShape: 'square', minimapMarkers: 'symbol', symbology: 'nato', showHints: true, showFps: false, showStats: true, offlineGrowth: false },
     graphics: { preset: 'medium', ...GRAPHICS_PRESETS.medium, antialias: true },
     sound: { ...DEFAULT_SOUND_SETTINGS },
     controls: { mouseSensitivity: 1, sightSensitivity: 1, scaleWithZoom: true, invertY: false, bindings: defaultBindings() },
@@ -120,6 +122,7 @@ export function sanitize(raw: unknown): GameSettings {
       symbology: pick(g.symbology, ['nato', 'warsaw'] as const, d.game.symbology),
       showHints: bool(g.showHints, d.game.showHints),
       showFps: bool(g.showFps, d.game.showFps),
+      showStats: bool(g.showStats, d.game.showStats),
       offlineGrowth: bool(g.offlineGrowth, d.game.offlineGrowth),
     },
     graphics: {

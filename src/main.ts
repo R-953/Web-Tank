@@ -26,6 +26,7 @@ import { ModificationStore } from './settings/ModificationStore';
 import { PaintStore } from './settings/PaintStore';
 import { SoundManager, type ImpactKind, type SoundSource } from './audio/Sound';
 import { Hud, type HudState } from './ui/Hud';
+import { StatsBar, newMatchId } from './ui/hud/StatsBar';
 import { SightOverlay, azimuthFromYaw } from './ui/SightOverlay';
 import { KillCam, killcamRect } from './ui/KillCam';
 import { killcamPlan } from './ui/killcamPolicy';
@@ -174,6 +175,7 @@ async function start(): Promise<void> {
   // --- 界面:瞄准镜遮罩 < HUD < 小地图 < 击杀回放边框 < 暂停菜单 < 主界面 < 设置
   const sight = new SightOverlay(document.body);
   const hud = new Hud(document.body);
+  const statsBar = new StatsBar(document.body);
   const killcam = new KillCam(document.body);
   const worldReplay = new WorldReplay(scene, camera, document.body);
   let worldXray: WorldXray | null = null;
@@ -453,6 +455,7 @@ async function start(): Promise<void> {
       setSymbology(s.game.symbology);
       menu.refresh();
     }
+    statsBar.setVisible(appState === 'battle' && s.game.showStats);
     sound.applySettings(s.sound);
   };
   applySettings(cfg());
@@ -500,12 +503,14 @@ async function start(): Promise<void> {
     worldXray?.disable();
     worldXray = new WorldXray(game.player);
     hud.reset();
+    statsBar.setMatchId(newMatchId());
     killcam.stop();
     worldReplay.stop();
     worldReplayFinishAt = null;
     minimap.setMap(game.map);
     stepper.reset();
     appState = 'battle';
+    statsBar.setVisible(cfg().game.showStats);
     menu.hide();
     pause.hide();
     mapScreen.close();
@@ -518,6 +523,7 @@ async function start(): Promise<void> {
     game?.dispose();
     game = null;
     appState = 'menu';
+    statsBar.setVisible(false);
     pause.hide();
     mapScreen.close();
     killcam.stop();
@@ -690,6 +696,7 @@ async function start(): Promise<void> {
     actions.beginFrame();
 
     if (appState === 'menu' || !game) {
+      statsBar.setVisible(false);
       hangar.update(dt);
       renderer.render(hangar.scene, hangar.camera);
       input.consumeMouseDelta();
@@ -697,6 +704,8 @@ async function start(): Promise<void> {
       return;
     }
 
+    statsBar.setVisible(cfg().game.showStats);
+    statsBar.update(now);
     const g = game;
     const locked = document.pointerLockElement === canvas;
     // 用来锁定鼠标的那一下点击不算开火

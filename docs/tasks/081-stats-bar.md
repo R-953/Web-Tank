@@ -45,6 +45,6 @@
 
 ## 结果(完成后由执行者填写)
 
-- 改动文件:
-- 命令与结果:
-- 偏差 / 未完成 / 待决定:
+- 改动文件: `src/ui/hud/StatsBar.ts`、`src/settings/Settings.ts`、`src/ui/menu/SettingsPanel.ts`、`src/main.ts`、`tests/stats-bar.test.ts`、`tests/stats-setting.test.ts`、`changelog.d/2026-10-03-081-stats-bar.md`、本任务卡。
+- 命令与结果: `npm run lint` 通过; `npm test` 通过(94 个测试文件、1009 个测试); `npm run build` 通过(Vite 有既有的大 chunk 提示)。
+- 偏差 / 未完成 / 待决定:受允许命令限制，未能运行 `npm run dev` 并在浏览器目测；样式设置在左下角页面最底边(bottom: 0、行高 12 px)，理论上低于车辆状态面板底边，但遮挡情况、实际 FPS 显示和设置开关后的视觉效果未实测。
