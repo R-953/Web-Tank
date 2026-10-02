@@ -85,3 +85,24 @@
 3. **离开与结束**:
    - 当玩家驶离占领点、起步移动或车内所有弹药架全部装满时, 调用 `hud.setResupply(null)`。
    - HUD 自动隐藏补给圆环并收起展示容器。
+
+## 官方用语对照
+
+以下战斗中己方损伤提示对应 War Thunder 公开语言文件 [`menu.csv`](https://github.com/gszabi99/War-Thunder-Datamine/blob/master/lang.vromfs.bin_u/lang/menu.csv) 中的词条:
+
+| 键 | English | 简体 | 我们现在用的文字 |
+|---|---|---|---|
+| `my_dmg_msg/tank_engine` | Engine damaged | 发动机受损 | 发动机受损 |
+| `my_dmg_msg/tank_transmission` | Transmission damaged | 传动机构受损 | 传动装置受损 |
+| `my_dmg_msg/tank_gun_barrel` | Gun barrel damaged | 炮管损坏 | 炮管损坏 |
+| `my_dmg_msg/tank_cannon_breech` | Gun breech damaged | 炮闩损坏 | 炮闩损坏 |
+| `my_dmg_msg/tank_engine_fire` | Engine fire | 发动机起火 | 起火! |
+| `hud_tank_driver_dead` | Driver unconscious | 驾驶员昏迷,%02d:%02d 后恢复车辆控制 | 驾驶员昏迷,无法驾驶 |
+| `hud_tank_gunner_dead` | Gunner unconscious | 炮手昏迷,%02d:%02d 后恢复射击控制 | 炮手昏迷,无法瞄准和开火 |
+| `hud_tank_loader_dead` | Loader unconscious | 装填手昏迷,弹药装填时间增加 | 装填手昏迷,无法装填 |
+| `hud_tank_commander_dead` | Commander unconscious | 车长昏迷 | 车长昏迷,无法使用超越控制 |
+| `hints/commander_is_unconscious` | The commander is unconscious and cannot use commander sight | 车长已昏迷,无法使用车长观瞄 | 车长昏迷,无法使用超越控制 |
+| `hud_gun_barell_malfunction` | Caution, the gun barrel is damaged; continued firing may cause a breech explosion | 注意,炮管已受损,继续发射弹药可能会导致炸膛 | 炮管受损,击发失败 |
+| `hud_gun_breech_malfunction` | Caution, the gun breech is damaged; continued firing may cause a fighting compartment explosion | 注意,炮闩已受损,继续发射弹药可能会导致战斗室爆炸 | 炮闩受损,击发失败 |
+
+我们沿用负责人 10-03 指定的文案,只有「炮闩受损,击发失败」这类官方没有的才算我们自己的设计。
