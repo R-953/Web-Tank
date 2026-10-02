@@ -189,26 +189,41 @@ export const T34_85: VehicleSpec = {
   sight: { magnifications: [4], reticle: 'soviet' },
   internals: {
     modules: [
-      { id: 'engine', type: 'engine', part: 'hull', center: [0, -0.05, 1.3], size: [1.1, 0.9, 1.4] },
+      // V-2-34 柴油机,中置后部;尺寸按实车约 1.5×1.0×0.9m(估算)
+      { id: 'engine', type: 'engine', part: 'hull', center: [0, -0.05, 1.3], size: [1.1, 0.85, 1.4] },
+      // 5 速变速箱与最终传动,后置(苏式后驱);尺寸估算
       { id: 'transmission', type: 'transmission', part: 'hull', center: [0, -0.25, 2.5], size: [1.6, 0.6, 0.8] },
-      ...pair('fuel', 'fuel', 'hull', [1.2, 0.2, 0.2], [0.35, 0.55, 2.2]),
-      // 共 55 发:炮塔尾舱 12 发(最先取空)、炮塔右壁 4 发、车体右侧 4 发、车底 6 个弹箱 35 发
-      rack('ammo_floor', 'hull', [0, -0.55, -0.5], [1.4, 0.3, 1.3], 35, 4),
-      rack('ammo_hull_r', 'hull', [1.2, 0.25, -1.5], [0.3, 0.5, 0.6], 4, 3),
+      // 内部侧油箱:战斗室两侧(pair)与发动机舱两侧(pair),避开履带与弹药(估算)
+      ...pair('fuel_fighting', 'fuel', 'hull', [1.15, 0.15, -0.3], [0.3, 0.55, 1.2]),
+      ...pair('fuel_engine', 'fuel', 'hull', [1.15, 0.15, 1.3], [0.3, 0.55, 1.4]),
+      // 履带总成
       ...pair('track', 'track', 'hull', [1.25, -0.425, 0], [0.5, 0.77, 6.0]),
-      rack('ammo_bustle', 'turret', [0, 0.5, 1.05], [1.2, 0.35, 0.3], 12, 1),
-      rack('ammo_turret_r', 'turret', [0.85, 0.35, 0.45], [0.2, 0.45, 0.45], 4, 2),
-      { id: 'traverse', type: 'traverse', part: 'turret', center: [-0.3, -0.2, -0.15], size: [0.3, 0.3, 0.3] },
-      { id: 'elevation', type: 'elevation', part: 'turret', center: [-0.3, 0.3, -0.85], size: [0.25, 0.3, 0.25] },
-      { id: 'breech', type: 'breech', part: 'gun', center: [0, 0, 0.9], size: [0.3, 0.3, 1.0] },
+      // 共 55 发:
+      // 1) 炮塔尾舱 12 发(最先取空,drawOrder 1)
+      rack('ammo_bustle', 'turret', [0, 0.5, 0.95], [1.1, 0.35, 0.3], 12, 1),
+      // 2) 炮塔右壁 4 发(装填手侧待发弹,drawOrder 2)
+      rack('ammo_turret_r', 'turret', [0.85, 0.35, 0.35], [0.25, 0.4, 0.45], 4, 2),
+      // 3) 车体右侧壁 4 发(drawOrder 3)
+      rack('ammo_hull_r', 'hull', [1.15, 0.2, -1.4], [0.3, 0.45, 0.65], 4, 3),
+      // 4) 车底 6 个橡胶密封弹药箱共 35 发(拆为左 18 发 / 右 17 发,drawOrder 4/5)
+      rack('ammo_floor_l', 'hull', [-0.4, -0.55, -0.5], [0.65, 0.28, 1.2], 18, 4),
+      rack('ammo_floor_r', 'hull', [0.4, -0.55, -0.5], [0.65, 0.28, 1.2], 17, 5),
+      // 炮塔电动/手动方向机:炮塔座圈左前方,炮手操纵(估算)
+      { id: 'traverse', type: 'traverse', part: 'turret', center: [-0.45, 0.18, -0.75], size: [0.3, 0.3, 0.3] },
+      // 高低机:主炮耳轴左侧,手轮与扇形齿轮(估算)
+      { id: 'elevation', type: 'elevation', part: 'turret', center: [-0.25, 0.35, -0.9], size: [0.25, 0.25, 0.25] },
+      // 85 mm ZiS-S-53 炮闩(gun 局部系)
+      { id: 'breech', type: 'breech', part: 'gun', center: [0, 0, 0.85], size: [0.32, 0.32, 1.05] },
+      // 85 mm 炮管(gun 局部系,长 3.9 m)
       { id: 'barrel', type: 'barrel', part: 'gun', center: [0, 0, -1.95], size: [0.18, 0.18, 3.9] },
     ],
     crew: [
-      crew('driver', 'hull', -0.45, -0.1, -2.2),
-      crew('radio', 'hull', 0.5, -0.1, -2.2),
-      crew('gunner', 'turret', -0.5, 0.05, -0.45),
-      crew('commander', 'turret', -0.5, 0.3, 0.5),
-      crew('loader', 'turret', 0.55, 0.0, 0.05),
+      // 5 人:驾驶员(车体前左)、航向机枪手兼无线电员(车体前右)、炮手(炮塔左前)、车长(炮塔左后车长塔下)、装填手(炮塔右侧)
+      crew('driver', 'hull', -0.5, -0.05, -2.15),
+      crew('radio', 'hull', 0.5, -0.05, -2.15),
+      crew('gunner', 'turret', -0.55, 0.15, -0.45),
+      crew('commander', 'turret', -0.5, 0.35, 0.5),
+      crew('loader', 'turret', 0.55, 0.15, 0.05),
     ],
   },
   color: 0x4b5a2c,
@@ -345,25 +360,38 @@ export const SU_100: VehicleSpec = {
   sight: { magnifications: [3.4, 4], reticle: 'soviet' },
   internals: {
     modules: [
-      { id: 'engine', type: 'engine', part: 'hull', center: [0, -0.05, 1.3], size: [1.1, 0.9, 1.4] },
+      // V-2-34 柴油机(T-34 底盘通用,估算)
+      { id: 'engine', type: 'engine', part: 'hull', center: [0, -0.05, 1.3], size: [1.1, 0.85, 1.4] },
+      // 5 速变速箱与最终传动,后置(估算)
       { id: 'transmission', type: 'transmission', part: 'hull', center: [0, -0.25, 2.5], size: [1.6, 0.6, 0.8] },
-      ...pair('fuel', 'fuel', 'hull', [1.2, 0.2, 0.2], [0.35, 0.55, 2.2]),
-      // 共 33 发:战斗室左壁 8 发、后壁 8 发、车底 17 发
-      rack('ammo_left', 'turret', [-1.05, 0.1, 0.4], [0.3, 0.5, 1.2], 8, 1),
-      rack('ammo_rear', 'turret', [0.2, 0.2, 1.2], [1.4, 0.4, 0.3], 8, 2),
-      rack('ammo_floor', 'hull', [0, -0.55, -0.5], [1.4, 0.3, 1.3], 17, 3),
+      // 内部侧油箱:战斗室两侧(pair)与发动机舱两侧(pair)(估算)
+      ...pair('fuel_fighting', 'fuel', 'hull', [1.15, 0.15, -0.3], [0.3, 0.55, 1.2]),
+      ...pair('fuel_engine', 'fuel', 'hull', [1.15, 0.15, 1.3], [0.3, 0.55, 1.4]),
+      // 履带总成
       ...pair('track', 'track', 'hull', [1.25, -0.425, 0], [0.5, 0.77, 6.0]),
-      { id: 'traverse', type: 'traverse', part: 'turret', center: [0.4, -0.1, -1.0], size: [0.3, 0.3, 0.3] },
-      { id: 'elevation', type: 'elevation', part: 'turret', center: [-0.4, 0.2, -1.1], size: [0.25, 0.3, 0.25] },
+      // 共 33 发(100 mm D-10S):
+      // 1) 战斗室左侧壁立式弹药架 8 发(drawOrder 1)
+      rack('ammo_left', 'turret', [-1.05, 0.2, 0.35], [0.28, 0.38, 1.2], 8, 1),
+      // 2) 战斗室后壁横置弹药架 8 发(drawOrder 2)
+      rack('ammo_rear', 'turret', [0.1, 0.25, 1.15], [1.3, 0.38, 0.25], 8, 2),
+      // 3) 车体底板弹药箱 17 发(拆为左 8 发 / 右 9 发,drawOrder 3/4)
+      rack('ammo_floor_l', 'hull', [-0.4, -0.55, -0.5], [0.65, 0.28, 1.1], 8, 3),
+      rack('ammo_floor_r', 'hull', [0.4, -0.55, -0.5], [0.65, 0.28, 1.1], 9, 4),
+      // D-10S 方向机:主炮耳轴左侧,炮手操纵(实车方向机位于火炮左侧,校正旧数据右侧错误,估算)
+      { id: 'traverse', type: 'traverse', part: 'turret', center: [-0.4, 0.18, -0.95], size: [0.28, 0.28, 0.28] },
+      // D-10S 高低机:主炮耳轴左侧上部(估算)
+      { id: 'elevation', type: 'elevation', part: 'turret', center: [-0.35, 0.35, -1.05], size: [0.24, 0.24, 0.24] },
+      // 100 mm D-10S 炮闩(gun 局部系)
       { id: 'breech', type: 'breech', part: 'gun', center: [0, 0, 0.9], size: [0.35, 0.35, 1.2] },
+      // 100 mm 炮管(gun 局部系,长 4.3 m)
       { id: 'barrel', type: 'barrel', part: 'gun', center: [0, 0, -2.15], size: [0.2, 0.2, 4.3] },
     ],
     crew: [
-      // 4 人:车长兼无线电员、炮手、装填手、驾驶员
-      crew('driver', 'hull', -0.5, -0.1, -2.2),
-      crew('gunner', 'turret', -0.55, 0.05, -0.6),
-      crew('commander', 'turret', 0.6, 0.3, 0.2),
-      crew('loader', 'turret', 0.55, 0, 0.7),
+      // 4 人:驾驶员(车体左前)、炮手(战斗室左前)、车长兼无线电员(战斗室右侧车长指挥塔)、装填手(战斗室右后)
+      crew('driver', 'hull', -0.5, -0.05, -2.15),
+      crew('gunner', 'turret', -0.6, 0.15, -0.65),
+      crew('commander', 'turret', 0.65, 0.25, -0.15),
+      crew('loader', 'turret', 0.55, 0.15, 0.65),
     ],
   },
   color: 0x4f5b31,
@@ -420,26 +448,39 @@ export const ISU_122: VehicleSpec = {
   sight: { magnifications: [1.9, 3.5], reticle: 'soviet' },
   internals: {
     modules: [
-      { id: 'engine', type: 'engine', part: 'hull', center: [0, -0.05, 1.7], size: [1.2, 0.9, 1.5] },
-      { id: 'transmission', type: 'transmission', part: 'hull', center: [0, -0.2, 2.9], size: [1.8, 0.6, 0.8] },
-      ...pair('fuel', 'fuel', 'hull', [1.15, 0.1, 0.5], [0.35, 0.6, 1.2]),
-      // 共 30 发(Wikipedia):战斗室左壁 12 发、后壁 8 发、车底 10 发(分布估算)
-      rack('ammo_left', 'turret', [-1.1, 0.1, 0.3], [0.3, 0.5, 1.4], 12, 1),
-      rack('ammo_rear', 'turret', [0.3, 0.2, 1.55], [1.6, 0.4, 0.3], 8, 2),
-      rack('ammo_floor', 'hull', [0, -0.5, -0.6], [1.4, 0.3, 1.4], 10, 3),
+      // V-2-IS 柴油机(IS-2 底盘,520 hp;估算)
+      { id: 'engine', type: 'engine', part: 'hull', center: [0, -0.05, 1.7], size: [1.2, 0.85, 1.5] },
+      // 行星转向传动机构与最终传动,后置(估算)
+      { id: 'transmission', type: 'transmission', part: 'hull', center: [0, -0.2, 2.9], size: [1.8, 0.6, 0.7] },
+      // 内部侧油箱:战斗室两侧(pair)与动力舱两侧(pair)(估算)
+      ...pair('fuel_fighting', 'fuel', 'hull', [1.15, 0.15, 0.2], [0.35, 0.6, 1.1]),
+      ...pair('fuel_engine', 'fuel', 'hull', [1.15, 0.15, 1.7], [0.35, 0.6, 1.4]),
+      // 行走机构重型履带总成
       ...pair('track', 'track', 'hull', [1.21, -0.375, 0], [0.65, 0.8, 6.3]),
-      { id: 'traverse', type: 'traverse', part: 'turret', center: [-0.35, -0.1, -1.2], size: [0.3, 0.3, 0.3] },
-      { id: 'elevation', type: 'elevation', part: 'turret', center: [-0.35, 0.15, -1.3], size: [0.25, 0.3, 0.25] },
-      { id: 'breech', type: 'breech', part: 'gun', center: [0, 0, 1.2], size: [0.4, 0.4, 1.6] },
+      // 共 30 发(122 mm A-19S 分装弹药,30 弹头 + 30 药筒):
+      // 1) 战斗室左壁弹架 12 发(第一装填手侧,drawOrder 1)
+      rack('ammo_left', 'turret', [-1.1, 0.25, 0.25], [0.3, 0.48, 1.5], 12, 1),
+      // 2) 战斗室右壁弹架 8 发(第二装填手侧,drawOrder 2)
+      rack('ammo_right', 'turret', [1.1, 0.25, 0.25], [0.3, 0.48, 1.2], 8, 2),
+      // 3) 战斗室底板弹箱 10 发(拆为左 5 发 / 右 5 发,drawOrder 3/4)
+      rack('ammo_floor_l', 'hull', [-0.45, -0.5, -0.6], [0.65, 0.28, 1.2], 5, 3),
+      rack('ammo_floor_r', 'hull', [0.45, -0.5, -0.6], [0.65, 0.28, 1.2], 5, 4),
+      // A-19S 方向机:火炮左侧,炮手手轮操纵(估算)
+      { id: 'traverse', type: 'traverse', part: 'turret', center: [-0.38, 0.18, -1.2], size: [0.28, 0.28, 0.28] },
+      // A-19S 高低机:火炮左侧上部扇形齿轮(估算)
+      { id: 'elevation', type: 'elevation', part: 'turret', center: [-0.38, 0.38, -1.3], size: [0.25, 0.25, 0.25] },
+      // 122 mm A-19S 螺式炮闩(gun 局部系)
+      { id: 'breech', type: 'breech', part: 'gun', center: [0, 0, 1.2], size: [0.42, 0.42, 1.6] },
+      // 122 mm 炮管(gun 局部系,长 3.57 m)
       { id: 'barrel', type: 'barrel', part: 'gun', center: [0, 0, -1.785], size: [0.22, 0.22, 3.57] },
     ],
     crew: [
-      // 5 人:车长、炮手、驾驶员、装填手、闩手(第二装填手,岗位按装填手算)
-      crew('driver', 'hull', -0.6, -0.1, -2.5),
-      crew('gunner', 'turret', -0.65, 0, -0.6),
-      crew('commander', 'turret', 0.75, 0.15, -0.8),
-      crew('loader', 'turret', 0.6, 0, 0.5),
-      crew('loader', 'turret', -0.6, 0, 0.8),
+      // 5 人:驾驶员(车体前左)、炮手(战斗室左前)、车长(战斗室右前)、第一装填手(战斗室左后)、第二装填手兼闩手(战斗室右后)
+      crew('driver', 'hull', -0.6, -0.05, -2.45),
+      crew('gunner', 'turret', -0.7, 0.2, -0.75),
+      crew('commander', 'turret', 0.7, 0.25, -0.75),
+      crew('loader', 'turret', -0.65, 0.15, 0.65),
+      crew('loader', 'turret', 0.65, 0.15, 0.65),
     ],
   },
   color: 0x535e36,
