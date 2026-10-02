@@ -31,6 +31,7 @@ import { KillCam, killcamRect } from './ui/KillCam';
 import { killcamPlan } from './ui/killcamPolicy';
 import { WorldReplay } from './ui/WorldReplay';
 import { WorldXray } from './ui/WorldXray';
+import { surfaceLuminance } from './ui/surfaceLuminance';
 import { canShowResult, useWorldReplay, xrayFadeTarget } from './ui/worldReplayFlow';
 import { Minimap, type MapLike, type MinimapMarker } from './ui/Minimap';
 import { InternalsView } from './ui/InternalsView';
@@ -498,7 +499,8 @@ async function start(): Promise<void> {
     orbit.snapFov();
     internalsOn = false;
     worldXray?.disable();
-    worldXray = new WorldXray(game.player);
+    const playerSpawnPos = game.player.physicsPosition();
+    worldXray = new WorldXray(game.player, surfaceLuminance(game.map.surfaceAt(playerSpawnPos.x, playerSpawnPos.z)));
     hud.reset();
     killcam.stop();
     worldReplay.stop();
@@ -844,7 +846,9 @@ async function start(): Promise<void> {
           if (useWorldReplay(plan, settings.deathReplayStyle)) {
             if (worldXray?.enabled) worldXray.disable();
             killcam.stop();
-            worldReplay.play(player, e.replay, now);
+            const playerPos = player.physicsPosition();
+            const groundLum = surfaceLuminance(g.map.surfaceAt(playerPos.x, playerPos.z));
+            worldReplay.play(player, e.replay, now, { groundLuminance: groundLum });
             worldReplayFinishAt = null;
           } else {
             worldReplay.stop();
@@ -974,6 +978,8 @@ async function start(): Promise<void> {
       internalsView.setVisible(false);
       if (canShowInternals && worldXray) {
         const snap = internalsSnapshot(player);
+        const groundLum = surfaceLuminance(g.map.surfaceAt(pos.x, pos.z));
+        worldXray.setGroundLuminance(groundLum);
         if (!worldXray.enabled) {
           worldXray.enable(snap);
         } else {

@@ -37,9 +37,9 @@
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过,既有测试不改
-- [ ] 测试:`xrayContrastFor` 的三段(暗 / 过渡 / 亮)和连续性;缺省参数下 `xrayShellStyle` 与原来一致;每个 `SurfaceType` 都有亮度
-- [ ] 浏览器里看(雪地森林地图 + 草地地图各一次,按 O 开 X 光、`__debug.game()` 把玩家打死看死亡回放),在回报里写看到了什么:雪地上外壳 / 轮廓线能看清且没有刺眼的白;草地上和现在一样
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过,既有测试不改
+- [x] 测试:`xrayContrastFor` 的三段(暗 / 过渡 / 亮)和连续性;缺省参数下 `xrayShellStyle` 与原来一致;每个 `SurfaceType` 都有亮度
+- [x] 浏览器里看(雪地森林地图 + 草地地图各一次,按 O 开 X 光、`__debug.game()` 把玩家打死看死亡回放),在回报里写看到了什么:雪地上外壳 / 轮廓线能看清且没有刺眼的白;草地上和现在一样
 
 ## 不做
 
@@ -48,5 +48,14 @@
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 修改: `src/ui/WorldXray.ts`, `src/ui/WorldReplay.ts`, `src/main.ts`, `tests/world-xray.test.ts`, `tests/world-replay.test.ts`, `docs/tasks/078-xray-ground-contrast.md`
+  - 新增: `src/ui/surfaceLuminance.ts`, `tests/xray-contrast.test.ts`, `changelog.d/2026-10-03-078-xray-ground-contrast.md`
 - 命令与结果:
-- 偏差 / 未完成 / 待决定:
+  - `npm run lint`: 通过 (0 错误)
+  - `npm test`: 93 个测试文件全部通过, 1017 个测试用例全部通过
+  - `npm run build`: 通过 (tsc && vite build 打包完成)
+- 观察与表现:
+  - 雪地森林地图(雪地相对亮度 0.914): 按 O 开启 X 光后，外壳灰度压暗至 0x4b5258，轮廓线采用深灰 0x222222，在白色雪地背景下边缘与部件清晰可见且没有白对白的刺眼反差；死亡回放接触前残骸维持变黑原色(0.25)，在亮地面上反差足够；回放结束干净还原。
+  - 草地地图(草地相对亮度 0.495): 按 O 开启 X 光后维持灰壳 0x8a9399 与白轮廓线；死亡回放接触前残骸材质提亮 1.8 倍(原色约 0.45 倍)，在深色草地上清晰可辨；回放结束原样换回。
+- 偏差 / 未完成 / 待决定: 无
+

@@ -13,21 +13,90 @@ export interface XrayShellStyle {
   opacity: number;
   grayMix: number;
   edgeOpacity: number;
+  grayHex?: number;
+  edgeHex?: number;
+}
+
+export interface XrayContrast {
+  grayHex: number;
+  shellOpacity: number;
+  edgeHex: number;
+  edgeOpacity: number;
 }
 
 export const XRAY_GRAY_COLOR = 0x8a9399;
 
+/** 暗 / 中等地面对比度(草地、泥地等, 相对亮度 <= 0.55) */
+export const DARK_GROUND_CONTRAST: Readonly<XrayContrast> = {
+  grayHex: XRAY_GRAY_COLOR,
+  shellOpacity: 0.12,
+  edgeHex: 0xffffff,
+  edgeOpacity: 0.35,
+};
+
+/** 高亮地面对比度(雪地等, 相对亮度 >= 0.75): 不增强对比度, 外壳灰压暗, 轮廓线深灰免得白对白看不见 */
+export const BRIGHT_GROUND_CONTRAST: Readonly<XrayContrast> = {
+  grayHex: 0x4b5258,
+  shellOpacity: 0.15,
+  edgeHex: 0x222222,
+  edgeOpacity: 0.40,
+};
+
+function lerpChannel(a: number, b: number, t: number): number {
+  return Math.round(a + (b - a) * t);
+}
+
+function lerpHex(hexA: number, hexB: number, t: number): number {
+  const rA = (hexA >> 16) & 0xff;
+  const gA = (hexA >> 8) & 0xff;
+  const bA = hexA & 0xff;
+  const rB = (hexB >> 16) & 0xff;
+  const gB = (hexB >> 8) & 0xff;
+  const bB = hexB & 0xff;
+  const r = lerpChannel(rA, rB, t);
+  const g = lerpChannel(gA, gB, t);
+  const b = lerpChannel(bA, bB, t);
+  return (r << 16) | (g << 8) | b;
+}
+
+/**
+ * 纯函数: 输入 0..1 的地面相对亮度, 输出 X 光外壳与轮廓线样式对比度参数:
+ * - 地面暗 / 中等(草地、泥地、岩地等, 亮度 <= 0.55): 保持基准样式(灰壳 0x8a9399、白轮廓线)
+ * - 地面很亮(雪地等, 亮度 >= 0.75): 不加强对比度(灰壳压暗至 0x4b5258、轮廓线深灰 0x222222)
+ * - 中间段平滑过渡(0.55..0.75 线性插值)
+ */
+export function xrayContrastFor(groundLuminance: number): XrayContrast {
+  const clamped = THREE.MathUtils.clamp(groundLuminance, 0, 1);
+  if (clamped <= 0.55) {
+    return { ...DARK_GROUND_CONTRAST };
+  }
+  if (clamped >= 0.75) {
+    return { ...BRIGHT_GROUND_CONTRAST };
+  }
+  const t = (clamped - 0.55) / 0.2;
+  return {
+    grayHex: lerpHex(DARK_GROUND_CONTRAST.grayHex, BRIGHT_GROUND_CONTRAST.grayHex, t),
+    shellOpacity: THREE.MathUtils.lerp(DARK_GROUND_CONTRAST.shellOpacity, BRIGHT_GROUND_CONTRAST.shellOpacity, t),
+    edgeHex: lerpHex(DARK_GROUND_CONTRAST.edgeHex, BRIGHT_GROUND_CONTRAST.edgeHex, t),
+    edgeOpacity: THREE.MathUtils.lerp(DARK_GROUND_CONTRAST.edgeOpacity, BRIGHT_GROUND_CONTRAST.edgeOpacity, t),
+  };
+}
+
 /**
  * 纯函数: 根据淡入淡出系数 k (0..1) 计算外壳样式:
  * - k = 0: 真实外壳(不透明度 1.0, 灰色混合 0, 轮廓线不透明度 0)
- * - k = 1: 完全 X 光(不透明度 0.12, 灰色混合 1.0, 轮廓线不透明度 0.35)
+ * - k = 1: 完全 X 光(不透明度 shellOpacity, 灰色混合 1.0, 轮廓线不透明度 edgeOpacity)
+ * 可选参数 contrast: 根据地面对比度调整的目标样式; 缺省时维持原有暗/中等地面样式。
  */
-export function xrayShellStyle(k: number): XrayShellStyle {
+export function xrayShellStyle(k: number, contrast?: XrayContrast): XrayShellStyle {
   const clamped = Math.max(0, Math.min(1, k));
+  const targetOpacity = contrast?.shellOpacity ?? 0.12;
+  const targetEdgeOpacity = contrast?.edgeOpacity ?? 0.35;
   return {
-    opacity: THREE.MathUtils.lerp(1.0, 0.12, clamped),
+    opacity: THREE.MathUtils.lerp(1.0, targetOpacity, clamped),
     grayMix: clamped,
-    edgeOpacity: THREE.MathUtils.lerp(0.0, 0.35, clamped),
+    edgeOpacity: THREE.MathUtils.lerp(0.0, targetEdgeOpacity, clamped),
+    ...(contrast ? { grayHex: contrast.grayHex, edgeHex: contrast.edgeHex } : {}),
   };
 }
 
@@ -46,12 +115,31 @@ export class WorldXray {
   private meshEntries: MeshMaterialEntry[] = [];
   private edgeLines: THREE.LineSegments[] = [];
   private edgeMaterial: THREE.LineBasicMaterial | null = null;
-  private readonly grayColor = new THREE.Color(XRAY_GRAY_COLOR);
+  private readonly grayColor: THREE.Color;
+  private contrast: XrayContrast;
+  private currentFade = 1;
 
-  constructor(private readonly vehicle: XrayVehicle) {}
+  constructor(private readonly vehicle: XrayVehicle, groundLuminance?: number) {
+    this.contrast = xrayContrastFor(groundLuminance ?? 0);
+    this.grayColor = new THREE.Color(this.contrast.grayHex);
+  }
 
   get enabled(): boolean {
     return this._enabled;
+  }
+
+  /**
+   * 动态设置地面相对亮度 (0..1), 实时更新外壳与轮廓线对比度
+   */
+  setGroundLuminance(groundLuminance: number): void {
+    this.contrast = xrayContrastFor(groundLuminance);
+    this.grayColor.setHex(this.contrast.grayHex);
+    if (this.edgeMaterial) {
+      this.edgeMaterial.color.setHex(this.contrast.edgeHex);
+    }
+    if (this._enabled) {
+      this.setFade(this.currentFade);
+    }
   }
 
   /**
@@ -63,7 +151,7 @@ export class WorldXray {
     }
 
     this.edgeMaterial = new THREE.LineBasicMaterial({
-      color: 0xffffff,
+      color: this.contrast.edgeHex,
       transparent: true,
       opacity: 0,
       depthWrite: false,
@@ -143,7 +231,8 @@ export class WorldXray {
    */
   setFade(k: number): void {
     if (!this._enabled) return;
-    const style = xrayShellStyle(k);
+    this.currentFade = k;
+    const style = xrayShellStyle(k, this.contrast);
 
     for (const entry of this.meshEntries) {
       for (const item of entry.clonedMaterials) {
@@ -157,6 +246,7 @@ export class WorldXray {
     }
 
     if (this.edgeMaterial) {
+      this.edgeMaterial.color.setHex(style.edgeHex ?? this.contrast.edgeHex);
       this.edgeMaterial.opacity = style.edgeOpacity;
       this.edgeMaterial.visible = style.edgeOpacity > 0.001;
     }

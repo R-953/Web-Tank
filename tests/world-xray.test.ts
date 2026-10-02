@@ -212,4 +212,35 @@ describe('WorldXray 类', () => {
     expect(xray.enabled).toBe(false);
     expect(v.hullMesh.material).toBe(origMat);
   });
+
+  it('传入地面亮度时, 构造函数与 setGroundLuminance 能正确调整轮廓线与外壳灰度', () => {
+    const v = createMockVehicle();
+    // 亮地面(雪地亮度 0.9)
+    const xraySnow = new WorldXray(v, 0.9);
+    const snap = makeMockSnapshot();
+    xraySnow.enable(snap);
+    xraySnow.setFade(1);
+
+    const edgeSnow = v.hullMesh.children.find((c) => c.name === 'xray-edge') as THREE.LineSegments;
+    expect(edgeSnow).toBeDefined();
+    const edgeMatSnow = edgeSnow.material as THREE.LineBasicMaterial;
+    expect(edgeMatSnow.color.getHex()).toBe(0x222222);
+    expect(edgeMatSnow.opacity).toBeCloseTo(0.40, 5);
+
+    const matSnow = v.hullMesh.material as THREE.MeshStandardMaterial;
+    expect(matSnow.opacity).toBeCloseTo(0.15, 5);
+    expect(matSnow.color.getHex()).toBe(0x4b5258);
+
+    // 动态切换到暗地面(草地亮度 0.4)
+    xraySnow.setGroundLuminance(0.4);
+    expect(edgeMatSnow.color.getHex()).toBe(0xffffff);
+    expect(edgeMatSnow.opacity).toBeCloseTo(0.35, 5);
+
+    const matGrass = v.hullMesh.material as THREE.MeshStandardMaterial;
+    expect(matGrass.opacity).toBeCloseTo(0.12, 5);
+    expect(matGrass.color.getHex()).toBe(XRAY_GRAY_COLOR);
+
+    xraySnow.disable();
+  });
 });
+
