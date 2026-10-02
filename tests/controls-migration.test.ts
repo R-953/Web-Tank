@@ -82,3 +82,32 @@ describe('键位与老存档迁移 (044-mapscreen-key-and-symbols)', () => {
     expect(s.controls.bindings.minimapShape).toEqual(['KeyM', null]);
   });
 });
+
+describe('显示内构键位 (052-internals-view)', () => {
+  it('internals 操作定义与默认键位', () => {
+    const def = ACTION_BY_ID.internals;
+    expect(def).toBeDefined();
+    expect(def.name).toBe('显示内构');
+    expect(def.group).toBe('车辆');
+    expect(def.hint).toBe('再按一次关闭');
+    expect(def.defaults).toEqual(['KeyO', null]);
+
+    const defBindings = defaultBindings();
+    expect(defBindings.internals).toEqual(['KeyO', null]);
+    expect(findConflicts(defBindings).size).toBe(0);
+  });
+
+  it('老存档没有 internals 字段时自动补齐默认键 KeyO', () => {
+    const oldSave = {
+      controls: {
+        bindings: {
+          forward: ['KeyW', 'ArrowUp'],
+          repair: ['KeyF', null],
+        },
+      },
+    };
+    const s = sanitize(oldSave);
+    expect(s.controls.bindings.internals).toEqual(['KeyO', null]);
+  });
+});
+

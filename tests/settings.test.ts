@@ -48,6 +48,7 @@ describe('设置:修正与保存', () => {
     const s = sanitize({ controls: { bindings: { forward: ['KeyI', null], bogus: ['KeyQ', null] } } });
     expect(s.controls.bindings.forward).toEqual(['KeyI', null]);
     expect(s.controls.bindings.back).toEqual(defaultBindings().back);
+    expect(s.controls.bindings.internals).toEqual(defaultBindings().internals);
   });
 
   it('update 保存到存储并通知订阅者;重新读取得到同样的设置', () => {
