@@ -37,37 +37,38 @@ describe('载具新增基础属性数据层校验 (任务 064)', () => {
   });
 
   it('各载具数据值符合出处与设定', () => {
-    // 虎式 Ausf. E: 57.0 t, 700 hp @ 3000 rpm, 倒车 6 km/h (Wikipedia 2500 rpm 限速)
+    // 倒车速度:War Thunder wiki 机动表两栏里取较小的一栏(2026-10-02 核对);质量和发动机功率见 vehicles.ts 里各车的注释
+    // 虎式 Ausf. E: 57.3 t(WT), 700 hp @ 3000 rpm(史料标称), 倒车 8 km/h(WT 8 / 9)
     const tiger = VEHICLES.tiger_i;
-    expect(tiger.mass).toBe(57000);
+    expect(tiger.mass).toBe(57300);
     expect(tiger.enginePower).toEqual({ hp: 700, rpm: 3000 });
-    expect(tiger.reverseSpeed).toBe(6);
+    expect(tiger.reverseSpeed).toBe(8);
 
-    // T-34-85: 32.2 t, 500 hp @ 1800 rpm, 倒车 9 km/h (War Thunder 值)
+    // T-34-85: 32.0 t, 500 hp @ 1800 rpm, 倒车 8 km/h(WT 8 / 9)
     const t34 = VEHICLES.t34_85;
-    expect(t34.mass).toBe(32200);
+    expect(t34.mass).toBe(32000);
     expect(t34.enginePower).toEqual({ hp: 500, rpm: 1800 });
-    expect(t34.reverseSpeed).toBe(9);
+    expect(t34.reverseSpeed).toBe(8);
 
-    // 虎王: 69.8 t, 700 hp @ 3000 rpm, 倒车 11 km/h (War Thunder 值)
+    // 虎王: 69.8 t(WT), 700 hp @ 3000 rpm, 倒车 9 km/h(WT 9 / 10)
     const tiger2 = VEHICLES.tiger_ii;
     expect(tiger2.mass).toBe(69800);
     expect(tiger2.enginePower).toEqual({ hp: 700, rpm: 3000 });
-    expect(tiger2.reverseSpeed).toBe(11);
+    expect(tiger2.reverseSpeed).toBe(9);
 
-    // SU-100: 31.6 t, 500 hp @ 1800 rpm, 倒车 9 km/h (War Thunder 值)
+    // SU-100: 31.6 t, 500 hp @ 1800 rpm, 倒车 8 km/h(WT 两栏都是 8)
     const su100 = VEHICLES.su_100;
     expect(su100.mass).toBe(31600);
     expect(su100.enginePower).toEqual({ hp: 500, rpm: 1800 });
-    expect(su100.reverseSpeed).toBe(9);
+    expect(su100.reverseSpeed).toBe(8);
 
-    // ISU-122: 45.5 t, 520 hp @ 2000 rpm, 倒车 14 km/h (War Thunder 值)
+    // ISU-122: 45.5 t, 520 hp @ 2000 rpm, 倒车 14 km/h(WT 14 / 15)
     const isu122 = VEHICLES.isu_122;
     expect(isu122.mass).toBe(45500);
     expect(isu122.enginePower).toEqual({ hp: 520, rpm: 2000 });
     expect(isu122.reverseSpeed).toBe(14);
 
-    // M4A3(76)W: 32.3 t, 500 hp @ 2600 rpm, 倒车 5 km/h (Hunnicutt 1994 / War Thunder 值)
+    // M4A3(76)W: 32.3 t(Hunnicutt), 500 hp @ 2600 rpm, 倒车 5 km/h(WT 5 / 6)
     const m4a3 = VEHICLES.m4a3_76w;
     expect(m4a3.mass).toBe(32300);
     expect(m4a3.enginePower).toEqual({ hp: 500, rpm: 2600 });
@@ -79,11 +80,11 @@ describe('载具新增基础属性数据层校验 (任务 064)', () => {
     expect(m4a3e8.enginePower).toEqual({ hp: 500, rpm: 2600 });
     expect(m4a3e8.reverseSpeed).toBe(5);
 
-    // M4A3E2: 38.0 t, 500 hp @ 2600 rpm, 倒车 4 km/h (修改最终传动比)
+    // M4A3E2: 38.1 t(Hunnicutt 84,000 lb), 500 hp @ 2600 rpm, 倒车 5 km/h(WT 两栏都是 5)
     const m4a3e2 = VEHICLES.m4a3e2;
-    expect(m4a3e2.mass).toBe(38000);
+    expect(m4a3e2.mass).toBe(38100);
     expect(m4a3e2.enginePower).toEqual({ hp: 500, rpm: 2600 });
-    expect(m4a3e2.reverseSpeed).toBe(4);
+    expect(m4a3e2.reverseSpeed).toBe(5);
   });
 });
 
@@ -94,13 +95,13 @@ describe('vehicleCardData 信息卡展示逻辑 (任务 064)', () => {
     expect(mobSec).toBeDefined();
 
     const massRow = mobSec?.rows.find((r) => r.label === '质量');
-    expect(massRow?.value).toBe('57.0 t');
+    expect(massRow?.value).toBe('57.3 t');
 
     const powerRow = mobSec?.rows.find((r) => r.label === '发动机功率');
     expect(powerRow?.value).toBe('700 hp @ 3000 rpm');
 
     const speedRow = mobSec?.rows.find((r) => r.label === '最大速度');
-    expect(speedRow?.value).toBe('38 / 6 km/h');
+    expect(speedRow?.value).toBe('38 / 8 km/h');
   });
 
   it('同轴机枪存在且带 rounds 时显示「同轴机枪弹药 n 发」', () => {

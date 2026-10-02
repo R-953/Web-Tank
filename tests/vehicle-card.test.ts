@@ -191,19 +191,19 @@ describe('vehicleCardData 纯数据生成', () => {
   });
 
   it('机动一节显示质量(xx.x t)、发动机功率(hp @ rpm)与前进/倒车速度', () => {
-    // 虎式 Ausf. E: mass = 57000 kg -> 57.0 t, enginePower = 700 hp @ 3000 rpm, maxSpeed = 38, reverseSpeed = 6
+    // 虎式 Ausf. E: mass = 57300 kg -> 57.3 t, enginePower = 700 hp @ 3000 rpm, maxSpeed = 38, reverseSpeed = 8
     const tigerData = vehicleCardData(TIGER_I, 0);
     const mobSec = tigerData.sections.find((s) => s.title === '机动');
     expect(mobSec).toBeDefined();
 
     const massRow = mobSec?.rows.find((r) => r.label === '质量');
-    expect(massRow?.value).toBe('57.0 t');
+    expect(massRow?.value).toBe('57.3 t');
 
     const powerRow = mobSec?.rows.find((r) => r.label === '发动机功率');
     expect(powerRow?.value).toBe('700 hp @ 3000 rpm');
 
     const speedRow = mobSec?.rows.find((r) => r.label === '最大速度');
-    expect(speedRow?.value).toBe('38 / 6 km/h');
+    expect(speedRow?.value).toBe('38 / 8 km/h');
   });
 
   it('字段缺失时不显示对应行,无 reverseSpeed 时最大速度仅显示前进', () => {

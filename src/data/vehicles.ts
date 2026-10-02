@@ -54,9 +54,9 @@ export const TIGER_I: VehicleSpec = {
     // 现有 4°/s,WT 页面未列乘员高低机数值,按方向机同一比例(10/7)折算估算:4 × (10 / 7) ≈ 5.71°/s
     elevationSpeed: 5.71,
   },
-  mass: 57000, // 战斗全重 57.0 t,出处: 德军官方资料 D 656/21 / Wikipedia(War Thunder 为 57.2 t)
-  enginePower: { hp: 700, rpm: 3000 }, // War Thunder 值: 迈巴赫 HL 230 P45 标称 700 hp @ 3000 rpm(Wikipedia: 2500 rpm 限速时为 600 hp)
-  reverseSpeed: 6, // Wikipedia: 2500 rpm 限速下最大倒车速度约 6 km/h(War Thunder 未限速值为 8 km/h)
+  mass: 57300, // War Thunder 值: 战斗全重 57.3 t(War Thunder wiki 机动表)
+  enginePower: { hp: 700, rpm: 3000 }, // 史料标称值: 迈巴赫 HL 230 P45,700 PS @ 3000 rpm(Wikipedia);War Thunder 的功率随模式和乘员熟练度变化,不取
+  reverseSpeed: 8, // War Thunder 值: War Thunder wiki 机动表(2026-10-02 核对)取两栏里较小的一栏(8 / 9 km/h 取 8)
   // 车首 100mm 垂直;侧面上部 80 / 下部 60;后部 80
   armor: { front: 100, side: 80, rear: 80 },
   // 炮塔正面 100(防盾 110–200),侧面 / 后部 80
@@ -155,9 +155,9 @@ export const T34_85: VehicleSpec = {
     // 现有 4°/s,WT 新手 2.8°/s → 王牌 4.0°/s,按 WT 新手→王牌比例折算:4 × (4.0 / 2.8) = 4 × (10 / 7) ≈ 5.71°/s(估算)
     elevationSpeed: 5.71,
   },
-  mass: 32200, // War Thunder 值: 战斗全重 32.2 t(苏联官方手册为 32.0 t)
-  enginePower: { hp: 500, rpm: 1800 }, // War Thunder 值 / 苏联资料: V-2-34 柴油机 500 hp @ 1800 rpm
-  reverseSpeed: 9, // War Thunder 值: 最大倒车速度 9 km/h(5 速变速箱倒挡)
+  mass: 32000, // 战斗全重 32.0 t(Wikipedia;War Thunder wiki 同为 32 t)
+  enginePower: { hp: 500, rpm: 1800 }, // 史料标称值: V-2-34 柴油机 500 hp @ 1800 rpm(Wikipedia)
+  reverseSpeed: 8, // War Thunder 值: War Thunder wiki 机动表(2026-10-02 核对)取两栏里较小的一栏(8 / 9 km/h 取 8)
   // 首上 45@60° → 90;首下 45@53° ≈ 75(分界高度 0.71m);侧面下部 45 垂直(上部 45@40° ≈ 59);后部 45@45° ≈ 64
   armor: { front: 90, side: 45, rear: 64, lowerFront: { thickness: 75, height: 0.71 } },
   // 炮塔正面 90,侧面 75,后部 52
@@ -259,9 +259,9 @@ export const TIGER_II: VehicleSpec = {
     // 现有 4°/s,按方向机同一比例(10/7)折算估算:4 × (10 / 7) ≈ 5.71°/s(WT 新手 4.7°/s → 王牌 6.7°/s 亦为 10/7)
     elevationSpeed: 5.71,
   },
-  mass: 69800, // War Thunder 值: 战斗全重 69.8 t(出处: Jentz 1996 / War Thunder)
-  enginePower: { hp: 700, rpm: 3000 }, // War Thunder 值: 迈巴赫 HL 230 P30 标称 700 hp @ 3000 rpm
-  reverseSpeed: 11, // War Thunder 值: 最大倒车速度 11 km/h(Olvar EG 40 12 16 变速箱倒挡)
+  mass: 69800, // War Thunder 值: 战斗全重 69.8 t(War Thunder wiki 机动表)
+  enginePower: { hp: 700, rpm: 3000 }, // 史料标称值: 迈巴赫 HL 230 P30,700 PS @ 3000 rpm(Wikipedia);War Thunder 的功率随模式和乘员熟练度变化,不取
+  reverseSpeed: 9, // War Thunder 值: War Thunder wiki 机动表(2026-10-02 核对)取两栏里较小的一栏(9 / 10 km/h 取 9)
   // 首上 150@50° ≈ 233;首下 100@50° ≈ 156(分界高度 0.9m);侧面下部 80 垂直(上部 80@25° ≈ 88);后部 80@30° ≈ 92
   armor: { front: 233, side: 80, rear: 92, lowerFront: { thickness: 156, height: 0.9 } },
   // 炮塔正面 180@10° ≈ 183;侧面 80@21° ≈ 86;后部 80@20° ≈ 85
@@ -361,9 +361,9 @@ export const SU_100: VehicleSpec = {
     // 现有高低机 2.8°/s 与 WT 新手 2.8°/s 一致,直接取 WT 王牌值
     elevationSpeed: 4.0, // War Thunder 值
   },
-  mass: 31600, // War Thunder 值 / Wikipedia: 战斗全重 31.6 t
-  enginePower: { hp: 500, rpm: 1800 }, // War Thunder 值: V-2-34 柴油机 500 hp @ 1800 rpm
-  reverseSpeed: 9, // War Thunder 值: 最大倒车速度 9 km/h(T-34 底盘变速箱倒挡)
+  mass: 31600, // 战斗全重 31.6 t(Wikipedia;War Thunder wiki 同为 31.6 t)
+  enginePower: { hp: 500, rpm: 1800 }, // 史料标称值: V-2-34 柴油机 500 hp @ 1800 rpm(Wikipedia)
+  reverseSpeed: 8, // War Thunder 值: War Thunder wiki 机动表(2026-10-02 核对)取两栏里较小的一栏(两栏都是 8 km/h)
   // 首上 75@55° → 131;侧面 45、后部 45 倾角没核实,按竖直填
   armor: { front: 131, side: 45, rear: 45 },
   turretArmor: { front: 131, side: 45, rear: 45 },
@@ -447,9 +447,9 @@ export const ISU_122: VehicleSpec = {
     // 现有高低机 2.8°/s 与 WT 新手 2.8°/s 一致,直接取 WT 王牌值
     elevationSpeed: 4.0, // War Thunder 值
   },
-  mass: 45500, // War Thunder 值 / Wikipedia: 战斗全重 45.5 t
-  enginePower: { hp: 520, rpm: 2000 }, // War Thunder 值 / 苏联资料: V-2-IS 柴油机 520 hp @ 2000 rpm
-  reverseSpeed: 14, // War Thunder 值: 最大倒车速度 14 km/h(IS 底盘行星转向传动机构倒挡)
+  mass: 45500, // 战斗全重 45.5 t(Wikipedia;War Thunder wiki 为 46 t)
+  enginePower: { hp: 520, rpm: 2000 }, // 史料标称值: V-2-IS 柴油机 520 hp @ 2000 rpm(Wikipedia)
+  reverseSpeed: 14, // War Thunder 值: War Thunder wiki 机动表(2026-10-02 核对)取两栏里较小的一栏(14 / 15 km/h 取 14)
   // 车体正面 90 / 侧面 90 / 后部 60,War Thunder 值(Wikipedia:正面 90、侧面 90)
   armor: { front: 90, side: 90, rear: 60 },
   // 战斗室正面 90 / 侧面 75 / 后部 60,War Thunder 值;防盾 120 mm(Wikipedia)没有单独建模
@@ -647,9 +647,9 @@ export const M4A3_76W: VehicleSpec = {
     // 现有高低机 2.8°/s 与 WT 新手 2.8°/s 一致,直接取 WT 王牌值
     elevationSpeed: 4.0, // War Thunder 值
   },
-  mass: 32300, // 出处: 《Catalogue of Standard Ordnance Items》(Hunnicutt 1994, 71,100 lb ≈ 32.3 t)
-  enginePower: { hp: 500, rpm: 2600 }, // 出处: Hunnicutt 1994 / War Thunder 值: Ford GAA V8 标称总功率 500 hp @ 2600 rpm(净功率 450 hp)
-  reverseSpeed: 5, // War Thunder 值 / TM 9-759: 最大倒车速度 5 km/h(3.1 mph)
+  mass: 32300, // 战斗全重 71,100 lb ≈ 32.3 t(Hunnicutt《Sherman》;War Thunder wiki 为 32.3–32.9 t)
+  enginePower: { hp: 500, rpm: 2600 }, // 史料标称值: Ford GAA V8 总功率 500 hp @ 2600 rpm(净功率约 450 hp)
+  reverseSpeed: 5, // War Thunder 值: War Thunder wiki 机动表(2026-10-02 核对)取两栏里较小的一栏(5 / 6 km/h 取 5)
   // 首上 63.5@47° → 93(首下铸造传动罩 108,分界高度 1.0m);侧面 38.1 垂直;后部 38.1@10–22° ≈ 40
   armor: { front: 93, side: 38, rear: 40, lowerFront: { thickness: 108, height: 1.0 } },
   // 炮盾 88.9 垂直(炮盾外的正面 63.5@40–45° ≈ 83–90);侧面 63.5@0–13° ≈ 64;后部 63.5 垂直
@@ -694,9 +694,9 @@ export const M4A3E8: VehicleSpec = {
     // 现有高低机 2.8°/s 与 WT 新手 2.8°/s 一致,直接取 WT 王牌值
     elevationSpeed: 4.0, // War Thunder 值
   },
-  mass: 33700, // 出处: Hunnicutt 1994(74,200 lb ≈ 33.7 t) / War Thunder 官方 wiki 33.7 t
-  enginePower: { hp: 500, rpm: 2600 }, // 出处: Hunnicutt 1994 / War Thunder 值: Ford GAA V8 标称总功率 500 hp @ 2600 rpm
-  reverseSpeed: 5, // War Thunder 值 / TM 9-759: 最大倒车速度 5 km/h(3.1 mph)
+  mass: 33700, // 战斗全重 74,200 lb ≈ 33.7 t(Hunnicutt《Sherman》;War Thunder wiki 的 M4A3 (76) W 为 32.3–32.9 t)
+  enginePower: { hp: 500, rpm: 2600 }, // 史料标称值: Ford GAA V8 总功率 500 hp @ 2600 rpm(净功率约 450 hp)
+  reverseSpeed: 5, // War Thunder 值: War Thunder wiki 机动表(2026-10-02 核对)取两栏里较小的一栏(M4A3 (76) W 页 5 / 6 km/h 取 5)
   armor: { front: 93, side: 38, rear: 40, lowerFront: { thickness: 108, height: 1.0 } },
   turretArmor: { front: 89, side: 64, rear: 64 },
   maxSpeed: 42,
@@ -740,9 +740,9 @@ export const M4A3E2: VehicleSpec = {
     // 现有高低机 2.8°/s 与 WT 新手 2.8°/s 一致,直接取 WT 王牌值
     elevationSpeed: 4.0, // War Thunder 值
   },
-  mass: 38000, // 出处: Hunnicutt 1994(84,000 lb ≈ 38.0 t) / War Thunder 值 38.1 t
-  enginePower: { hp: 500, rpm: 2600 }, // 出处: Hunnicutt 1994 / War Thunder 值: Ford GAA V8 标称总功率 500 hp @ 2600 rpm
-  reverseSpeed: 4, // War Thunder 值: 最大倒车速度 4 km/h(传动比改动后由 5 km/h 降至约 4 km/h)
+  mass: 38100, // 战斗全重 84,000 lb ≈ 38.1 t(Hunnicutt《Sherman》;War Thunder wiki 为 37.8 t)
+  enginePower: { hp: 500, rpm: 2600 }, // 史料标称值: Ford GAA V8 总功率 500 hp @ 2600 rpm(净功率约 450 hp)
+  reverseSpeed: 5, // War Thunder 值: War Thunder wiki 机动表(2026-10-02 核对)取两栏里较小的一栏(两栏都是 5 km/h)
   // 首上 101.6@47° → 149(首下加厚传动罩 140,分界高度 1.0m);上部侧面 76.2 垂直(下部 38.1,藏在行走机构后面);后部 38.1@10–22° ≈ 40
   armor: { front: 149, side: 76, rear: 40, lowerFront: { thickness: 140, height: 1.0 } },
   // 炮盾 177.8 垂直;炮塔正面 152.4@12° ≈ 156(炮盾覆盖大部分,取炮盾值);侧面 152.4@6° ≈ 153;后部 152.4@2° ≈ 152
