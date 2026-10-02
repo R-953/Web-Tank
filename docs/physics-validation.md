@@ -600,7 +600,7 @@
 
 ### 14.1 哑火概率公式（估算）
 
-War Thunder 官方 wiki（https://wiki.warthunder.com/）的伤害模型说明中没有找到炮闩或炮管受损后击发失败的具体概率数值。War Thunder 的实际行为是：炮闩受损时有概率击发失败（炮没响,显示「炮闩受损」）,概率与损伤程度相关,但未公开具体函数。
+War Thunder 公开语言文件 [`menu.csv`](https://github.com/gszabi99/War-Thunder-Datamine/blob/master/lang.vromfs.bin_u/lang/menu.csv) 中,`hud_gun_barell_malfunction` 提示炮管受损后继续开火可能炸膛,`hud_gun_breech_malfunction` 提示炮闩受损后继续开火可能导致战斗室爆炸;这些词条没有给出哑火概率。「击发失败」是负责人 10-03 指定的设计,概率仍按下述方法估算。
 
 本项目采用以下估算公式：
 

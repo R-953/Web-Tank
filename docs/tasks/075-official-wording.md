@@ -55,9 +55,9 @@
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过;测试只改文案断言,不删不放宽
-- [ ] `docs/design/killcam.md` 里不再出现 `Damage_mechanics`;每行有 `menu.csv` 出处和键名
-- [ ] 回报里列出改了哪些文案
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过;测试只改文案断言,不删不放宽
+- [x] `docs/design/killcam.md` 里不再出现 `Damage_mechanics`;每行有 `menu.csv` 出处和键名
+- [x] 回报里列出改了哪些文案
 
 ## 不做
 
@@ -65,6 +65,6 @@
 
 ## 结果(完成后由执行者填写)
 
-- 改动文件:
-- 命令与结果:
-- 偏差 / 未完成 / 待决定:
+- 改动文件: `src/ui/killcamOverlay.ts`、`tests/killcam-overlay.test.ts`、`tests/killcam-text-grades.test.ts`、`docs/design/killcam.md`、`docs/design/hud-status.md`、`docs/physics-validation.md`、`src/game/damage/DamageModel.ts`(仅注释)、本任务卡、`changelog.d/2026-10-03-075-official-wording.md`。
+- 命令与结果: `npm run lint` 通过;`npm test` 通过(91 个测试文件、983 个测试);`npm run build` 通过(伴随 bundle 超过 500 kB 的提示)。
+- 偏差 / 未完成 / 待决定: 工作分支比 `origin/integration/round12` 落后 1 个提交;按要求未执行同步。
