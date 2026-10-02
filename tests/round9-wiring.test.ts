@@ -43,7 +43,6 @@ describe('046 接线用到的组件改动', () => {
         maps: [RIVER_VALLEY],
         initial: { vehicleId: 'tiger_i', mapId: RIVER_VALLEY.id },
         loadLoadout: () => ({}),
-        saveLoadout: vi.fn(),
         onVehicleChange,
         onStart: vi.fn(),
         profile: { get: getProfile, set: vi.fn() },

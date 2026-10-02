@@ -287,7 +287,6 @@ async function start(): Promise<void> {
     initial: lastSelection,
     profile: { get: () => profiles.get(), set: (p) => profiles.set(p) },
     loadLoadout: loadSavedLoadout,
-    saveLoadout,
     onVehicleChange: (spec) => hangar.setVehicle(showcaseOf(spec)),
     onStart: (sel) => openSpawnMap(sel),
     onOpenModifications: (vehicleId, crewIndex) => {

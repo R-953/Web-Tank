@@ -221,7 +221,6 @@ describe('jsdom 集成测试: 科技树、编组栏、机库信息面板', () =>
       maps: mapList,
       initial: { vehicleId: 'tiger_i', mapId: mapList[0].id },
       loadLoadout: () => ({ pzgr39: 50 }),
-      saveLoadout: vi.fn(),
       onVehicleChange: vi.fn(),
       onStart: vi.fn(),
     });
@@ -258,7 +257,6 @@ describe('jsdom 集成测试: 科技树、编组栏、机库信息面板', () =>
       maps: mapList,
       initial: { vehicleId: 'test_custom', mapId: mapList[0].id },
       loadLoadout: () => ({ pzgr39: 50 }),
-      saveLoadout: vi.fn(),
       onVehicleChange: vi.fn(),
       onStart: vi.fn(),
     });
