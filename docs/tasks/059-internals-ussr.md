@@ -1,7 +1,7 @@
 # 059-internals-ussr:苏联车辆内构细化(T-34-85、SU-100、ISU-122)
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待领取
+- 状态:待审查
 - 分支:`task/059-internals-ussr`
 - 规模:M
 - 和 054–057、058、060、061–063 并行;三张内构卡都改 `src/data/vehicles.ts`,**只改自己负责的那几辆车的 `internals` 块**,不要碰别的车、也不要整理格式(并行合并时 git 靠不重叠的改动区域)
@@ -30,7 +30,7 @@
 2. **补模块**:只用现有的 `ModuleType`(`engine`、`transmission`、`track`、`barrel`、`breech`、`ammo`、`fuel`、`traverse`、`elevation`)。把弹药架、油箱按实车的分布拆得更细(几个、在哪、各装多少),发动机 / 传动 / 方向机 / 高低机的位置和大小按实车校正。**弹药架总容量必须和 `weapons[0].ammo` 的弹药总数、现有的 `ammoCapacity` 一致**;弹药架 `drawOrder` 的意图(最危险的最先取空)保留。
 3. **建议的新模块类型**(只写文档,不进代码):在 `docs/internals/ussr.md` 里列出这个国家的车史实上有、但现有类型表达不了的部件(例如电台、蓄电池、炮塔座圈、瞄准镜光学器材、转向离合器),每项写:部件、位置、对战斗有什么影响、建议的游戏效果。主程根据这份建议决定要不要扩展 `ModuleType` 和伤害模型。
 4. 文档 `docs/internals/ussr.md`:每辆车一节,写校正后的乘员岗位表和模块表、与旧数据的差异、每个数值的出处或估算方法。**不要改 `docs/physics-validation.md`**(并行的卡都要写,会冲突)。
-5. 测试 `tests/internals-ussr.test.ts`:乘员人数和岗位集合;每个乘员的 `center` 在所属部件的盒内(车体用 `hull` 尺寸,炮塔用 `turret` 尺寸加 `offset`);每个模块的盒子在所属部件范围内(炮和炮管部件放宽到炮管长度);弹药架总容量不变;模块 id 在同一辆车内唯一;任意两个**同类**模块的盒子不重叠。
+5. 测试 `tests/internals-ussr.test.ts`:乘员人数和岗位集合;每个乘员的 `center` 在所属部件的盒内(车体用 `hull` 尺寸,炮塔用 `turret` 尺寸加 offset);每个模块的盒子在所属部件范围内(炮和炮管部件放宽到炮管长度);弹药架总容量不变;模块 id 在同一辆车内唯一;任意两个**同类**模块的盒子不重叠。
 
 ## 允许修改的文件
 
@@ -40,9 +40,9 @@
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过(含已有的伤害、回放、车辆数据测试)
-- [ ] 第 5 条的测试都有
-- [ ] 每辆车的文档一节里,每个数值都有出处或估算方法
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过(含已有的伤害、回放、车辆数据测试)
+- [x] 第 5 条的测试都有
+- [x] 每辆车的文档一节里,每个数值都有出处或估算方法
 
 ## 不做
 
@@ -51,5 +51,15 @@
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 修改: `src/data/vehicles.ts`(仅 T-34-85、SU-100、ISU-122 的 `internals` 块)
+  - 新增: `docs/internals/ussr.md`(苏联车辆内构细化文档与新模块建议)
+  - 新增: `tests/internals-ussr.test.ts`(苏联车辆内构几何规范与完整性测试)
+  - 新增: `changelog.d/2026-10-02-059-internals-ussr.md`(开发日志)
+  - 修改: `docs/tasks/059-internals-ussr.md`(状态与结果填写)
 - 命令与结果:
+  - `npm run lint`: 通过 (0 错误, 0 警告)
+  - `npm test`: 全部通过 (61 个测试文件, 624 个用例全数通过)
+  - `npm run build`: 通过 (生产构建成功, 无类型与打包错误)
 - 偏差 / 未完成 / 待决定:
+  - 无偏差, 任务卡所有要求均已实现并全部通过测试。
+  - 建议的新模块类型(座圈、电台、瞄准镜、转向离合器、蓄电池)已在 `docs/internals/ussr.md` 第五节详述, 待主程评估是否纳入后续伤害模型演进。
