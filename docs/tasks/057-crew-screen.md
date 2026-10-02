@@ -47,8 +47,8 @@ Esc / × / 点遮罩关闭;车组或车辆不存在时显示「该车组还没�
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] 上面的测试都有
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] 上面的测试都有
 - [ ] 主程会在浏览器里看布局
 
 ## 不做
@@ -58,5 +58,13 @@ Esc / × / 点遮罩关闭;车组或车辆不存在时显示「该车组还没�
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 新增: `src/ui/menu/CrewScreen.ts`
+  - 新增: `tests/crew-screen.test.ts`
+  - 新增: `changelog.d/2026-10-02-057-crew-screen.md`
+  - 修改: `docs/tasks/057-crew-screen.md`
 - 命令与结果:
-- 偏差 / 未完成 / 待决定:
+  - `npm run lint`: 通过 (0 errors)
+  - `npm test`: 通过 (61 test files, 615 tests 全部通过，新增测试 12 个全部通过)
+  - `npm run build`: 通过 (生产构建成功)
+- 偏差 / 未完成 / 待决定: 无
+
