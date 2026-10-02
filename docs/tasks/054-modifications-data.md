@@ -1,7 +1,7 @@
 # 054-modifications-data:改装的数据、套用逻辑和存档
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待领取
+- 状态:已完成
 - 分支:`task/054-modifications-data`
 - 规模:M
 - 和 055–063 并行;055 的界面按本卡的接口写,改的文件不重叠
@@ -38,9 +38,9 @@
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] 上面第 4 条的测试都有
-- [ ] 每条改装的 `source` 都不是空的;用了估算的写清方法
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] 上面第 4 条的测试都有
+- [x] 每条改装的 `source` 都不是空的;用了估算的写清方法
 
 ## 不做
 
@@ -49,5 +49,11 @@
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 修改: `src/data/modifications.ts`、`docs/tasks/054-modifications-data.md`
+  - 新增: `src/settings/ModificationStore.ts`、`tests/modifications.test.ts`、`tests/modification-store.test.ts`、`changelog.d/2026-10-02-054-modifications-data.md`
 - 命令与结果:
-- 偏差 / 未完成 / 待决定:
+  - `npm run lint`: 通过 (tsc --noEmit 无错误)
+  - `npm test`: 通过 (62 个测试文件，623 个测试全部通过)
+  - `npm run build`: 通过 (tsc && vite build 成功输出生产构建产物)
+- 偏差 / 未完成 / 待决定: 无
+
