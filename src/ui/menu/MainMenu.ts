@@ -40,6 +40,11 @@ export interface MainMenuOptions {
   /** 点「进入战斗」:在点击事件里同步调用(main.ts 在这里申请锁定鼠标) */
   onStart(sel: MenuSelection): void;
   onUiSound?(): void;
+  /** 编组栏右键菜单的四项(换车在菜单里自己处理):各自打开改装 / 涂装 / 乘员界面、开始试驾 */
+  onOpenModifications?(vehicleId: string, crewIndex: number): void;
+  onOpenCustomization?(vehicleId: string, crewIndex: number): void;
+  onTestDrive?(vehicleId: string, crewIndex: number): void;
+  onOpenCrew?(nation: string, crewIndex: number): void;
   /** 有这个就用编组栏 + 科技树取代旧的载具栏;没有就保持旧行为 */
   profile?: {
     get(): Profile;

@@ -1,4 +1,5 @@
 import type { VehicleSpec } from './types';
+import { isCasemate } from '../game/casemate';
 
 /**
  * 改装(Modifications):每辆车的机动 / 防护 / 火力三栏、每栏分 I–IV 级的可选升级。
@@ -169,10 +170,6 @@ export const FIREPOWER_CASEMATE_MODS: readonly ModificationSpec[] = [
     source: '估算: 参考 War Thunder 射击调整改装设定，校验火炮内膛与瞄准基线，效果暂未接入',
   },
 ];
-
-function isCasemate(spec: VehicleSpec): boolean {
-  return Boolean(spec.turret?.traverse !== undefined || spec.vehicleClass === 'td');
-}
 
 /** 这辆车能用的改装列表(按国家 / 类别)。坦克歼击车 / 突击炮无炮塔方向机 */
 export function modificationsFor(spec: VehicleSpec): readonly ModificationSpec[] {

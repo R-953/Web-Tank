@@ -19,7 +19,11 @@ import type { Loadout, MapSpec, VehicleSpec } from './data/types';
 import { SettingsStore, type GameSettings } from './settings/Settings';
 import { ProfileStore, activeVehicleId, advanceTime, assignVehicle, selectCrew, setActiveNation, type Profile, type ProfileVehicle } from './settings/Profile';
 import { progressAfter } from './game/crew/progress';
-import { activeCrewSkill } from './game/crew/skill';
+import { activeCrewSkill, crewSkillFor } from './game/crew/skill';
+import { applyModifications } from './data/modifications';
+import { applyPaint } from './data/paints';
+import { ModificationStore } from './settings/ModificationStore';
+import { PaintStore } from './settings/PaintStore';
 import { SoundManager, type ImpactKind, type SoundSource } from './audio/Sound';
 import { Hud, type HudState } from './ui/Hud';
 import { SightOverlay, azimuthFromYaw } from './ui/SightOverlay';
@@ -33,6 +37,9 @@ import { HangarScene } from './ui/menu/Hangar';
 import { MainMenu, type MenuSelection } from './ui/menu/MainMenu';
 import { PauseMenu } from './ui/menu/PauseMenu';
 import { SettingsPanel } from './ui/menu/SettingsPanel';
+import { ModificationsScreen } from './ui/menu/ModificationsScreen';
+import { CustomizationScreen } from './ui/menu/CustomizationScreen';
+import { CrewScreen } from './ui/menu/CrewScreen';
 
 /** 准星射线的最远距离,m */
 const AIM_DISTANCE = 4000;
@@ -171,6 +178,13 @@ async function start(): Promise<void> {
 
   let appState: 'menu' | 'battle' = 'menu';
   let selection: MenuSelection | null = null;
+  /** 这一局是怎么开的(试驾 / 正常出战);重新开始时沿用 */
+  interface BattleKind {
+    practice?: boolean;
+    /** 试驾时右键点的车组序号(技能按这个车组算);缺省 = 当前车组 */
+    crewIndex?: number;
+  }
+  let battleKind: BattleKind = {};
   let game: Game | null = null;
   let scoped = false;
   let zoomIndex = 0;
@@ -217,6 +231,50 @@ async function start(): Promise<void> {
     .map((v) => ({ id: v.id, nation: v.nation!, family: v.family ?? v.id }));
   const profiles = openProfileStore(profileVehicles, lastSelection.vehicleId, cfg().game.offlineGrowth);
 
+  // --- 改装与涂装:存档在本机;改装只改玩家那一辆的数据(Game 的 playerSpec),涂装另外在机库里实时预览
+  const modStore = new ModificationStore();
+  const paintStore = new PaintStore();
+  /** 机库里看到的样子:只套涂装 */
+  const showcaseOf = (spec: VehicleSpec): VehicleSpec => applyPaint(spec, paintStore.get(spec.id));
+  /** 进战斗时玩家那辆车的数据:改装(性能)+ 涂装(颜色) */
+  const playerSpecOf = (spec: VehicleSpec): VehicleSpec => applyPaint(applyModifications(spec, modStore.get(spec.id)), paintStore.get(spec.id));
+
+  const modificationsScreen = new ModificationsScreen({
+    parent: document.body,
+    getEnabled: (id) => modStore.get(id),
+    setEnabled: (id, ids) => modStore.set(id, ids),
+    onUiSound: uiClick,
+  });
+  const customizationScreen = new CustomizationScreen({
+    parent: document.body,
+    getPaint: (id) => paintStore.get(id),
+    setPaint: (id, paintId) => paintStore.set(id, paintId),
+    // 选中方案时机库里的模型立刻换色;取消 / 关闭时 onClose 会按存档恢复
+    onPreview: (spec) => hangar.setVehicle(spec),
+    onClose: () => {
+      hangar.setVehicle(showcaseOf(menu.selection().vehicle));
+      menu.refresh();
+    },
+    onUiSound: uiClick,
+  });
+  const crewScreen = new CrewScreen({
+    parent: document.body,
+    vehicles: Object.values(VEHICLES),
+    getProfile: () => profiles.get(),
+    offlineGrowth: () => cfg().game.offlineGrowth,
+    onUiSound: uiClick,
+  });
+
+  /** 右键菜单点了某辆车:先把这个车组选成当前车组,机库里的模型和后面的界面才对得上这辆车 */
+  const focusCrew = (crewIndex: number): void => {
+    const p = profiles.get();
+    const nation = p.nations[p.activeNation];
+    if (nation && nation.lineups.find((l) => l.id === nation.activeLineup)?.selected !== crewIndex) {
+      profiles.set(selectCrew(p, p.activeNation, nation.activeLineup, crewIndex));
+      menu.refresh();
+    }
+  };
+
   const menu = new MainMenu({
     parent: document.body,
     settings,
@@ -227,11 +285,28 @@ async function start(): Promise<void> {
     profile: { get: () => profiles.get(), set: (p) => profiles.set(p) },
     loadLoadout: loadSavedLoadout,
     saveLoadout,
-    onVehicleChange: (spec) => hangar.setVehicle(spec),
+    onVehicleChange: (spec) => hangar.setVehicle(showcaseOf(spec)),
     onStart: (sel) => openSpawnMap(sel),
+    onOpenModifications: (vehicleId, crewIndex) => {
+      const spec = VEHICLES[vehicleId];
+      if (!spec) return;
+      focusCrew(crewIndex);
+      modificationsScreen.open(spec);
+    },
+    onOpenCustomization: (vehicleId, crewIndex) => {
+      const spec = VEHICLES[vehicleId];
+      if (!spec) return;
+      focusCrew(crewIndex);
+      customizationScreen.open(spec);
+    },
+    onTestDrive: (vehicleId, crewIndex) => testDrive(vehicleId, crewIndex),
+    onOpenCrew: (nation, crewIndex) => {
+      focusCrew(crewIndex);
+      crewScreen.open(nation, crewIndex);
+    },
     onUiSound: uiClick,
   });
-  hangar.setVehicle(menu.selection().vehicle);
+  hangar.setVehicle(showcaseOf(menu.selection().vehicle));
   hangar.bindDrag(menu.dragSurface);
 
   const pause = new PauseMenu(
@@ -323,7 +398,15 @@ async function start(): Promise<void> {
   }
 
   function restartBattle(): void {
-    if (selection) startBattle({ ...selection, loadout: loadSavedLoadout(selection.vehicle) });
+    if (selection) startBattle({ ...selection, loadout: loadSavedLoadout(selection.vehicle) }, battleKind);
+  }
+
+  /** 试驾:在机库里选的地图上开一局,靶车不还击、全灭也不结束(右键菜单「试驾」) */
+  function testDrive(vehicleId: string, crewIndex: number): void {
+    const vehicle = VEHICLES[vehicleId];
+    if (!vehicle) return;
+    startBattle({ vehicle, map: menu.selection().map, loadout: loadSavedLoadout(vehicle) }, { practice: true, crewIndex });
+    lockPointer();
   }
 
   // --- 设置生效
@@ -368,16 +451,24 @@ async function start(): Promise<void> {
   input.setPreventDefault((code) => appState === 'battle' && document.pointerLockElement === canvas && code !== 'Escape' && actions.isBound(code));
 
   // --- 一局游戏
-  function startBattle(sel: MenuSelection): void {
+  function startBattle(sel: MenuSelection, kind: BattleKind = {}): void {
     selection = sel;
+    battleKind = kind;
     game?.dispose();
     const g = cfg().graphics;
     game = new Game({
       map: sel.map,
       vehicles: VEHICLES,
       playerVehicleId: sel.vehicle.id,
-      playerCrewSkill: activeCrewSkill(profiles.get(), profileVehicles),
+      playerSpec: playerSpecOf(sel.vehicle),
+      // 试驾的车不一定是当前车组的车,技能按右键点的那个车组算
+      playerCrewSkill:
+        kind.crewIndex === undefined
+          ? activeCrewSkill(profiles.get(), profileVehicles)
+          : crewSkillFor(profiles.get(), profileVehicles, sel.vehicle.nation ?? '', kind.crewIndex, sel.vehicle.id),
       playerLoadout: sel.loadout,
+      enemyAi: kind.practice ? false : undefined,
+      practice: kind.practice,
       aiPreset: cfg().game.aiPreset,
       vegetation: { density: g.vegetation, grassDistance: g.grassDistance },
     });

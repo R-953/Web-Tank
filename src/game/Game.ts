@@ -97,6 +97,11 @@ export interface GameConfig {
   seed?: number;
   /** 玩家载具(缺省用地图出生点里写的) */
   playerVehicleId?: string;
+  /**
+   * 玩家载具的数据覆盖(套了改装 / 涂装的版本;id 要和 playerVehicleId 一致)。
+   * 只影响玩家这一辆,地图上同型号的靶车 / 敌车仍用 vehicles 里的原始数据。
+   */
+  playerSpec?: VehicleSpec;
   /** 玩家车组技能 ∈ [0, 1](= 车组成长进度 × 熟练度);缺省 0 = 新手数值(和现在一样) */
   playerCrewSkill?: number;
   /** 玩家携弹方案;缺省见 defaultLoadout */
@@ -408,6 +413,7 @@ export class Game {
     let spec = this.config.vehicles[s.vehicleId];
     if (!spec) throw new Error(`地图 ${this.config.map.id} 引用了不存在的载具 ${s.vehicleId}`);
     if (id === 'player') {
+      if (this.config.playerSpec?.id === spec.id) spec = this.config.playerSpec;
       spec = applyCrewSkill(spec, spec.crewAce, this.config.playerCrewSkill ?? 0);
     }
     const [x, z] = s.position;

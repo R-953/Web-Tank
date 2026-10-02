@@ -3,7 +3,8 @@ import type { VehicleSpec } from './types';
 /**
  * 载具历史涂装方案定义。
  * 涂装色即模型主体色, 换涂装 = 换 spec.color。
- * 出处核实规则: 标准色号(RAL/FS等)严格对应标准转换, 未知出处使用估算并标明方法。
+ * 出处规则: 标准色号(RAL / FS 等)只写资料里能对上的;屏幕色值查不到标准 RGB 的,一律标「估算」并写方法。
+ * 主程已对照涂装复原资料逐条核对(见各项 source)。
  */
 export interface PaintSpec {
   /** 涂装方案唯一标识, 'default' 固定保留给出厂涂装 */
@@ -24,29 +25,29 @@ const GERMAN_PAINTS = {
     id: 'panzergrau',
     name: '装甲灰',
     color: 0x3b3f42,
-    source: 'RAL 7021 Dunkelgrau(标准色卡转换 RGB 59, 63, 66)',
-    note: '1943 年 2 月前早期德军战车全车标准装甲灰涂装',
+    source: '色号 RAL 7021(Panzergrau / Dunkelgrau);色值为估算: 涂装复原资料给出的屏幕色约 #353536–#4A4A4C, 取略偏蓝的 #3B3F42',
+    note: '1943 年 2 月以前德军装甲车辆的标准全车涂装',
   },
   dunkelgelb: {
     id: 'dunkelgelb',
     name: '暗黄色',
     color: 0xa89060,
-    source: 'RAL 7028 Dunkelgelb(德军标准暗黄, 与虎式出厂色相同)',
-    note: '1943 年 2 月起德军标准出厂底漆与主体色',
+    source: '色号 RAL 7028 Dunkelgelb;屏幕色参考涂装复原资料约 #9A8953–#A39448, 取项目里虎式既有的 #A89060',
+    note: '1943 年 2 月起德军装甲车辆的标准出厂底色',
   },
   olivgruen: {
     id: 'olivgruen',
     name: '橄榄绿',
     color: 0x4b533b,
-    source: 'RAL 6003 Olivgrün(标准色卡转换 RGB 75, 83, 59)',
-    note: '1943 年起德军三色迷彩之绿色, 后期部分车辆直接作为主体底漆',
+    source: '色号 RAL 6003 Olivgrün(与空军 RLM 62 同色);色值为估算: 中暗橄榄绿 #4B533B, 没有查到可核对的标准 RGB',
+    note: '1943 年春起与 Dunkelgelb、Rotbraun 组成三色迷彩的绿色;1944 年下半年起部分车辆以它为主体色',
   },
   winterWhite: {
     id: 'winter_white',
     name: '冬季水洗白',
     color: 0xd8dcd6,
-    source: '估算: 战地临时石灰水洗涂料(Kalktünche), 取带轻微风化的灰白色(RGB 216, 220, 214)',
-    note: '东线与阿登战役冬季战地临时涂刷的石灰白色水洗漆',
+    source: '估算: 战地临时涂刷的水溶性白色冬季涂料, 取带轻微风化的灰白色(RGB 216, 220, 214)',
+    note: '东线等冬季战场上临时涂刷、开春洗去的白色伪装涂料',
   },
 } as const;
 
@@ -55,8 +56,8 @@ const SOVIET_WINTER_WHITE: PaintSpec = {
   id: 'winter_white',
   name: '冬季水洗白',
   color: 0xd8dcd6,
-  source: '估算: 苏军临时石灰水洗白色伪装涂料, 微带风化灰白色(RGB 216, 220, 214)',
-  note: '冬季作战期间战地临时涂刷的石灰白色水洗漆, 春季洗去',
+  source: '估算: 苏军战地临时刷的可洗去白色伪装涂料, 取微带风化的灰白色(RGB 216, 220, 214)',
+  note: '冬季作战期间战地临时涂刷, 开春洗去',
 };
 
 /** 美军战地水洗白 */
@@ -64,8 +65,8 @@ const US_WINTER_WHITE: PaintSpec = {
   id: 'winter_white',
   name: '冬季水洗白',
   color: 0xd8dcd6,
-  source: '估算: 1944 年冬阿登战役美军战地临时水洗白漆, 微带风化灰白色(RGB 216, 220, 214)',
-  note: '1944 年冬季阿登战役(突出部战役)美军战地临时喷刷的白色伪装漆',
+  source: '估算: 美军战地临时刷的白色伪装涂料, 取微带风化的灰白色(RGB 216, 220, 214)',
+  note: '1944—45 年冬季(阿登战役前后)战地临时涂刷的白色伪装',
 };
 
 /** 车型专属涂装列表构造函数(不含出厂项) */
@@ -96,40 +97,40 @@ function defaultPaintSpec(spec: VehicleSpec): PaintSpec {
         id: 'default',
         name: '出厂暗黄',
         color: spec.color,
-        source: 'RAL 7028 Dunkelgelb(虎式出厂色值 0xa89060)',
-        note: '1943 年 2 月起德军装甲车辆标准出厂底色',
+        source: '色号 RAL 7028 Dunkelgelb;色值 0xa89060 是项目既有的虎式出厂色',
+        note: '1943 年 2 月起德军装甲车辆的标准出厂底色',
       };
     case 'tiger_ii':
       return {
         id: 'default',
         name: '出厂涂装',
         color: spec.color,
-        source: '虎王出厂基色(0x6b6e5e)',
-        note: '1944 年后期型标准涂装基色',
+        source: '项目既有的虎王出厂色 0x6b6e5e(灰橄榄色, 没有对应标准色号)',
+        note: '沿用项目原有色值',
       };
     case 't34_85':
       return {
         id: 'default',
         name: '出厂 4BO 防护绿',
         color: spec.color,
-        source: '苏联 4BO 防护绿标准色(T-34-85 出厂色值 0x4b5a2c)',
-        note: '1944 年苏联装甲战车标准出厂保护绿涂装',
+        source: '4БО 防护绿(1938 年起红军的标准车辆色);色值 0x4b5a2c 是项目既有值',
+        note: '1944 年 T-34-85 投产后的标准出厂涂装',
       };
     case 'su_100':
       return {
         id: 'default',
         name: '出厂 4BO 防护绿',
         color: spec.color,
-        source: '苏联 4BO 防护绿标准色(SU-100 出厂色值 0x4f5b31)',
-        note: '1944 年第 183 厂与乌拉尔重机厂标准出厂防护绿',
+        source: '4БО 防护绿(1938 年起红军的标准车辆色);色值 0x4f5b31 是项目既有值',
+        note: '1944 年 SU-100 投产后的标准出厂涂装',
       };
     case 'isu_122':
       return {
         id: 'default',
         name: '出厂 4BO 防护绿',
         color: spec.color,
-        source: '苏联 4BO 防护绿标准色(ISU-122 出厂色值 0x535e36)',
-        note: '1944 年车里雅宾斯克基洛夫厂(ChKZ)标准出厂防护绿',
+        source: '4БО 防护绿(1938 年起红军的标准车辆色);色值 0x535e36 是项目既有值',
+        note: '1944 年 ISU-122 服役后的标准出厂涂装',
       };
     case 'm4a3_76w':
     case 'm4a3e8':
@@ -138,8 +139,8 @@ function defaultPaintSpec(spec: VehicleSpec): PaintSpec {
         id: 'default',
         name: '出厂橄榄褐',
         color: spec.color,
-        source: '二战美军 Olive Drab No. 9 / No. 319(FS 33070, 026 号卡色值 0x544f3d)',
-        note: '1944 年美军陆军战车标准出厂橄榄褐涂料',
+        source: '美军 Olive Drab(陆军 No. 9 / AN 319, 最接近的现代色卡是 FS 33070);色值 0x544f3d 是 026 号卡定的既有值',
+        note: '二战美军战车的标准出厂涂装',
       };
     default:
       return {
@@ -164,8 +165,8 @@ export function paintsFor(spec: VehicleSpec): readonly PaintSpec[] {
       id: 'winter_white',
       name: '冬季水洗白',
       color: 0xd8dcd6,
-      source: '估算: 战地临时石灰水洗涂料(Kalktünche), 取带轻微风化的灰白色(RGB 216, 220, 214)',
-      note: '冬季作战期间战地临时涂刷的石灰白色水洗漆',
+      source: '估算: 战地临时涂刷的可洗去白色涂料, 取带轻微风化的灰白色(RGB 216, 220, 214)',
+      note: '冬季作战期间战地临时涂刷',
     },
   ];
   return [def, ...extras];

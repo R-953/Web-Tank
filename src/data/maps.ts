@@ -1,4 +1,6 @@
 import type { MapSpec, Vec2 } from './types';
+import { HARBOR_TOWN } from './mapspecs/harbor_town';
+import { SNOW_FOREST } from './mapspecs/snow_forest';
 
 /**
  * 把手写的字符网格('0'~'9')转成 0..1 的高度数组。
@@ -260,4 +262,6 @@ export const RIVER_VALLEY: MapSpec = {
 export const MAPS: Readonly<Record<string, MapSpec>> = {
   [RIVER_VALLEY.id]: RIVER_VALLEY,
   [TRAINING_GROUND.id]: TRAINING_GROUND,
+  [HARBOR_TOWN.id]: HARBOR_TOWN,
+  [SNOW_FOREST.id]: SNOW_FOREST,
 };
