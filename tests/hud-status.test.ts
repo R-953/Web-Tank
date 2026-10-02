@@ -6,6 +6,10 @@ import {
   MessageQueue,
   getCrewIncapacitatedMessage,
   getCrewRoleName,
+  repairLabel,
+  hintLine,
+  formatActionHintHtml,
+  formatActionHintText,
 } from '../src/ui/hud/hudStatus';
 import type { HitReplay } from '../src/game/Game';
 import type { HitRecord } from '../src/game/damage/DamageModel';
@@ -307,6 +311,98 @@ describe('hudStatus 单元测试', () => {
       expect(q.get(1.0)).toHaveLength(2);
       q.clear();
       expect(q.get(1.0)).toEqual([]);
+    });
+  });
+
+  describe('维修倒计时 repairLabel', () => {
+    it('正确格式化维修倒计时文案', () => {
+      expect(repairLabel(30)).toBe('正在修理,剩余:30秒');
+      expect(repairLabel(29.4)).toBe('正在修理,剩余:30秒');
+      expect(repairLabel(1)).toBe('正在修理,剩余:1秒');
+      expect(repairLabel(0.2)).toBe('正在修理,剩余:1秒');
+      expect(repairLabel(0)).toBe('正在修理,剩余:0秒');
+    });
+  });
+
+  describe('操作提示行 hintLine', () => {
+    const keys = { repair: 'F', extinguish: '6' };
+
+    it('无损坏且未起火时不显示提示', () => {
+      const hint = hintLine(
+        { fire: null, extinguishers: 2, isRepairing: false, hasRepairable: false },
+        keys
+      );
+      expect(hint).toBeNull();
+    });
+
+    it('有损坏模块、未起火、未在维修中时触发维修提示', () => {
+      const hint = hintLine(
+        { fire: null, extinguishers: 2, isRepairing: false, hasRepairable: true },
+        keys
+      );
+      expect(hint).toEqual({ key: 'F', text: '按住开始维修' });
+      expect(formatActionHintText(hint!)).toBe('[F] 按住开始维修');
+      expect(formatActionHintHtml(hint!)).toBe('<span class="hud-hint-key">F</span><span>按住开始维修</span>');
+    });
+
+    it('按键名自定义时正确反映按键', () => {
+      const customKeys = { repair: 'R', extinguish: '7' };
+      const hint = hintLine(
+        { fire: null, extinguishers: 2, isRepairing: false, hasRepairable: true },
+        customKeys
+      );
+      expect(hint).toEqual({ key: 'R', text: '按住开始维修' });
+      expect(formatActionHintText(hint!)).toBe('[R] 按住开始维修');
+    });
+
+    it('正在维修中时不显示维修提示', () => {
+      const hint = hintLine(
+        { fire: null, extinguishers: 2, isRepairing: true, hasRepairable: true },
+        keys
+      );
+      expect(hint).toBeNull();
+    });
+
+    it('着火且有灭火器时触发灭火提示', () => {
+      const hint = hintLine(
+        { fire: { extinguishing: null }, extinguishers: 1, isRepairing: false, hasRepairable: false },
+        keys
+      );
+      expect(hint).toEqual({ key: '6', text: '灭火' });
+      expect(formatActionHintText(hint!)).toBe('[6] 灭火');
+      expect(formatActionHintHtml(hint!)).toBe('<span class="hud-hint-key">6</span><span>灭火</span>');
+    });
+
+    it('正在灭火中时不提示灭火', () => {
+      const hint = hintLine(
+        { fire: { extinguishing: 2.1 }, extinguishers: 1, isRepairing: false, hasRepairable: false },
+        keys
+      );
+      expect(hint).toBeNull();
+    });
+
+    it('着火但无灭火器时不提示灭火', () => {
+      const hint = hintLine(
+        { fire: { extinguishing: null }, extinguishers: 0, isRepairing: false, hasRepairable: false },
+        keys
+      );
+      expect(hint).toBeNull();
+    });
+
+    it('同时着火且有损坏模块时, 灭火提示优先于维修提示', () => {
+      const hint = hintLine(
+        { fire: { extinguishing: null }, extinguishers: 2, isRepairing: false, hasRepairable: true },
+        keys
+      );
+      expect(hint).toEqual({ key: '6', text: '灭火' });
+    });
+
+    it('着火时即使灭火器用尽, 也不能显示维修提示 (着火状态下无法维修)', () => {
+      const hint = hintLine(
+        { fire: { extinguishing: null }, extinguishers: 0, isRepairing: false, hasRepairable: true },
+        keys
+      );
+      expect(hint).toBeNull();
     });
   });
 });
