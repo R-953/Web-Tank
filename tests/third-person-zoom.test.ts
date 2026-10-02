@@ -20,12 +20,14 @@ describe('第三人称视角放大(third-person zoom)', () => {
     orbit.toggleThirdZoom();
     expect(orbit.thirdZoomed).toBe(true);
     expect(orbit.fov).toBe(THIRD_PERSON_ZOOM_FOV);
+    orbit.snapFov();
     expect(camera.fov).toBe(THIRD_PERSON_ZOOM_FOV);
 
     // 第二次切换:复原
     orbit.toggleThirdZoom();
     expect(orbit.thirdZoomed).toBe(false);
     expect(orbit.fov).toBe(THIRD_PERSON_FOV);
+    orbit.snapFov();
     expect(camera.fov).toBe(THIRD_PERSON_FOV);
   });
 
@@ -43,6 +45,7 @@ describe('第三人称视角放大(third-person zoom)', () => {
     expect(orbit.mode).toBe('sight');
     expect(orbit.thirdZoomed).toBe(false);
     expect(orbit.fov).toBeCloseTo(62.5 / 2.5);
+    orbit.snapFov();
     expect(camera.fov).toBeCloseTo(62.5 / 2.5);
 
     // 切回第三人称:放大状态已复位为 false
@@ -50,6 +53,7 @@ describe('第三人称视角放大(third-person zoom)', () => {
     expect(orbit.mode).toBe('third');
     expect(orbit.thirdZoomed).toBe(false);
     expect(orbit.fov).toBe(THIRD_PERSON_FOV);
+    orbit.snapFov();
     expect(camera.fov).toBe(THIRD_PERSON_FOV);
   });
 
@@ -58,6 +62,7 @@ describe('第三人称视角放大(third-person zoom)', () => {
     const orbit = new OrbitCamera(camera);
 
     orbit.setSight(4);
+    orbit.snapFov();
     const expectedSightFov = 62.5 / 4;
     expect(orbit.fov).toBeCloseTo(expectedSightFov);
     expect(camera.fov).toBeCloseTo(expectedSightFov);
@@ -83,6 +88,7 @@ describe('第三人称视角放大(third-person zoom)', () => {
 
     // 放大后相同位移转动
     orbit.toggleThirdZoom();
+    orbit.snapFov();
     orbit.yaw = 0;
     orbit.pitch = 0;
     orbit.rotate(10, 10);

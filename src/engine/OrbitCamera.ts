@@ -11,6 +11,8 @@ export const THIRD_PERSON_ZOOM_FOV = 35;
  * 瞄准镜视场 ≈ 该值 / 倍率(度)。取自实物:TZF 9d 2.5× 视场 25°、5× 视场 12.5°;TSh-16 4× 视场 16°。
  */
 export const SIGHT_FOV_AT_1X = 62.5;
+/** 视场平滑过渡时间常数,秒(约 0.15 s 走完 90%) */
+export const FOV_TAU = 0.06;
 /** 单次 rotate() 最多转动的角度,弧度(防止异常的巨大鼠标位移把视角甩到背后) */
 const MAX_STEP = 0.5;
 
@@ -34,12 +36,16 @@ export class OrbitCamera {
   mode: 'third' | 'sight' = 'third';
   magnification = 1;
   private _thirdZoomed = false;
+  private _displayFov: number;
+  private _hasUpdated = false;
   private userSensitivity = { mouse: 1, sight: 1, scaleWithZoom: true, invertY: false };
 
   private readonly pivot = new THREE.Vector3();
   private readonly dir = new THREE.Vector3();
 
-  constructor(readonly camera: THREE.PerspectiveCamera) {}
+  constructor(readonly camera: THREE.PerspectiveCamera) {
+    this._displayFov = this.fov;
+  }
 
   /** 第三人称是否处于放大状态;setSight() / setThirdPerson() 时复位为 false */
   get thirdZoomed(): boolean {
@@ -50,23 +56,37 @@ export class OrbitCamera {
     this.setThirdZoom(val);
   }
 
-  /** 当前垂直视场,度 */
+  /** 当前垂直目标视场,度 */
   get fov(): number {
     if (this.mode === 'sight') return SIGHT_FOV_AT_1X / this.magnification;
     return this._thirdZoomed ? THIRD_PERSON_ZOOM_FOV : THIRD_PERSON_FOV;
   }
 
+  /** 当前显示视场,度 */
+  get displayFov(): number {
+    return this._displayFov;
+  }
+
+  /**
+   * 将显示视场直接设为目标值,不做平滑过渡。
+   * 构造时或场景重置时由调用方按需调用。
+   */
+  snapFov(): void {
+    this._hasUpdated = true;
+    this._displayFov = this.fov;
+    this.camera.fov = this._displayFov;
+    this.camera.updateProjectionMatrix();
+  }
+
   setThirdPerson(): void {
     this.mode = 'third';
     this._thirdZoomed = false;
-    this.applyFov();
   }
 
   setSight(magnification: number): void {
     this.mode = 'sight';
     this._thirdZoomed = false;
     this.magnification = magnification;
-    this.applyFov();
   }
 
   /** 设置第三人称放大状态;开镜时调用无效果 */
@@ -74,7 +94,6 @@ export class OrbitCamera {
     if (this.mode === 'sight') return;
     if (this._thirdZoomed === zoomed) return;
     this._thirdZoomed = zoomed;
-    this.applyFov();
   }
 
   /** 第三人称下切换放大;开镜时调用无效果 */
@@ -96,10 +115,11 @@ export class OrbitCamera {
   rotate(dx: number, dy: number): void {
     const u = this.userSensitivity;
     let k = this.sensitivity;
+    const currentFov = this._hasUpdated ? this.displayFov : this.fov;
     if (this.mode === 'sight') {
-      k *= u.sight * (u.scaleWithZoom ? this.fov / THIRD_PERSON_FOV : 1 / Math.sqrt(this.magnification));
+      k *= u.sight * (u.scaleWithZoom ? currentFov / THIRD_PERSON_FOV : 1 / Math.sqrt(this.magnification));
     } else {
-      k *= u.mouse * (this._thirdZoomed && u.scaleWithZoom ? this.fov / THIRD_PERSON_FOV : 1);
+      k *= u.mouse * (u.scaleWithZoom ? currentFov / THIRD_PERSON_FOV : 1);
     }
     // 第二道保险:一次最多转 MAX_STEP(输入层已经过滤了尖峰)
     const dYaw = THREE.MathUtils.clamp(dx * k, -MAX_STEP, MAX_STEP);
@@ -118,8 +138,33 @@ export class OrbitCamera {
    * @param target        第三人称跟随的目标位置
    * @param groundHeightAt 用于防止第三人称相机钻进地面
    * @param sightPosition 瞄准镜在世界中的位置(sight 模式必填)
+   * @param dt            帧间隔时间,秒(默认 1/60)
    */
-  update(target: THREE.Vector3, groundHeightAt?: (x: number, z: number) => number, sightPosition?: THREE.Vector3): void {
+  update(
+    target: THREE.Vector3,
+    groundHeightAt?: (x: number, z: number) => number,
+    sightPosition?: THREE.Vector3,
+    dt = 1 / 60,
+  ): void {
+    this._hasUpdated = true;
+    const targetFov = this.fov;
+    if (this._displayFov !== targetFov) {
+      const prevFov = this._displayFov;
+      if (dt > 0) {
+        this._displayFov += (targetFov - this._displayFov) * (1 - Math.exp(-dt / FOV_TAU));
+      }
+      if (Math.abs(targetFov - this._displayFov) < 0.01) {
+        this._displayFov = targetFov;
+      }
+      if (this._displayFov !== prevFov || this.camera.fov !== this._displayFov) {
+        this.camera.fov = this._displayFov;
+        this.camera.updateProjectionMatrix();
+      }
+    } else if (this.camera.fov !== this._displayFov) {
+      this.camera.fov = this._displayFov;
+      this.camera.updateProjectionMatrix();
+    }
+
     this.getDirection(this.dir);
     const pos = this.camera.position;
     if (this.mode === 'sight' && sightPosition) {
@@ -143,10 +188,5 @@ export class OrbitCamera {
     const dir = this.getDirection();
     const skip = this.mode === 'sight' ? 0 : this.distance;
     return { origin: this.camera.position.clone().addScaledVector(dir, skip), dir };
-  }
-
-  private applyFov(): void {
-    this.camera.fov = this.fov;
-    this.camera.updateProjectionMatrix();
   }
 }
