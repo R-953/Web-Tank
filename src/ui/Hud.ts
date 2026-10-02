@@ -19,6 +19,7 @@ import {
   type StatusMsg,
 } from './hud/hudStatus';
 import { ProgressRing, type RingIcon } from './hud/ProgressRing';
+import { shellIconKind, slotIconSvg, type SlotIconKind } from './hud/slotIcons';
 
 /** 一种弹在快捷栏里的显示 */
 export interface AmmoLine {
@@ -120,17 +121,23 @@ const CSS = `
 .hud-progress-ring { display: flex; flex-direction: column; align-items: center; gap: 4px; pointer-events: none; }
 .hud-progress-ring .progress-ring-label { font-size: 12px; font-weight: 600; color: #ffd166; text-shadow: 0 1px 2px rgba(0,0,0,.9); white-space: nowrap; }
 .hud-bar { position: relative; display: flex; gap: 4px; align-items: stretch; padding: 4px; }
-.hud-slot { position: relative; width: 64px; height: 50px; background: rgba(30,36,42,.75); border: 1px solid rgba(255,255,255,.14); border-radius: 3px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
+.hud-slot { position: relative; width: 64px; height: 64px; background: rgba(30,36,42,.75); border: 1px solid rgba(255,255,255,.14); border-radius: 3px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
 .hud-slot .key { position: absolute; left: 3px; top: 1px; font-size: 10px; opacity: .7; }
 .hud-slot .ico { font-size: 11px; font-weight: 600; white-space: nowrap; }
+.hud-slot .slot-icon { display: block; width: 24px; height: 24px; flex: none; margin-top: 7px; color: #f2f2f2; }
+.hud-slot .slot-icon svg { display: block; width: 100%; height: 100%; }
 .hud-slot .val { font-size: 12px; font-variant-numeric: tabular-nums; opacity: .92; }
 .hud-slot .prog { position: absolute; left: 0; bottom: 0; height: 3px; background: #ffb347; width: 0; }
 .hud-slot.sel { border-color: #e0b44c; box-shadow: inset 0 0 0 1px #e0b44c; }
+.hud-slot.loaded .slot-icon { color: #7cfc9a; }
+.hud-slot.sel .slot-icon { color: #ffcf5a; }
 .hud-slot.loaded::after { content: ""; position: absolute; right: 4px; top: 4px; width: 6px; height: 6px; border-radius: 50%; background: #7cfc9a; box-shadow: 0 0 3px #000; }
 .hud-slot.empty { opacity: .45; }
 .hud-slot.alert { border-color: #ff5a4a; background: rgba(90,20,16,.8); }
+.hud-slot.alert .slot-icon { color: #ff5a4a; }
 .hud-slot.flash { animation: hudflash .6s steps(2) infinite; }
 .hud-slot.busy .prog { background: #7cc4ff; }
+.hud-slot.busy .slot-icon { color: #7cc4ff; }
 .hud-slot.ok .ico { color: #bfe8c0; }
 .hud-slot.wide { width: 74px; }
 .hud-sep { width: 1px; background: rgba(255,255,255,.15); margin: 2px 2px; }
@@ -161,6 +168,8 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, className: string, pa
 interface Slot {
   root: HTMLDivElement;
   key: HTMLSpanElement;
+  icon: HTMLSpanElement;
+  iconKind: SlotIconKind | null;
   ico: HTMLSpanElement;
   val: HTMLSpanElement;
   prog: HTMLDivElement;
@@ -573,10 +582,17 @@ export class Hud {
   private makeSlot(parent: HTMLElement, wide = false): Slot {
     const root = el('div', `hud-slot${wide ? ' wide' : ''}`, parent);
     const key = el('span', 'key', root);
+    const icon = el('span', 'slot-icon', root);
     const ico = el('span', 'ico', root);
     const val = el('span', 'val', root);
     const prog = el('div', 'prog', root);
-    return { root, key, ico, val, prog };
+    return { root, key, icon, iconKind: null, ico, val, prog };
+  }
+
+  private setSlotIcon(slot: Slot, kind: SlotIconKind): void {
+    if (slot.iconKind === kind) return;
+    slot.icon.innerHTML = slotIconSvg(kind);
+    slot.iconKind = kind;
   }
 
   private updateBar(s: HudState): void {
@@ -602,6 +618,7 @@ export class Hud {
     s.ammo.forEach((a, i) => {
       const slot = sl.ammo[i];
       slot.key.textContent = a.key;
+      this.setSlotIcon(slot, shellIconKind(a.type));
       slot.ico.textContent = a.type;
       slot.val.textContent = String(a.count);
       slot.root.title = a.name;
@@ -613,6 +630,7 @@ export class Hud {
     if (sl.mg && s.mg) {
       const m = s.mg;
       sl.mg.key.textContent = m.key;
+      this.setSlotIcon(sl.mg, 'mg');
       sl.mg.ico.textContent = '机枪';
       sl.mg.val.textContent = m.reloading > 0 ? `换弹链 ${m.reloading.toFixed(1)}s` : `${m.inBelt} / ${m.reserve}`;
       sl.mg.root.title = m.name;
@@ -623,6 +641,7 @@ export class Hud {
     // 维修
     const r = sl.repair;
     r.key.textContent = s.keys.repair;
+    this.setSlotIcon(r, 'repair');
     r.ico.textContent = '维修';
     if (d.repair) {
       r.val.textContent = `${(d.repair.remaining / Math.max(d.repairRate, 1e-6)).toFixed(0)}s`;
@@ -637,6 +656,7 @@ export class Hud {
     // 灭火
     const f = sl.fire;
     f.key.textContent = s.keys.extinguish;
+    this.setSlotIcon(f, 'extinguish');
     f.ico.textContent = '灭火';
     f.val.textContent = `× ${d.extinguishers}`;
     if (d.fire && d.fire.extinguishing !== null) {
@@ -649,6 +669,7 @@ export class Hud {
     // 瞄准镜
     const v = sl.sight;
     v.key.textContent = s.keys.scope;
+    this.setSlotIcon(v, 'scope');
     v.ico.textContent = s.scoped ? `${s.magnification}×` : '瞄准镜';
     v.val.textContent = `表尺 ${s.sightRange} m`;
     v.root.className = `hud-slot wide${s.scoped ? ' sel' : ''}`;

@@ -1,7 +1,7 @@
 # 082-slot-icons:底部按钮栏每个按钮加图标
 
 - 负责:Copilot(`auto`,即 mai-code)
-- 状态:待领取
+- 状态:部分完成(待浏览器目视验收)
 - 分支:`task/082-slot-icons`
 - 规模:S–M
 - 和 080(维修倒计时行,也在改 `Hud.ts`)并行:**只改按钮栏那一块**(`makeSlot`、`updateBar` 和 `.hud-slot` 的样式),不要碰状态文字块、圆环、击毁提示流的代码;合并时的小冲突由主程处理
@@ -38,8 +38,8 @@
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过,既有测试不改
-- [ ] 测试:`shellIconKind` 覆盖所有 `ShellType` 且未知值回退;每个 `SlotIconKind` 的 SVG 都是合法字符串(含 `<svg`);`jsdom` 里 `updateBar` 后每个按钮都有图标节点
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过,既有测试不改
+- [ ] 测试:`shellIconKind` 覆盖所有 `ShellType` 且未知值回退;每个 `SlotIconKind` 的 SVG 都是合法字符串(含 `<svg`);`jsdom` 里 `updateBar` 后每个按钮都有图标节点(代码测试已通过,浏览器目视验收未完成)
 - [ ] 浏览器里看一遍(`npm run dev` + `?debug`)并在回报里写:每种弹种的图标是否能区分、选中 / 数量 0 / 着火时的样式、按钮有没有被撑得太大
 
 ## 不做
@@ -49,5 +49,7 @@
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
-- 命令与结果:
-- 偏差 / 未完成 / 待决定:
+  - 修改:`src/ui/Hud.ts`、`src/ui/hud/ProgressRing.ts`、本卡
+  - 新增:`src/ui/hud/slotIcons.ts`、`tests/slot-icons.test.ts`、`changelog.d/2026-10-03-082-slot-icons.md`
+- 命令与结果:`npm run lint`通过;`npm test`首次运行有 1 个既有 `killcam-redo.test.ts` 断言失败,重跑后 97 个测试文件 / 1056 个测试全部通过;`npm run build`通过(仅有现有 chunk size 提示)
+- 偏差 / 未完成 / 待决定:未能在浏览器中查看 `?debug` 页面,弹种辨识度、状态色和按钮实际尺寸仍需目视确认;按钮高度从 50px 调为 64px

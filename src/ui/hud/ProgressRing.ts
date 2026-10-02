@@ -14,6 +14,9 @@ export interface ProgressRingOptions {
 const RING_RADIUS = 18;
 const CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
+export const REPAIR_ICON_SVG =
+  '<path d="M14.5 4.5 C13 3 11 3.5 9.5 4.5 L11.5 6.5 L10 8 L8 6.5 C7 8 6.5 10 8 11.5 L4.5 15 C4 15.5 4 16.5 4.5 17 C5 17.5 6 17.5 6.5 17 L10 13.5 C11.5 15 13.5 14.5 15 13.5 L13.5 12 L15 10.5 L17 12 C18 10.5 18 8.5 16.5 7 L14.5 9 L13 7.5 Z" stroke="currentColor" fill="none" stroke-width="1.4" stroke-linejoin="round"/>';
+
 const ICON_SVGS: Record<RingIcon, string> = {
   // 方向盘
   driver:
@@ -45,8 +48,7 @@ const ICON_SVGS: Record<RingIcon, string> = {
     '<path d="M8 17 L8 8 C8 6 10 4 10 4 C10 4 12 6 12 8 L12 17 Z M7 17 L13 17 M8 13 L12 13" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>',
 
   // 扳手
-  repair:
-    '<path d="M14.5 4.5 C13 3 11 3.5 9.5 4.5 L11.5 6.5 L10 8 L8 6.5 C7 8 6.5 10 8 11.5 L4.5 15 C4 15.5 4 16.5 4.5 17 C5 17.5 6 17.5 6.5 17 L10 13.5 C11.5 15 13.5 14.5 15 13.5 L13.5 12 L15 10.5 L17 12 C18 10.5 18 8.5 16.5 7 L14.5 9 L13 7.5 Z" stroke="currentColor" fill="none" stroke-width="1.4" stroke-linejoin="round"/>',
+  repair: REPAIR_ICON_SVG,
 
   // 补给(炮弹)
   ammo:
