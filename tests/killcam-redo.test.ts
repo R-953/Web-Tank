@@ -201,6 +201,7 @@ describe('KillCam 场景重做与相机行为集成', () => {
       part: 'hull',
       entry: new THREE.Vector3(0, 0.5, -1),
       dir,
+      normal: new THREE.Vector3(0, 0, -1),
       armor: {
         face: 'front',
         armor: 80,

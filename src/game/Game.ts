@@ -35,6 +35,8 @@ export interface HitReplay {
   part: VehiclePart;
   entry: THREE.Vector3;
   dir: THREE.Vector3;
+  /** 命中面的外法线(车体本地坐标,单位向量,朝车外);回放里画跳弹方向和弹着标记用 */
+  normal: THREE.Vector3;
   /** 装甲判定;直接打中炮管时为 null */
   armor: HitResolution | null;
   /** 车外的伤害:直接打中的外挂模块(履带 / 炮管),以及化学能弹在车外起爆波及的外挂模块 */
@@ -633,6 +635,7 @@ export class Game {
       part,
       entry,
       dir,
+      normal: vehicle.worldDirToHull(hit.normal).normalize(),
       armor,
       external,
       penetration,

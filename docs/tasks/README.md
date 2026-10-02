@@ -111,6 +111,8 @@
 | [062](062-map-harbor-town.md) | 新地图:港口城镇 | Antigravity(3.8 Flash High) | 内容 | 已合并 |
 | [063](063-map-snow-forest.md) | 新地图:雪地森林 | Antigravity(3.8 Flash High,主程加积雪地表) | 内容 | 已合并 |
 | [064](064-info-card-fields.md) | 信息卡补质量、发动机功率、前进 / 倒车速度和机枪弹药 | Antigravity(3.8 Flash High,主程按 WT wiki 更正数据) | 内容 / 界面 | 已合并 |
+| [065](065-killcam-overlay.md) | 命中回放的文字层:顶部结果文字、左下模块图标、右下乘员数 | Antigravity(3.8 Flash High) | 界面 | 待领取 |
+| [066](066-killcam-all-hits.md) | 命中回放第二版:跳弹 / 未击穿 / 击穿未击毁都出回放,按 WT 设计重做场景 | Antigravity(3.8 Flash High) | 界面 | 待领取 |
 
 ### 候选车辆(负责人 2026-09-29 提出方向,型号待确认后再开卡)
 

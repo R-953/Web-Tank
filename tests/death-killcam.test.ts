@@ -13,6 +13,7 @@ function makeReplay(spec = SHOOTER, destroyed = true): HitReplay {
     part: 'hull',
     entry: new THREE.Vector3(0, 0.5, -1),
     dir: new THREE.Vector3(0, 0, 1),
+    normal: new THREE.Vector3(0, 0, -1),
     armor: {
       face: 'front',
       armor: 80,
