@@ -1,7 +1,7 @@
 # 060-internals-usa:美国车辆内构细化(谢尔曼三车)
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待审查
+- 状态:已合并(第十轮)
 - 分支:`task/060-internals-usa`
 - 规模:M
 - 和 054–057、058、059、061–063 并行;三张内构卡都改 `src/data/vehicles.ts`,**只改自己负责的那几辆车的 `internals` 块**,不要碰别的车、也不要整理格式(并行合并时 git 靠不重叠的改动区域)
@@ -62,3 +62,6 @@
   - 底板湿式弹药箱保留 `ammo_floor_l` 与 `ammo_floor_r` 标识与 `wet: true` 标记,严格与 TM 9-731B / Hunnicutt 记录的左右对称水套弹药箱布局对齐,并向后兼容已有测试 `tests/wet-stowage.test.ts`。
   - 修正了旧数据中 `traverse`($y=-0.2$)与待发弹架($y=0.0$)因坐标参考座圈底面导致计算高度穿透座圈底部的几何溢出问题,使炮塔模块盒子完全位于炮塔盒高度范围 $[0, \text{turret.height}]$ 之内。
 
+### 主程审查
+
+总弹数不变(底板湿式弹药箱仍带 `wet: true`);三车差异体现正确。

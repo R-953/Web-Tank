@@ -1,7 +1,7 @@
 # 054-modifications-data:改装的数据、套用逻辑和存档
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:已完成
+- 状态:已合并(第十轮)
 - 分支:`task/054-modifications-data`
 - 规模:M
 - 和 055–063 并行;055 的界面按本卡的接口写,改的文件不重叠
@@ -57,3 +57,6 @@
   - `npm run build`: 通过 (tsc && vite build 成功输出生产构建产物)
 - 偏差 / 未完成 / 待决定: 无
 
+### 主程审查
+
+`isCasemate` 原来在 modifications.ts 里重复实现了一份(还多判了 `vehicleClass === 'td'`),改用项目已有的 `game/casemate`。其余数值和规则按卡片通过。

@@ -1,4 +1,4 @@
-# 任务看板
+(主程加积雪地表)(主程浏览器核对)(主程改样式前缀)(主程更正出处)(主程审查)(主程小修:改用 game/casemate)(主程审查)# 任务看板
 
 一个任务一张卡(模板见 [TEMPLATE.md](TEMPLATE.md))。主程写卡、分配、审查;执行者只做卡上的事,完成后在卡末尾填「结果」。
 
@@ -6,18 +6,20 @@
 
 > 每个对话之间不共享上下文。新开的会话先读这一节,再看下面的看板和 Changelog「路线与进度」;主程每轮收尾时更新这一节。
 
-最后更新:2026-10-02(第九轮收尾)
+最后更新:2026-10-02(第十轮收尾)
 
-- **刚完成:** 第九轮全部合并:
-  - 第一波(039–043):北约 / 华约军标、机库底栏重排、悬停信息卡、地图界面、worktree 里 dev server 自动刷新。
-  - 第二波:044(M 键操作、小地图和地图界面换军标)、045(机库去掉携弹面板,信息卡挂到编组栏和科技树)、046(主程接线:开局先进地图界面、战斗中按 M、标记换军标、符号体系同步)。
-  - 044、045 审查后只由主程小修(测试里的 `as any`、科技树悬停的车组下标),没有返工给 Flash;两张卡一共用了约 198 万输入 / 24 万输出 token(多数是缓存读)。
-  - 汇总:`changelog.d/` 里 020、028–046 已汇总进 [Changelog.md](../../Changelog.md)(第七、八、九轮)。
+- **刚完成:** 第十轮全部合并(两个集成分支各一个 PR,#59 和第二波的 PR):
+  - 第一波(047–052):真实模型缩略图、地图界面按 WT 还原、携弹滑块、Z 键平滑变焦、离线成长改手动开启、O 键显示内构。
+  - 第二波(053–064):右键菜单(换车 / 改装 / 涂装 / 试驾 / 乘员)和各自的界面、改装与历史涂装(只对玩家那辆生效)、试驾、德 / 苏 / 美内构细化、命中回放重做、港口城镇和雪地森林两张新地图、信息卡补质量 / 功率 / 倒车速度。
+  - 主程审查:056 涂装出处和 064 倒车速度、质量按资料更正;乘员界面和涂装界面的 CSS 类名冲突、054 重复的 `isCasemate` 直接修了;雪地森林原来地面是绿草,新增了 `snow` 积雪地表。命中回放按时间点在浏览器里核对过相机角度和内构淡入淡出。没有返工给 Flash。
+  - 汇总:`changelog.d/` 里 047–064 已汇总进 [Changelog.md](../../Changelog.md)(第十轮)。
 - **下一步(新会话从这里接):**
-  1. 请负责人在真实 Chrome 里把第九轮流程玩一遍:机库 → 地图界面 → 出战 → M → 返回战斗 → Esc 菜单 → 重开 → 回机库,切换北约 / 华约。重点看 Esc 退出鼠标锁定后,再按 Esc / M 能不能重新锁(开发时的内置浏览器不支持鼠标锁,是用脚本模拟的)。有问题记到 Changelog 第九轮的「待确认」。
-  2. 10 月 3 日 Copilot 权益生效后,重测 Copilot 可用的模型;OpenAI 工单解决后,把 Codex CLI 加进调度脚本。
-  3. 候选车辆(见下文)型号确认后开卡。
-  4. 清理:`MainMenu` 的 `saveLoadout` 选项机库里已经没人用了,删它要改十几处测试的构造参数。
+  1. 请负责人玩一遍第十轮:右键菜单各项、改装(勾几项再进试驾看方向机变快)、涂装(机库换色、缩略图跟着变)、乘员、试驾、两张新地图、O 键、命中回放。命中回放的环绕方向和节奏是最需要看的(不满意给录屏,调 `KILLCAM_ORBIT_DEGREES` / `KILLCAM_ORBIT_DIRECTION`);第九轮遗留的「Esc 退出鼠标锁定后能否重新锁」也一并确认。
+  2. 负责人决定:058–060 提议的新模块类型(电台、蓄电池、炮塔座圈、光学器材、转向离合器等,见 `docs/internals/`)要不要做;改装里占位的几项(备件、灭火器、乘员补充、射击调整)要不要接进伤害模型。
+  3. 外观:港口城镇建筑是纯灰方块;雪地森林雪面上有少量绿草;缩略图首次全部生成约 0.8 秒停顿(可分帧);信息卡不反映改装后的数值。
+  4. 10 月 3 日 Copilot 权益生效后,重测 Copilot 可用的模型;OpenAI 工单解决后,把 Codex CLI 加进调度脚本。
+  5. 候选车辆(见下文)型号确认后开卡。
+  6. 清理:`MainMenu` 的 `saveLoadout` 选项机库里已经没人用了,删它要改十几处测试的构造参数。
 - **额度:** 以 Antigravity / Copilot 应用里显示的为准;10-02 第二波之前 Antigravity 每周限额还剩 71%,第二波两张卡用量很小。
 - **已定的细节:**
   - 车组与编组:
@@ -91,23 +93,24 @@
 | [044](044-mapscreen-key-and-symbols.md) | M 键操作、小地图和地图界面换成军标 | Antigravity(3.8 Flash High,主程小修) | 界面 | 已合并 |
 | [045](045-hangar-info-card-hooks.md) | 机库去掉携弹面板,信息卡挂到编组栏和科技树 | Antigravity(3.8 Flash High,主程小修) | 界面 | 已合并 |
 | [046](046-round9-wiring.md) | main.ts 接上地图界面、军标和符号体系 | Claude Code | 主程 | 已合并 |
-| [047](047-vehicle-thumbnails.md) | 载具缩略图:用真实模型渲染,接到编组栏、科技树、信息卡 | Antigravity(3.8 Flash High) | 界面 | 待审查 |
-| [048](048-map-screen-wt-layout.md) | 战斗准备界面和 M 键地图界面按 War Thunder 布局还原,地图可缩放拖动 | Antigravity(3.8 Flash High) | 界面 | 待审查 |
-| [049](049-smooth-zoom.md) | Z 键放大、开镜、切换倍率时视场平滑过渡 | Antigravity(3.8 Flash High) | 小任务 | 待审查 |
-| [050](050-offline-growth-opt-in.md) | 离线挂机成长改成设置里手动开启(默认关) | Antigravity(3.8 Flash High) | 小任务 | 待审查 |
-| [051](051-ammo-slider.md) | 携弹面板用滑块自由设定数量 | Antigravity(3.8 Flash High) | 界面 | 待审查 |
-| [052](052-internals-view.md) | 战斗中按 O 显示当前车辆内构 | Antigravity(3.8 Flash High) | 界面 | 待审查 |
-| [053](053-lineup-context-menu.md) | 右键菜单改成换车 / 改装 / 涂装 / 试驾 / 乘员,各接对应界面 | Antigravity(3.8 Flash High) | 界面 | 待领取(等 055–057) |
-| [054](054-modifications-data.md) | 改装的数据、套用逻辑和存档 | Antigravity(3.8 Flash High) | 内容 | 待领取 |
-| [055](055-modifications-screen.md) | 改装界面 | Antigravity(3.8 Flash High) | 界面 | 待领取 |
-| [056](056-customization-paints.md) | 涂装界面与历史涂装方案 | Antigravity(3.8 Flash High) | 内容 / 界面 | 待领取 |
-| [057](057-crew-screen.md) | 乘员界面 | Antigravity(3.8 Flash High) | 界面 | 待领取 |
-| [058](058-internals-germany.md) | 德国车辆内构细化(乘员站位和模块) | Antigravity(3.8 Flash High) | 内容 | 待领取 |
-| [059](059-internals-ussr.md) | 苏联车辆内构细化 | Antigravity(3.8 Flash High) | 内容 | 待领取 |
-| [060](060-internals-usa.md) | 美国车辆内构细化 | Antigravity(3.8 Flash High) | 内容 | 待领取 |
-| [061](061-killcam-redo.md) | 命中回放重做:方向规范化、环绕相机、内构淡入淡出 | Antigravity(3.8 Flash High) | 界面 | 待领取 |
-| [062](062-map-harbor-town.md) | 新地图:港口城镇 | Antigravity(3.8 Flash High) | 内容 | 待领取 |
-| [063](063-map-snow-forest.md) | 新地图:雪地森林 | Antigravity(3.8 Flash High) | 内容 | 待领取 |
+| [047](047-vehicle-thumbnails.md) | 载具缩略图:用真实模型渲染,接到编组栏、科技树、信息卡 | Antigravity(3.8 Flash High) | 界面 | 已合并 |
+| [048](048-map-screen-wt-layout.md) | 战斗准备界面和 M 键地图界面按 War Thunder 布局还原,地图可缩放拖动 | Antigravity(3.8 Flash High) | 界面 | 已合并 |
+| [049](049-smooth-zoom.md) | Z 键放大、开镜、切换倍率时视场平滑过渡 | Antigravity(3.8 Flash High) | 小任务 | 已合并 |
+| [050](050-offline-growth-opt-in.md) | 离线挂机成长改成设置里手动开启(默认关) | Antigravity(3.8 Flash High) | 小任务 | 已合并 |
+| [051](051-ammo-slider.md) | 携弹面板用滑块自由设定数量 | Antigravity(3.8 Flash High) | 界面 | 已合并 |
+| [052](052-internals-view.md) | 战斗中按 O 显示当前车辆内构 | Antigravity(3.8 Flash High) | 界面 | 已合并 |
+| [053](053-lineup-context-menu.md) | 右键菜单改成换车 / 改装 / 涂装 / 试驾 / 乘员,各接对应界面 | Antigravity(3.8 Flash High,主程审查) | 界面 | 已合并 |
+| [054](054-modifications-data.md) | 改装的数据、套用逻辑和存档 | Antigravity(3.8 Flash High,主程小修:改用 game/casemate) | 内容 | 已合并 |
+| [055](055-modifications-screen.md) | 改装界面 | Antigravity(3.8 Flash High,主程审查) | 界面 | 已合并 |
+| [056](056-customization-paints.md) | 涂装界面与历史涂装方案 | Antigravity(3.8 Flash High,主程更正出处) | 内容 / 界面 | 已合并 |
+| [057](057-crew-screen.md) | 乘员界面 | Antigravity(3.8 Flash High,主程改样式前缀) | 界面 | 已合并 |
+| [058](058-internals-germany.md) | 德国车辆内构细化(乘员站位和模块) | Antigravity(3.8 Flash High) | 内容 | 已合并 |
+| [059](059-internals-ussr.md) | 苏联车辆内构细化 | Antigravity(3.8 Flash High) | 内容 | 已合并 |
+| [060](060-internals-usa.md) | 美国车辆内构细化 | Antigravity(3.8 Flash High) | 内容 | 已合并 |
+| [061](061-killcam-redo.md) | 命中回放重做:方向规范化、环绕相机、内构淡入淡出 | Antigravity(3.8 Flash High,主程浏览器核对) | 界面 | 已合并 |
+| [062](062-map-harbor-town.md) | 新地图:港口城镇 | Antigravity(3.8 Flash High) | 内容 | 已合并 |
+| [063](063-map-snow-forest.md) | 新地图:雪地森林 | Antigravity(3.8 Flash High,主程加积雪地表) | 内容 | 已合并 |
+| [064](064-info-card-fields.md) | 信息卡补质量、发动机功率、前进 / 倒车速度和机枪弹药 | Antigravity(3.8 Flash High,主程按 WT wiki 更正数据) | 内容 / 界面 | 已合并 |
 
 ### 候选车辆(负责人 2026-09-29 提出方向,型号待确认后再开卡)
 

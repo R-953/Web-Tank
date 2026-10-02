@@ -1,7 +1,7 @@
 # 055-modifications-screen:改装界面
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待审查
+- 状态:已合并(第十轮)
 - 分支:`task/055-modifications-screen`
 - 规模:M–L
 - 和 054 并行:界面按 `src/data/modifications.ts` 里定死的类型写,测试里 mock 数据函数
@@ -70,3 +70,7 @@
   - `npm run build`: 通过 (生产产物构建成功)
 - 偏差 / 未完成 / 待决定:
   - 无偏差, 严格按任务卡和接口约定完成。
+
+### 主程审查
+
+浏览器里看过:三栏 × 四级布局、前置变暗、效果汇总(方向机 19→20.9°/s 等)、Esc 关闭、存档都正常。

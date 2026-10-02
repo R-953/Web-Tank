@@ -1,7 +1,7 @@
 # 061-killcam-redo:命中回放按负责人的描述重做(规范化方向、环绕相机、内构淡入淡出)
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待审查
+- 状态:已合并(第十轮)
 - 分支:`task/061-killcam-redo`
 - 规模:M–L
 - 和 054–060、062–063 并行;只改 `src/ui/KillCam.ts`(052 的内构窗口只 `import { healthColor }`,不受影响)
@@ -68,3 +68,7 @@
 - 偏差 / 未完成 / 待决定:
   - 无偏差。已有 `tests/death-killcam.test.ts` 与 `tests/internals-view.test.ts` 无需修改即全数通过。
   - 常量 `KILLCAM_ORBIT_DEGREES = 90` 与 `KILLCAM_ORBIT_DIRECTION = 1` 已导出并带有完整坐标说明注释，便于主程对照负责人录屏微调。
+
+### 主程审查
+
+浏览器里按时间点核对:相机从 -X 侧(180°)逆时针转到 +Z 侧(90°),内构不透明度接触后 0.25 s 淡入、后效结束后 0.4 s 淡出到 0,炮弹射出后不可见。方向和节奏等负责人看过再微调。
