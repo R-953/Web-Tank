@@ -28,6 +28,7 @@ import { SoundManager, type ImpactKind, type SoundSource } from './audio/Sound';
 import { Hud, type HudState } from './ui/Hud';
 import { SightOverlay, azimuthFromYaw } from './ui/SightOverlay';
 import { KillCam, killcamRect } from './ui/KillCam';
+import { killcamPlan } from './ui/killcamPolicy';
 import { Minimap, type MapLike, type MinimapMarker } from './ui/Minimap';
 import { InternalsView } from './ui/InternalsView';
 import { internalsSnapshot } from './game/internalsSnapshot';
@@ -788,19 +789,20 @@ async function start(): Promise<void> {
       playEventSound(e);
       if (e.type === 'fired' && e.shooterId === player.id && e.weapon === 'main') stats.shots++;
       if (e.type === 'hit') {
-        const replayAll = cfg().game.killCamAll;
-        if (e.shooterId === player.id) {
-          stats.hits++;
-          if (cfg().game.killCam && (e.replay.destroyed || replayAll)) {
-            killcam.play(e.replay, e.replay.destroyed ? undefined : { title: `命中回放 · ${e.targetName}` });
-          }
-        }
-        if (e.targetId === player.id && cfg().game.killCam && (e.replay.destroyed || replayAll)) {
-          const killer = g.vehicles.find((v) => v.id === e.shooterId);
-          const by = killer ? `被 ${killer.spec.name} ` : '被';
-          if (e.replay.destroyed) killcam.play(e.replay, { layout: 'full', title: `${by}击毁` });
-          else killcam.play(e.replay, { title: `${by}命中` });
-        }
+        if (e.shooterId === player.id) stats.hits++;
+        const settings = cfg().game;
+        const killerName = g.vehicles.find((v) => v.id === e.shooterId)?.spec.name;
+        const plan = killcamPlan({
+          playerId: player.id,
+          shooterId: e.shooterId,
+          targetId: e.targetId,
+          targetName: e.targetName,
+          killerName,
+          destroyed: e.replay.destroyed,
+          killCam: settings.killCam,
+          killCamAll: settings.killCamAll,
+        });
+        if (plan) killcam.play(e.replay, plan);
       }
     }
     if (g.state !== 'playing') {
