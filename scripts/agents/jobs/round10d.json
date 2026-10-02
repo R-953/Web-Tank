@@ -1,0 +1,10 @@
+{
+  "name": "round10d",
+  "base": "origin/integration/round10b",
+  "permissions": "scoped",
+  "timeoutMin": 90,
+  "maxPerAgent": 2,
+  "jobs": [
+    { "id": "064", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/064-info-card-fields.md", "branch": "task/064-info-card-fields", "commit": "data: 信息卡补质量、发动机功率、倒车速度" }
+  ]
+}

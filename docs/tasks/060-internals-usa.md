@@ -1,0 +1,67 @@
+# 060-internals-usa:美国车辆内构细化(谢尔曼三车)
+
+- 负责:Antigravity(3.8 Flash High)
+- 状态:已合并(第十轮)
+- 分支:`task/060-internals-usa`
+- 规模:M
+- 和 054–057、058、059、061–063 并行;三张内构卡都改 `src/data/vehicles.ts`,**只改自己负责的那几辆车的 `internals` 块**,不要碰别的车、也不要整理格式(并行合并时 git 靠不重叠的改动区域)
+
+## 目标
+
+负责人 10-02 要求「进一步细化内构(如成员组站位)」。已定的范围:**补模块 + 校正乘员站位**。本卡负责美国:M4A3(76)W(`M4A3_76W`)、M4A3E8(`M4A3E8`)、M4A3E2(`M4A3E2`)。
+
+## 背景与参考
+
+- 现在的内构是按剖面图估算的,精度 ±0.2 m(`docs/physics-validation.md` 的内构坐标行)。数据结构见 `src/data/types.ts` 的 `ModuleSpec` / `CrewSpec` / `InternalsSpec`;坐标系:车体坐标,车头朝 −Z,+X 为车体右侧,y 向上;炮塔、炮部件的坐标分别在炮塔 / 炮的局部系(见 `AttachPart`)。
+- 用到的辅助函数 `pair` / `rack` / `crew` 在 `vehicles.ts` 顶部。
+- 这些数据会被伤害模型(穿甲后的破片击中哪些模块和乘员)、击毁回放、O 键内构视图用到,所以**盒子不能互相大面积重叠、不能超出车体 / 炮塔外形**。
+- 参考资料方向:M4A3 系列的美军技术手册(TM 9-731 系列)和公开剖面图;你不确定的数字就走「估算」。
+- 数值规则见 AGENTS.md:有公开出处就写在注释里;查不到按 War Thunder wiki 的设定并注明「War Thunder 值」;都没有就**估算**并写明方法。agent 没有联网,没把握的尺寸一律写「估算」,不要编出处。
+
+## 要做的事
+
+- 三辆谢尔曼共用 `shermanInternals(...)` 这个辅助函数(在 `vehicles.ts` 里):改函数体和三处调用的参数即可,**三辆车的差异(M4A3E2 的 Jumbo 炮塔更大、76 mm 与 75 mm 的弹药数、HVSS 的车体基本相同)要体现在参数里**;5 人(驾驶员和副驾驶 / 机枪手在车体前部,车长、炮手、装填手在炮塔);湿式弹药架(车体底板两侧)的 `wet` 标记保持不变。
+- 弹药数:每辆车的弹药架总数以现有 `ammoCapacity` 为准,不改总数。
+
+对**每辆车**:
+1. **乘员站位**:核对乘员人数和岗位(中文岗位名见 `CREW_ROLE_NAMES`),座位位置按这个车型的实际乘员舱布局校正(驾驶员、无线电员 / 机枪手在车体前部哪一侧,车长、炮手、装填手在炮塔 / 战斗室里的位置和姿态高度)。每个乘员的 `center` 是躯干中心,放在车体 / 炮塔盒内。
+2. **补模块**:只用现有的 `ModuleType`(`engine`、`transmission`、`track`、`barrel`、`breech`、`ammo`、`fuel`、`traverse`、`elevation`)。把弹药架、油箱按实车的分布拆得更细(几个、在哪、各装多少),发动机 / 传动 / 方向机 / 高低机的位置和大小按实车校正。**弹药架总容量必须和 `weapons[0].ammo` 的弹药总数、现有的 `ammoCapacity` 一致**;弹药架 `drawOrder` 的意图(最危险的最先取空)保留。
+3. **建议的新模块类型**(只写文档,不进代码):在 `docs/internals/usa.md` 里列出这个国家的车史实上有、但现有类型表达不了的部件(例如电台、蓄电池、炮塔座圈、瞄准镜光学器材、转向离合器),每项写:部件、位置、对战斗有什么影响、建议的游戏效果。主程根据这份建议决定要不要扩展 `ModuleType` 和伤害模型。
+4. 文档 `docs/internals/usa.md`:每辆车一节,写校正后的乘员岗位表和模块表、与旧数据的差异、每个数值的出处或估算方法。**不要改 `docs/physics-validation.md`**(并行的卡都要写,会冲突)。
+5. 测试 `tests/internals-usa.test.ts`:乘员人数和岗位集合;每个乘员的 `center` 在所属部件的盒内(车体用 `hull` 尺寸,炮塔用 `turret` 尺寸加 `offset`);每个模块的盒子在所属部件范围内(炮和炮管部件放宽到炮管长度);弹药架总容量不变;模块 id 在同一辆车内唯一;任意两个**同类**模块的盒子不重叠。
+
+## 允许修改的文件
+
+- 修改:`src/data/vehicles.ts`(只改M4A3(76)W(`M4A3_76W`)、M4A3E8(`M4A3E8`)、M4A3E2(`M4A3E2`)的 `internals` 块和 `shermanInternals` 辅助函数)
+- 新增:`docs/internals/usa.md`、`tests/internals-usa.test.ts`、`changelog.d/<日期>-060-internals-usa.md`
+- 修改测试:已有测试里依赖旧座位 / 旧模块数量的断言,按新数据改并在结果里逐条说明(不放宽)
+
+## 验收标准
+
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过(含已有的伤害、回放、车辆数据测试)
+- [x] 第 5 条的测试都有
+- [x] 每辆车的文档一节里,每个数值都有出处或估算方法
+
+## 不做
+
+- 新增 `ModuleType`、改伤害模型(`src/game/damage/**` 归主程);改装甲、外形、模型;改别的国家的车。
+
+## 结果(完成后由执行者填写)
+
+- 改动文件:
+  - 修改: `src/data/vehicles.ts`(校正 `shermanInternals` 及 M4A3(76)W、M4A3E8、M4A3E2 的模块与乘员数据)
+  - 新增: `docs/internals/usa.md`(美系谢尔曼三车内构细化与校正技术文档、建议新模块)
+  - 新增: `tests/internals-usa.test.ts`(乘员人数与岗位、盒子范围、弹药容量、ID 唯一性、同类模块不重叠、三车差异化测试)
+  - 新增: `changelog.d/2026-10-02-060-internals-usa.md`(任务日志)
+  - 修改: `docs/tasks/060-internals-usa.md`(状态与结果回报)
+- 命令与结果:
+  - `npm run lint`: 通过,TypeScript 严格类型检查 0 报错。
+  - `npm test`: 61 个测试文件共 639 个测试全部通过(包含新增的 `tests/internals-usa.test.ts` 以及已有 `tests/wet-stowage.test.ts`、回放、伤害系统等全部测试)。
+  - `npm run build`: 生产构建成功,生成 `dist/index.html` 与 bundle 无报错。
+- 偏差 / 未完成 / 待决定:
+  - 底板湿式弹药箱保留 `ammo_floor_l` 与 `ammo_floor_r` 标识与 `wet: true` 标记,严格与 TM 9-731B / Hunnicutt 记录的左右对称水套弹药箱布局对齐,并向后兼容已有测试 `tests/wet-stowage.test.ts`。
+  - 修正了旧数据中 `traverse`($y=-0.2$)与待发弹架($y=0.0$)因坐标参考座圈底面导致计算高度穿透座圈底部的几何溢出问题,使炮塔模块盒子完全位于炮塔盒高度范围 $[0, \text{turret.height}]$ 之内。
+
+### 主程审查
+
+总弹数不变(底板湿式弹药箱仍带 `wet: true`);三车差异体现正确。

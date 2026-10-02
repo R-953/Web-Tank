@@ -54,6 +54,9 @@ export const TIGER_I: VehicleSpec = {
     // 现有 4°/s,WT 页面未列乘员高低机数值,按方向机同一比例(10/7)折算估算:4 × (10 / 7) ≈ 5.71°/s
     elevationSpeed: 5.71,
   },
+  mass: 57300, // War Thunder 值: 战斗全重 57.3 t(War Thunder wiki 机动表)
+  enginePower: { hp: 700, rpm: 3000 }, // 史料标称值: 迈巴赫 HL 230 P45,700 PS @ 3000 rpm(Wikipedia);War Thunder 的功率随模式和乘员熟练度变化,不取
+  reverseSpeed: 8, // War Thunder 值: War Thunder wiki 机动表(2026-10-02 核对)取两栏里较小的一栏(8 / 9 km/h 取 8)
   // 车首 100mm 垂直;侧面上部 80 / 下部 60;后部 80
   armor: { front: 100, side: 80, rear: 80 },
   // 炮塔正面 100(防盾 110–200),侧面 / 后部 80
@@ -101,28 +104,36 @@ export const TIGER_I: VehicleSpec = {
   sight: { magnifications: [2.5, 5], reticle: 'german' },
   internals: {
     modules: [
-      { id: 'engine', type: 'engine', part: 'hull', center: [0, -0.05, 2.1], size: [1.3, 1.0, 1.5] },
+      // 迈巴赫 HL 230 P45 发动机(车尾正中)
+      { id: 'engine', type: 'engine', part: 'hull', center: [0, -0.05, 2.05], size: [1.2, 0.9, 1.5] },
+      // 迈巴赫 Olvar 55 11 17 变速箱(车首正中)
       { id: 'transmission', type: 'transmission', part: 'hull', center: [0, -0.2, -2.45], size: [1.0, 0.8, 1.0] },
-      ...pair('fuel', 'fuel', 'hull', [1.1, 0.0, 2.2], [0.5, 0.9, 1.1]),
-      // 共 92 发:侧裙 4 个 16 发弹箱(最先取空)、驾驶员旁 6 发、车底 22 发
-      rack('ammo_sponson_lf', 'hull', [-1.35, 0.5, -0.9], [0.5, 0.6, 1.0], 16, 1),
-      rack('ammo_sponson_rf', 'hull', [1.35, 0.5, -0.9], [0.5, 0.6, 1.0], 16, 2),
-      rack('ammo_sponson_lr', 'hull', [-1.35, 0.5, 0.1], [0.5, 0.6, 1.0], 16, 3),
-      rack('ammo_sponson_rr', 'hull', [1.35, 0.5, 0.1], [0.5, 0.6, 1.0], 16, 4),
-      rack('ammo_front', 'hull', [1.0, -0.3, -1.5], [0.5, 0.5, 0.7], 6, 5),
-      rack('ammo_floor', 'hull', [0, -0.65, -0.3], [1.4, 0.3, 1.2], 22, 6),
+      // 油箱共 4 个(发动机舱两侧各前后两个油箱,容积 534 L)
+      { id: 'fuel_lf', type: 'fuel', part: 'hull', center: [-1.15, 0.0, 1.5], size: [0.45, 0.8, 0.7] },
+      { id: 'fuel_lr', type: 'fuel', part: 'hull', center: [-1.15, 0.0, 2.35], size: [0.45, 0.8, 0.7] },
+      { id: 'fuel_rf', type: 'fuel', part: 'hull', center: [1.15, 0.0, 1.5], size: [0.45, 0.8, 0.7] },
+      { id: 'fuel_rr', type: 'fuel', part: 'hull', center: [1.15, 0.0, 2.35], size: [0.45, 0.8, 0.7] },
+      // 共 92 发:两侧侧壁 4 个 16 发弹箱(最先取空)、机电员旁 6 发、车底左右各 11 发
+      rack('ammo_sponson_lf', 'hull', [-1.35, 0.45, -0.85], [0.48, 0.55, 0.95], 16, 1),
+      rack('ammo_sponson_rf', 'hull', [1.35, 0.45, -0.85], [0.48, 0.55, 0.95], 16, 2),
+      rack('ammo_sponson_lr', 'hull', [-1.35, 0.45, 0.25], [0.48, 0.55, 0.95], 16, 3),
+      rack('ammo_sponson_rr', 'hull', [1.35, 0.45, 0.25], [0.48, 0.55, 0.95], 16, 4),
+      rack('ammo_front', 'hull', [0.95, -0.3, -1.5], [0.4, 0.5, 0.65], 6, 5),
+      rack('ammo_floor', 'hull', [0, -0.65, -0.3], [1.3, 0.28, 1.1], 22, 6),
       ...pair('track', 'track', 'hull', [1.42, -0.51, -0.05], [0.72, 0.93, 6.2]),
-      { id: 'traverse', type: 'traverse', part: 'turret', center: [-0.3, -0.2, -0.2], size: [0.3, 0.3, 0.3] },
-      { id: 'elevation', type: 'elevation', part: 'turret', center: [-0.35, 0.3, -1.0], size: [0.25, 0.3, 0.25] },
-      { id: 'breech', type: 'breech', part: 'gun', center: [0, 0, 1.0], size: [0.35, 0.35, 1.2] },
+      // 液压方向机与齿圈(炮手脚边)
+      { id: 'traverse', type: 'traverse', part: 'turret', center: [-0.32, 0.2, -0.3], size: [0.3, 0.3, 0.35] },
+      // 火炮高低机(防盾左内侧)
+      { id: 'elevation', type: 'elevation', part: 'turret', center: [-0.32, 0.45, -0.95], size: [0.25, 0.3, 0.3] },
+      { id: 'breech', type: 'breech', part: 'gun', center: [0, 0, 0.95], size: [0.38, 0.38, 1.25] },
       { id: 'barrel', type: 'barrel', part: 'gun', center: [0, 0, -1.925], size: [0.2, 0.2, 3.85] },
     ],
     crew: [
-      crew('driver', 'hull', -0.6, -0.05, -2.3),
-      crew('radio', 'hull', 0.6, -0.05, -2.3),
-      crew('gunner', 'turret', -0.55, 0.05, -0.55),
-      crew('commander', 'turret', -0.65, 0.35, 0.6),
-      crew('loader', 'turret', 0.65, -0.05, 0.15),
+      crew('driver', 'hull', -0.65, -0.15, -2.1),
+      crew('radio', 'hull', 0.65, -0.15, -2.1),
+      crew('gunner', 'turret', -0.6, 0.35, -0.55),
+      crew('commander', 'turret', -0.65, 0.5, 0.55),
+      crew('loader', 'turret', 0.65, 0.35, 0.0),
     ],
   },
   color: 0xa89060,
@@ -144,6 +155,9 @@ export const T34_85: VehicleSpec = {
     // 现有 4°/s,WT 新手 2.8°/s → 王牌 4.0°/s,按 WT 新手→王牌比例折算:4 × (4.0 / 2.8) = 4 × (10 / 7) ≈ 5.71°/s(估算)
     elevationSpeed: 5.71,
   },
+  mass: 32000, // 战斗全重 32.0 t(Wikipedia;War Thunder wiki 同为 32 t)
+  enginePower: { hp: 500, rpm: 1800 }, // 史料标称值: V-2-34 柴油机 500 hp @ 1800 rpm(Wikipedia)
+  reverseSpeed: 8, // War Thunder 值: War Thunder wiki 机动表(2026-10-02 核对)取两栏里较小的一栏(8 / 9 km/h 取 8)
   // 首上 45@60° → 90;首下 45@53° ≈ 75(分界高度 0.71m);侧面下部 45 垂直(上部 45@40° ≈ 59);后部 45@45° ≈ 64
   armor: { front: 90, side: 45, rear: 64, lowerFront: { thickness: 75, height: 0.71 } },
   // 炮塔正面 90,侧面 75,后部 52
@@ -189,26 +203,41 @@ export const T34_85: VehicleSpec = {
   sight: { magnifications: [4], reticle: 'soviet' },
   internals: {
     modules: [
-      { id: 'engine', type: 'engine', part: 'hull', center: [0, -0.05, 1.3], size: [1.1, 0.9, 1.4] },
+      // V-2-34 柴油机,中置后部;尺寸按实车约 1.5×1.0×0.9m(估算)
+      { id: 'engine', type: 'engine', part: 'hull', center: [0, -0.05, 1.3], size: [1.1, 0.85, 1.4] },
+      // 5 速变速箱与最终传动,后置(苏式后驱);尺寸估算
       { id: 'transmission', type: 'transmission', part: 'hull', center: [0, -0.25, 2.5], size: [1.6, 0.6, 0.8] },
-      ...pair('fuel', 'fuel', 'hull', [1.2, 0.2, 0.2], [0.35, 0.55, 2.2]),
-      // 共 55 发:炮塔尾舱 12 发(最先取空)、炮塔右壁 4 发、车体右侧 4 发、车底 6 个弹箱 35 发
-      rack('ammo_floor', 'hull', [0, -0.55, -0.5], [1.4, 0.3, 1.3], 35, 4),
-      rack('ammo_hull_r', 'hull', [1.2, 0.25, -1.5], [0.3, 0.5, 0.6], 4, 3),
+      // 内部侧油箱:战斗室两侧(pair)与发动机舱两侧(pair),避开履带与弹药(估算)
+      ...pair('fuel_fighting', 'fuel', 'hull', [1.15, 0.15, -0.3], [0.3, 0.55, 1.2]),
+      ...pair('fuel_engine', 'fuel', 'hull', [1.15, 0.15, 1.3], [0.3, 0.55, 1.4]),
+      // 履带总成
       ...pair('track', 'track', 'hull', [1.25, -0.425, 0], [0.5, 0.77, 6.0]),
-      rack('ammo_bustle', 'turret', [0, 0.5, 1.05], [1.2, 0.35, 0.3], 12, 1),
-      rack('ammo_turret_r', 'turret', [0.85, 0.35, 0.45], [0.2, 0.45, 0.45], 4, 2),
-      { id: 'traverse', type: 'traverse', part: 'turret', center: [-0.3, -0.2, -0.15], size: [0.3, 0.3, 0.3] },
-      { id: 'elevation', type: 'elevation', part: 'turret', center: [-0.3, 0.3, -0.85], size: [0.25, 0.3, 0.25] },
-      { id: 'breech', type: 'breech', part: 'gun', center: [0, 0, 0.9], size: [0.3, 0.3, 1.0] },
+      // 共 55 发:
+      // 1) 炮塔尾舱 12 发(最先取空,drawOrder 1)
+      rack('ammo_bustle', 'turret', [0, 0.5, 0.95], [1.1, 0.35, 0.3], 12, 1),
+      // 2) 炮塔右壁 4 发(装填手侧待发弹,drawOrder 2)
+      rack('ammo_turret_r', 'turret', [0.85, 0.35, 0.35], [0.25, 0.4, 0.45], 4, 2),
+      // 3) 车体右侧壁 4 发(drawOrder 3)
+      rack('ammo_hull_r', 'hull', [1.15, 0.2, -1.4], [0.3, 0.45, 0.65], 4, 3),
+      // 4) 车底 6 个橡胶密封弹药箱共 35 发(拆为左 18 发 / 右 17 发,drawOrder 4/5)
+      rack('ammo_floor_l', 'hull', [-0.4, -0.55, -0.5], [0.65, 0.28, 1.2], 18, 4),
+      rack('ammo_floor_r', 'hull', [0.4, -0.55, -0.5], [0.65, 0.28, 1.2], 17, 5),
+      // 炮塔电动/手动方向机:炮塔座圈左前方,炮手操纵(估算)
+      { id: 'traverse', type: 'traverse', part: 'turret', center: [-0.45, 0.18, -0.75], size: [0.3, 0.3, 0.3] },
+      // 高低机:主炮耳轴左侧,手轮与扇形齿轮(估算)
+      { id: 'elevation', type: 'elevation', part: 'turret', center: [-0.25, 0.35, -0.9], size: [0.25, 0.25, 0.25] },
+      // 85 mm ZiS-S-53 炮闩(gun 局部系)
+      { id: 'breech', type: 'breech', part: 'gun', center: [0, 0, 0.85], size: [0.32, 0.32, 1.05] },
+      // 85 mm 炮管(gun 局部系,长 3.9 m)
       { id: 'barrel', type: 'barrel', part: 'gun', center: [0, 0, -1.95], size: [0.18, 0.18, 3.9] },
     ],
     crew: [
-      crew('driver', 'hull', -0.45, -0.1, -2.2),
-      crew('radio', 'hull', 0.5, -0.1, -2.2),
-      crew('gunner', 'turret', -0.5, 0.05, -0.45),
-      crew('commander', 'turret', -0.5, 0.3, 0.5),
-      crew('loader', 'turret', 0.55, 0.0, 0.05),
+      // 5 人:驾驶员(车体前左)、航向机枪手兼无线电员(车体前右)、炮手(炮塔左前)、车长(炮塔左后车长塔下)、装填手(炮塔右侧)
+      crew('driver', 'hull', -0.5, -0.05, -2.15),
+      crew('radio', 'hull', 0.5, -0.05, -2.15),
+      crew('gunner', 'turret', -0.55, 0.15, -0.45),
+      crew('commander', 'turret', -0.5, 0.35, 0.5),
+      crew('loader', 'turret', 0.55, 0.15, 0.05),
     ],
   },
   color: 0x4b5a2c,
@@ -230,6 +259,9 @@ export const TIGER_II: VehicleSpec = {
     // 现有 4°/s,按方向机同一比例(10/7)折算估算:4 × (10 / 7) ≈ 5.71°/s(WT 新手 4.7°/s → 王牌 6.7°/s 亦为 10/7)
     elevationSpeed: 5.71,
   },
+  mass: 69800, // War Thunder 值: 战斗全重 69.8 t(War Thunder wiki 机动表)
+  enginePower: { hp: 700, rpm: 3000 }, // 史料标称值: 迈巴赫 HL 230 P30,700 PS @ 3000 rpm(Wikipedia);War Thunder 的功率随模式和乘员熟练度变化,不取
+  reverseSpeed: 9, // War Thunder 值: War Thunder wiki 机动表(2026-10-02 核对)取两栏里较小的一栏(9 / 10 km/h 取 9)
   // 首上 150@50° ≈ 233;首下 100@50° ≈ 156(分界高度 0.9m);侧面下部 80 垂直(上部 80@25° ≈ 88);后部 80@30° ≈ 92
   armor: { front: 233, side: 80, rear: 92, lowerFront: { thickness: 156, height: 0.9 } },
   // 炮塔正面 180@10° ≈ 183;侧面 80@21° ≈ 86;后部 80@20° ≈ 85
@@ -274,26 +306,37 @@ export const TIGER_II: VehicleSpec = {
   sight: { magnifications: [2.5, 5], reticle: 'german' },
   internals: {
     modules: [
-      { id: 'engine', type: 'engine', part: 'hull', center: [0, 0.0, 2.3], size: [1.4, 1.1, 1.6] },
-      { id: 'transmission', type: 'transmission', part: 'hull', center: [0, -0.3, -2.9], size: [1.1, 0.8, 1.0] },
-      ...pair('fuel', 'fuel', 'hull', [1.15, 0.0, 2.4], [0.55, 0.9, 1.2]),
-      // 共 86 发:炮塔尾舱 22 发(最先取空)、两侧侧裙各 24 发、车底 16 发
-      rack('ammo_sponson_l', 'hull', [-1.5, 0.55, -0.5], [0.55, 0.6, 2.4], 24, 2),
-      rack('ammo_sponson_r', 'hull', [1.5, 0.55, -0.5], [0.55, 0.6, 2.4], 24, 3),
-      rack('ammo_floor', 'hull', [0, -0.7, -0.4], [1.2, 0.3, 1.0], 16, 4),
+      // 迈巴赫 HL 230 P30 发动机(车尾正中)
+      { id: 'engine', type: 'engine', part: 'hull', center: [0, 0.0, 2.35], size: [1.3, 1.05, 1.6] },
+      // 迈巴赫 Olvar EG 40 12 16 变速箱(车首正中)
+      { id: 'transmission', type: 'transmission', part: 'hull', center: [0, -0.3, -2.9], size: [1.1, 0.8, 1.05] },
+      // 油箱共 4 个(发动机舱两侧前后各一组主副油箱,容积 860 L)
+      { id: 'fuel_lf', type: 'fuel', part: 'hull', center: [-1.2, 0.0, 1.7], size: [0.5, 0.85, 0.85] },
+      { id: 'fuel_lr', type: 'fuel', part: 'hull', center: [-1.2, 0.0, 2.65], size: [0.5, 0.85, 0.85] },
+      { id: 'fuel_rf', type: 'fuel', part: 'hull', center: [1.2, 0.0, 1.7], size: [0.5, 0.85, 0.85] },
+      { id: 'fuel_rr', type: 'fuel', part: 'hull', center: [1.2, 0.0, 2.65], size: [0.5, 0.85, 0.85] },
+      // 共 86 发:炮塔尾舱 22 发(最先取空)、车体两侧侧壁 4 个 12 发弹箱、车底左右各 8 发
+      rack('ammo_bustle', 'turret', [0, 0.45, 1.25], [1.8, 0.5, 0.55], 22, 1),
+      rack('ammo_sponson_lf', 'hull', [-1.45, 0.55, -0.95], [0.52, 0.55, 1.1], 12, 2),
+      rack('ammo_sponson_rf', 'hull', [1.45, 0.55, -0.95], [0.52, 0.55, 1.1], 12, 3),
+      rack('ammo_sponson_lr', 'hull', [-1.45, 0.55, 0.35], [0.52, 0.55, 1.1], 12, 4),
+      rack('ammo_sponson_rr', 'hull', [1.45, 0.55, 0.35], [0.52, 0.55, 1.1], 12, 5),
+      rack('ammo_floor_l', 'hull', [-0.45, -0.7, -0.4], [0.55, 0.28, 1.0], 8, 6),
+      rack('ammo_floor_r', 'hull', [0.45, -0.7, -0.4], [0.55, 0.28, 1.0], 8, 7),
       ...pair('track', 'track', 'hull', [1.475, -0.575, -0.05], [0.8, 0.95, 7.1]),
-      rack('ammo_bustle', 'turret', [0, 0.45, 1.35], [2.0, 0.5, 0.6], 22, 1),
-      { id: 'traverse', type: 'traverse', part: 'turret', center: [-0.3, -0.2, -0.35], size: [0.3, 0.3, 0.3] },
-      { id: 'elevation', type: 'elevation', part: 'turret', center: [-0.35, 0.3, -1.2], size: [0.25, 0.3, 0.25] },
-      { id: 'breech', type: 'breech', part: 'gun', center: [0, 0, 1.1], size: [0.38, 0.38, 1.3] },
+      // Boehringer 液压方向机与旋转机构
+      { id: 'traverse', type: 'traverse', part: 'turret', center: [-0.32, 0.2, -0.35], size: [0.3, 0.3, 0.35] },
+      // 手摇齿弧高低机
+      { id: 'elevation', type: 'elevation', part: 'turret', center: [-0.35, 0.45, -1.15], size: [0.25, 0.3, 0.3] },
+      { id: 'breech', type: 'breech', part: 'gun', center: [0, 0, 1.1], size: [0.38, 0.38, 1.35] },
       { id: 'barrel', type: 'barrel', part: 'gun', center: [0, 0, -2.45], size: [0.22, 0.22, 4.9] },
     ],
     crew: [
-      crew('driver', 'hull', -0.6, -0.05, -2.75),
-      crew('radio', 'hull', 0.6, -0.05, -2.75),
-      crew('gunner', 'turret', -0.55, 0.05, -0.7),
-      crew('commander', 'turret', -0.6, 0.35, 0.45),
-      crew('loader', 'turret', 0.6, -0.05, -0.1),
+      crew('driver', 'hull', -0.65, -0.15, -2.65),
+      crew('radio', 'hull', 0.65, -0.15, -2.65),
+      crew('gunner', 'turret', -0.55, 0.35, -0.7),
+      crew('commander', 'turret', -0.6, 0.5, 0.45),
+      crew('loader', 'turret', 0.6, 0.35, -0.1),
     ],
   },
   color: 0x6b6e5e,
@@ -318,6 +361,9 @@ export const SU_100: VehicleSpec = {
     // 现有高低机 2.8°/s 与 WT 新手 2.8°/s 一致,直接取 WT 王牌值
     elevationSpeed: 4.0, // War Thunder 值
   },
+  mass: 31600, // 战斗全重 31.6 t(Wikipedia;War Thunder wiki 同为 31.6 t)
+  enginePower: { hp: 500, rpm: 1800 }, // 史料标称值: V-2-34 柴油机 500 hp @ 1800 rpm(Wikipedia)
+  reverseSpeed: 8, // War Thunder 值: War Thunder wiki 机动表(2026-10-02 核对)取两栏里较小的一栏(两栏都是 8 km/h)
   // 首上 75@55° → 131;侧面 45、后部 45 倾角没核实,按竖直填
   armor: { front: 131, side: 45, rear: 45 },
   turretArmor: { front: 131, side: 45, rear: 45 },
@@ -345,25 +391,38 @@ export const SU_100: VehicleSpec = {
   sight: { magnifications: [3.4, 4], reticle: 'soviet' },
   internals: {
     modules: [
-      { id: 'engine', type: 'engine', part: 'hull', center: [0, -0.05, 1.3], size: [1.1, 0.9, 1.4] },
+      // V-2-34 柴油机(T-34 底盘通用,估算)
+      { id: 'engine', type: 'engine', part: 'hull', center: [0, -0.05, 1.3], size: [1.1, 0.85, 1.4] },
+      // 5 速变速箱与最终传动,后置(估算)
       { id: 'transmission', type: 'transmission', part: 'hull', center: [0, -0.25, 2.5], size: [1.6, 0.6, 0.8] },
-      ...pair('fuel', 'fuel', 'hull', [1.2, 0.2, 0.2], [0.35, 0.55, 2.2]),
-      // 共 33 发:战斗室左壁 8 发、后壁 8 发、车底 17 发
-      rack('ammo_left', 'turret', [-1.05, 0.1, 0.4], [0.3, 0.5, 1.2], 8, 1),
-      rack('ammo_rear', 'turret', [0.2, 0.2, 1.2], [1.4, 0.4, 0.3], 8, 2),
-      rack('ammo_floor', 'hull', [0, -0.55, -0.5], [1.4, 0.3, 1.3], 17, 3),
+      // 内部侧油箱:战斗室两侧(pair)与发动机舱两侧(pair)(估算)
+      ...pair('fuel_fighting', 'fuel', 'hull', [1.15, 0.15, -0.3], [0.3, 0.55, 1.2]),
+      ...pair('fuel_engine', 'fuel', 'hull', [1.15, 0.15, 1.3], [0.3, 0.55, 1.4]),
+      // 履带总成
       ...pair('track', 'track', 'hull', [1.25, -0.425, 0], [0.5, 0.77, 6.0]),
-      { id: 'traverse', type: 'traverse', part: 'turret', center: [0.4, -0.1, -1.0], size: [0.3, 0.3, 0.3] },
-      { id: 'elevation', type: 'elevation', part: 'turret', center: [-0.4, 0.2, -1.1], size: [0.25, 0.3, 0.25] },
+      // 共 33 发(100 mm D-10S):
+      // 1) 战斗室左侧壁立式弹药架 8 发(drawOrder 1)
+      rack('ammo_left', 'turret', [-1.05, 0.2, 0.35], [0.28, 0.38, 1.2], 8, 1),
+      // 2) 战斗室后壁横置弹药架 8 发(drawOrder 2)
+      rack('ammo_rear', 'turret', [0.1, 0.25, 1.15], [1.3, 0.38, 0.25], 8, 2),
+      // 3) 车体底板弹药箱 17 发(拆为左 8 发 / 右 9 发,drawOrder 3/4)
+      rack('ammo_floor_l', 'hull', [-0.4, -0.55, -0.5], [0.65, 0.28, 1.1], 8, 3),
+      rack('ammo_floor_r', 'hull', [0.4, -0.55, -0.5], [0.65, 0.28, 1.1], 9, 4),
+      // D-10S 方向机:主炮耳轴左侧,炮手操纵(实车方向机位于火炮左侧,校正旧数据右侧错误,估算)
+      { id: 'traverse', type: 'traverse', part: 'turret', center: [-0.4, 0.18, -0.95], size: [0.28, 0.28, 0.28] },
+      // D-10S 高低机:主炮耳轴左侧上部(估算)
+      { id: 'elevation', type: 'elevation', part: 'turret', center: [-0.35, 0.35, -1.05], size: [0.24, 0.24, 0.24] },
+      // 100 mm D-10S 炮闩(gun 局部系)
       { id: 'breech', type: 'breech', part: 'gun', center: [0, 0, 0.9], size: [0.35, 0.35, 1.2] },
+      // 100 mm 炮管(gun 局部系,长 4.3 m)
       { id: 'barrel', type: 'barrel', part: 'gun', center: [0, 0, -2.15], size: [0.2, 0.2, 4.3] },
     ],
     crew: [
-      // 4 人:车长兼无线电员、炮手、装填手、驾驶员
-      crew('driver', 'hull', -0.5, -0.1, -2.2),
-      crew('gunner', 'turret', -0.55, 0.05, -0.6),
-      crew('commander', 'turret', 0.6, 0.3, 0.2),
-      crew('loader', 'turret', 0.55, 0, 0.7),
+      // 4 人:驾驶员(车体左前)、炮手(战斗室左前)、车长兼无线电员(战斗室右侧车长指挥塔)、装填手(战斗室右后)
+      crew('driver', 'hull', -0.5, -0.05, -2.15),
+      crew('gunner', 'turret', -0.6, 0.15, -0.65),
+      crew('commander', 'turret', 0.65, 0.25, -0.15),
+      crew('loader', 'turret', 0.55, 0.15, 0.65),
     ],
   },
   color: 0x4f5b31,
@@ -388,6 +447,9 @@ export const ISU_122: VehicleSpec = {
     // 现有高低机 2.8°/s 与 WT 新手 2.8°/s 一致,直接取 WT 王牌值
     elevationSpeed: 4.0, // War Thunder 值
   },
+  mass: 45500, // 战斗全重 45.5 t(Wikipedia;War Thunder wiki 为 46 t)
+  enginePower: { hp: 520, rpm: 2000 }, // 史料标称值: V-2-IS 柴油机 520 hp @ 2000 rpm(Wikipedia)
+  reverseSpeed: 14, // War Thunder 值: War Thunder wiki 机动表(2026-10-02 核对)取两栏里较小的一栏(14 / 15 km/h 取 14)
   // 车体正面 90 / 侧面 90 / 后部 60,War Thunder 值(Wikipedia:正面 90、侧面 90)
   armor: { front: 90, side: 90, rear: 60 },
   // 战斗室正面 90 / 侧面 75 / 后部 60,War Thunder 值;防盾 120 mm(Wikipedia)没有单独建模
@@ -420,26 +482,39 @@ export const ISU_122: VehicleSpec = {
   sight: { magnifications: [1.9, 3.5], reticle: 'soviet' },
   internals: {
     modules: [
-      { id: 'engine', type: 'engine', part: 'hull', center: [0, -0.05, 1.7], size: [1.2, 0.9, 1.5] },
-      { id: 'transmission', type: 'transmission', part: 'hull', center: [0, -0.2, 2.9], size: [1.8, 0.6, 0.8] },
-      ...pair('fuel', 'fuel', 'hull', [1.15, 0.1, 0.5], [0.35, 0.6, 1.2]),
-      // 共 30 发(Wikipedia):战斗室左壁 12 发、后壁 8 发、车底 10 发(分布估算)
-      rack('ammo_left', 'turret', [-1.1, 0.1, 0.3], [0.3, 0.5, 1.4], 12, 1),
-      rack('ammo_rear', 'turret', [0.3, 0.2, 1.55], [1.6, 0.4, 0.3], 8, 2),
-      rack('ammo_floor', 'hull', [0, -0.5, -0.6], [1.4, 0.3, 1.4], 10, 3),
+      // V-2-IS 柴油机(IS-2 底盘,520 hp;估算)
+      { id: 'engine', type: 'engine', part: 'hull', center: [0, -0.05, 1.7], size: [1.2, 0.85, 1.5] },
+      // 行星转向传动机构与最终传动,后置(估算)
+      { id: 'transmission', type: 'transmission', part: 'hull', center: [0, -0.2, 2.9], size: [1.8, 0.6, 0.7] },
+      // 内部侧油箱:战斗室两侧(pair)与动力舱两侧(pair)(估算)
+      ...pair('fuel_fighting', 'fuel', 'hull', [1.15, 0.15, 0.2], [0.35, 0.6, 1.1]),
+      ...pair('fuel_engine', 'fuel', 'hull', [1.15, 0.15, 1.7], [0.35, 0.6, 1.4]),
+      // 行走机构重型履带总成
       ...pair('track', 'track', 'hull', [1.21, -0.375, 0], [0.65, 0.8, 6.3]),
-      { id: 'traverse', type: 'traverse', part: 'turret', center: [-0.35, -0.1, -1.2], size: [0.3, 0.3, 0.3] },
-      { id: 'elevation', type: 'elevation', part: 'turret', center: [-0.35, 0.15, -1.3], size: [0.25, 0.3, 0.25] },
-      { id: 'breech', type: 'breech', part: 'gun', center: [0, 0, 1.2], size: [0.4, 0.4, 1.6] },
+      // 共 30 发(122 mm A-19S 分装弹药,30 弹头 + 30 药筒):
+      // 1) 战斗室左壁弹架 12 发(第一装填手侧,drawOrder 1)
+      rack('ammo_left', 'turret', [-1.1, 0.25, 0.25], [0.3, 0.48, 1.5], 12, 1),
+      // 2) 战斗室右壁弹架 8 发(第二装填手侧,drawOrder 2)
+      rack('ammo_right', 'turret', [1.1, 0.25, 0.25], [0.3, 0.48, 1.2], 8, 2),
+      // 3) 战斗室底板弹箱 10 发(拆为左 5 发 / 右 5 发,drawOrder 3/4)
+      rack('ammo_floor_l', 'hull', [-0.45, -0.5, -0.6], [0.65, 0.28, 1.2], 5, 3),
+      rack('ammo_floor_r', 'hull', [0.45, -0.5, -0.6], [0.65, 0.28, 1.2], 5, 4),
+      // A-19S 方向机:火炮左侧,炮手手轮操纵(估算)
+      { id: 'traverse', type: 'traverse', part: 'turret', center: [-0.38, 0.18, -1.2], size: [0.28, 0.28, 0.28] },
+      // A-19S 高低机:火炮左侧上部扇形齿轮(估算)
+      { id: 'elevation', type: 'elevation', part: 'turret', center: [-0.38, 0.38, -1.3], size: [0.25, 0.25, 0.25] },
+      // 122 mm A-19S 螺式炮闩(gun 局部系)
+      { id: 'breech', type: 'breech', part: 'gun', center: [0, 0, 1.2], size: [0.42, 0.42, 1.6] },
+      // 122 mm 炮管(gun 局部系,长 3.57 m)
       { id: 'barrel', type: 'barrel', part: 'gun', center: [0, 0, -1.785], size: [0.22, 0.22, 3.57] },
     ],
     crew: [
-      // 5 人:车长、炮手、驾驶员、装填手、闩手(第二装填手,岗位按装填手算)
-      crew('driver', 'hull', -0.6, -0.1, -2.5),
-      crew('gunner', 'turret', -0.65, 0, -0.6),
-      crew('commander', 'turret', 0.75, 0.15, -0.8),
-      crew('loader', 'turret', 0.6, 0, 0.5),
-      crew('loader', 'turret', -0.6, 0, 0.8),
+      // 5 人:驾驶员(车体前左)、炮手(战斗室左前)、车长(战斗室右前)、第一装填手(战斗室左后)、第二装填手兼闩手(战斗室右后)
+      crew('driver', 'hull', -0.6, -0.05, -2.45),
+      crew('gunner', 'turret', -0.7, 0.2, -0.75),
+      crew('commander', 'turret', 0.7, 0.25, -0.75),
+      crew('loader', 'turret', -0.65, 0.15, 0.65),
+      crew('loader', 'turret', 0.65, 0.15, 0.65),
     ],
   },
   color: 0x535e36,
@@ -492,41 +567,66 @@ function m1919a4Coax(): WeaponSpec {
 }
 
 /**
- * 三辆共用的内部布局(位置全部估算,见 docs/research/m4a3-76w.md 第 9 节):
- * 后置发动机、前置变速箱;弹药在车底传动轴两侧的湿式弹药箱里,炮塔地板上有待发弹架。
- * 谢尔曼从左侧装填:装填手在左,炮手、车长在右。
+ * 三辆共用的内部布局(出处与估算方法见 docs/internals/usa.md):
+ * 后置福特 GAA V8 发动机、前置变速箱与受控差速器;
+ * 弹药在车底传动轴两侧的湿式弹药箱里(ammo_floor_l 与 ammo_floor_r),炮塔装填手旁设待发弹架(ammo_ready);
+ * 谢尔曼火炮从左侧装填:装填手在炮塔左侧,炮手在炮塔右前,车长在炮塔右后指挥塔下方;
+ * 驾驶员在车体左前,机电员/副驾驶在车体右前。
  */
 function shermanInternals(o: {
   ready: number;
+  readyCenter?: [number, number, number];
+  readySize?: [number, number, number];
   floor: readonly [left: number, right: number];
-  floorLength: readonly [left: number, right: number];
+  floorLength?: readonly [left: number, right: number];
+  floorCenterZ?: readonly [left: number, right: number];
   track: { x: number; width: number };
   barrelLength: number;
   breech: { z: number; length: number };
+  traverse?: { center: [number, number, number]; size?: [number, number, number] };
+  elevation?: { center: [number, number, number]; size?: [number, number, number] };
+  turretCrew?: {
+    gunnerX?: number;
+    commanderX?: number;
+    loaderX?: number;
+  };
 }): VehicleSpec['internals'] {
   const bl = o.barrelLength;
+  const readyCenter = o.readyCenter ?? [-0.55, 0.22, 0.65];
+  const readySize = o.readySize ?? [0.35, 0.35, 0.45];
+  const floorLen = o.floorLength ?? [1.35, 1.20];
+  const floorZ = o.floorCenterZ ?? [-0.55, -0.55];
+  const travCenter = o.traverse?.center ?? [0.4, 0.18, -0.2];
+  const travSize = o.traverse?.size ?? [0.26, 0.26, 0.26];
+  const elevCenter = o.elevation?.center ?? [0.25, 0.36, -0.8];
+  const elevSize = o.elevation?.size ?? [0.24, 0.24, 0.24];
+  const gx = o.turretCrew?.gunnerX ?? 0.45;
+  const cx = o.turretCrew?.commanderX ?? 0.45;
+  const lx = o.turretCrew?.loaderX ?? -0.48;
+
   return {
     modules: [
-      { id: 'engine', type: 'engine', part: 'hull', center: [0, 0.05, 2.0], size: [1.2, 1.0, 1.5] },
-      { id: 'transmission', type: 'transmission', part: 'hull', center: [0, -0.2, -2.7], size: [1.6, 0.6, 0.7] },
-      ...pair('fuel', 'fuel', 'hull', [1.0, 0.4, 1.8], [0.35, 0.6, 1.4]),
-      // 炮塔里的待发弹架没有水套(湿式改进只针对车体底板的弹药箱),按干式算——估算,待核实
-      rack('ammo_ready', 'turret', [-0.6, 0.0, 0.5], [0.4, 0.4, 0.5], o.ready, 1),
-      rack('ammo_floor_l', 'hull', [-0.45, -0.2, -0.6], [0.6, 0.5, o.floorLength[0]], o.floor[0], 2, true),
-      rack('ammo_floor_r', 'hull', [0.45, -0.2, -0.6], [0.6, 0.5, o.floorLength[1]], o.floor[1], 3, true),
+      { id: 'engine', type: 'engine', part: 'hull', center: [0, 0.0, 2.05], size: [1.1, 0.95, 1.4] },
+      { id: 'transmission', type: 'transmission', part: 'hull', center: [0, -0.25, -2.65], size: [1.5, 0.6, 0.8] },
+      ...pair('fuel', 'fuel', 'hull', [0.95, 0.35, 1.85], [0.35, 0.55, 1.45]),
+      // 炮塔待发弹架没有水套,按干式算(drawOrder 1,最先取空)
+      rack('ammo_ready', 'turret', readyCenter, readySize, o.ready, 1),
+      // 车体底板两侧湿式弹药箱(TM 9-731B 规范:带水套,drawOrder 2/3)
+      rack('ammo_floor_l', 'hull', [-0.45, -0.45, floorZ[0]], [0.55, 0.45, floorLen[0]], o.floor[0], 2, true),
+      rack('ammo_floor_r', 'hull', [0.45, -0.45, floorZ[1]], [0.55, 0.45, floorLen[1]], o.floor[1], 3, true),
       // 履带盒底边贴地(车体盒高 1.93 → 地面 y = −0.965),从前主动轮到后诱导轮约 5.6 m
       ...pair('track', 'track', 'hull', [o.track.x, -0.59, 0], [o.track.width, 0.75, 5.6]),
-      { id: 'traverse', type: 'traverse', part: 'turret', center: [0.3, -0.2, -0.2], size: [0.3, 0.3, 0.3] },
-      { id: 'elevation', type: 'elevation', part: 'turret', center: [0.3, 0.3, -0.8], size: [0.25, 0.3, 0.25] },
+      { id: 'traverse', type: 'traverse', part: 'turret', center: travCenter, size: travSize },
+      { id: 'elevation', type: 'elevation', part: 'turret', center: elevCenter, size: elevSize },
       { id: 'breech', type: 'breech', part: 'gun', center: [0, 0, o.breech.z], size: [0.3, 0.3, o.breech.length] },
       { id: 'barrel', type: 'barrel', part: 'gun', center: [0, 0, -bl / 2], size: [0.16, 0.16, bl] },
     ],
     crew: [
-      crew('driver', 'hull', -0.55, 0.05, -2.3),
-      crew('radio', 'hull', 0.55, 0.05, -2.3),
-      crew('gunner', 'turret', 0.45, 0.05, -0.45),
-      crew('commander', 'turret', 0.5, 0.35, 0.45),
-      crew('loader', 'turret', -0.5, 0.0, 0.2),
+      crew('driver', 'hull', -0.55, -0.05, -2.15),
+      crew('radio', 'hull', 0.55, -0.05, -2.15),
+      crew('gunner', 'turret', gx, 0.2, -0.45),
+      crew('commander', 'turret', cx, 0.38, 0.45),
+      crew('loader', 'turret', lx, 0.22, 0.15),
     ],
   };
 }
@@ -547,6 +647,9 @@ export const M4A3_76W: VehicleSpec = {
     // 现有高低机 2.8°/s 与 WT 新手 2.8°/s 一致,直接取 WT 王牌值
     elevationSpeed: 4.0, // War Thunder 值
   },
+  mass: 32300, // 战斗全重 71,100 lb ≈ 32.3 t(Hunnicutt《Sherman》;War Thunder wiki 为 32.3–32.9 t)
+  enginePower: { hp: 500, rpm: 2600 }, // 史料标称值: Ford GAA V8 总功率 500 hp @ 2600 rpm(净功率约 450 hp)
+  reverseSpeed: 5, // War Thunder 值: War Thunder wiki 机动表(2026-10-02 核对)取两栏里较小的一栏(5 / 6 km/h 取 5)
   // 首上 63.5@47° → 93(首下铸造传动罩 108,分界高度 1.0m);侧面 38.1 垂直;后部 38.1@10–22° ≈ 40
   armor: { front: 93, side: 38, rear: 40, lowerFront: { thickness: 108, height: 1.0 } },
   // 炮盾 88.9 垂直(炮盾外的正面 63.5@40–45° ≈ 83–90);侧面 63.5@0–13° ≈ 64;后部 63.5 垂直
@@ -566,7 +669,8 @@ export const M4A3_76W: VehicleSpec = {
   internals: shermanInternals({
     ready: 6,
     floor: [35, 30],
-    floorLength: [1.4, 1.2],
+    floorLength: [1.35, 1.2],
+    floorCenterZ: [-0.55, -0.55],
     track: { x: 1.055, width: 0.42 },
     barrelLength: 3.09,
     breech: { z: 0.9, length: 1.0 },
@@ -590,6 +694,9 @@ export const M4A3E8: VehicleSpec = {
     // 现有高低机 2.8°/s 与 WT 新手 2.8°/s 一致,直接取 WT 王牌值
     elevationSpeed: 4.0, // War Thunder 值
   },
+  mass: 33700, // 战斗全重 74,200 lb ≈ 33.7 t(Hunnicutt《Sherman》;War Thunder wiki 的 M4A3 (76) W 为 32.3–32.9 t)
+  enginePower: { hp: 500, rpm: 2600 }, // 史料标称值: Ford GAA V8 总功率 500 hp @ 2600 rpm(净功率约 450 hp)
+  reverseSpeed: 5, // War Thunder 值: War Thunder wiki 机动表(2026-10-02 核对)取两栏里较小的一栏(M4A3 (76) W 页 5 / 6 km/h 取 5)
   armor: { front: 93, side: 38, rear: 40, lowerFront: { thickness: 108, height: 1.0 } },
   turretArmor: { front: 89, side: 64, rear: 64 },
   maxSpeed: 42,
@@ -605,7 +712,8 @@ export const M4A3E8: VehicleSpec = {
   internals: shermanInternals({
     ready: 6,
     floor: [35, 30],
-    floorLength: [1.4, 1.2],
+    floorLength: [1.35, 1.2],
+    floorCenterZ: [-0.55, -0.55],
     track: { x: 1.13, width: 0.58 },
     barrelLength: 3.16,
     breech: { z: 0.9, length: 1.0 },
@@ -632,6 +740,9 @@ export const M4A3E2: VehicleSpec = {
     // 现有高低机 2.8°/s 与 WT 新手 2.8°/s 一致,直接取 WT 王牌值
     elevationSpeed: 4.0, // War Thunder 值
   },
+  mass: 38100, // 战斗全重 84,000 lb ≈ 38.1 t(Hunnicutt《Sherman》;War Thunder wiki 为 37.8 t)
+  enginePower: { hp: 500, rpm: 2600 }, // 史料标称值: Ford GAA V8 总功率 500 hp @ 2600 rpm(净功率约 450 hp)
+  reverseSpeed: 5, // War Thunder 值: War Thunder wiki 机动表(2026-10-02 核对)取两栏里较小的一栏(两栏都是 5 km/h)
   // 首上 101.6@47° → 149(首下加厚传动罩 140,分界高度 1.0m);上部侧面 76.2 垂直(下部 38.1,藏在行走机构后面);后部 38.1@10–22° ≈ 40
   armor: { front: 149, side: 76, rear: 40, lowerFront: { thickness: 140, height: 1.0 } },
   // 炮盾 177.8 垂直;炮塔正面 152.4@12° ≈ 156(炮盾覆盖大部分,取炮盾值);侧面 152.4@6° ≈ 153;后部 152.4@2° ≈ 152
@@ -664,15 +775,25 @@ export const M4A3E2: VehicleSpec = {
   turret: { length: 2.5, width: 2.35, height: 0.72, barrelLength: 1.89, elevation: [-10, 25], elevationSpeed: 2.8 },
   // M71G 望远镜:倍率用 War Thunder 值 4.3–5×
   sight: { magnifications: [4.3, 5], reticle: 'us' },
-  // 共 104 发:炮塔待发弹架 4 发,车底 10 个湿式弹药箱 100 发(按同厂 M4A3(75)W 的布局,两侧各算 50 发)
+  // 共 104 发:炮塔待发弹架 4 发,车底 10 个湿式弹药箱 100 发(左右两侧对称各 50 发)
   // T48 履带加宽端联器(鸭嘴)后宽 0.51,履带中心距 2.11;鸭嘴装在外侧,履带盒中心外移 0.045
   internals: shermanInternals({
     ready: 4,
+    readyCenter: [-0.58, 0.22, 0.65],
+    readySize: [0.35, 0.35, 0.4],
     floor: [50, 50],
-    floorLength: [1.6, 1.6],
+    floorLength: [1.5, 1.5],
+    floorCenterZ: [-0.5, -0.5],
     track: { x: 1.1, width: 0.51 },
     barrelLength: 1.89,
     breech: { z: 0.7, length: 0.8 },
+    traverse: { center: [0.44, 0.18, -0.2], size: [0.26, 0.26, 0.26] },
+    elevation: { center: [0.25, 0.36, -0.75], size: [0.24, 0.24, 0.24] },
+    turretCrew: {
+      gunnerX: 0.48,
+      commanderX: 0.48,
+      loaderX: -0.52,
+    },
   }),
   color: 0x544f3d, // Olive Drab No. 9 / No. 319(FS 33070)
 };

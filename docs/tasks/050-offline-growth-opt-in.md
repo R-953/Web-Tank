@@ -1,7 +1,7 @@
 # 050-offline-growth-opt-in:离线挂机成长改成手动开启
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待审查(主程已审,等负责人合并)
+- 状态:已合并(第十轮)
 - 分支:`task/050-offline-growth-opt-in`
 - 规模:S
 - 和 047、048、049、051、052 并行;改的文件不重叠

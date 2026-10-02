@@ -97,6 +97,10 @@ export function vehicleCardData(spec: VehicleSpec, skill: number): VehicleCardDa
     fireRows.push({ label: '弹药架容量', value: `${ammoCap} 发` });
   }
 
+  if (mg?.rounds != null) {
+    fireRows.push({ label: '同轴机枪弹药', value: `${mg.rounds} 发` });
+  }
+
   if (fireRows.length > 0) {
     sections.push({ title: '火力', rows: fireRows });
   }
@@ -179,8 +183,23 @@ export function vehicleCardData(spec: VehicleSpec, skill: number): VehicleCardDa
 
   // --- 机动
   const mobRows: CardRow[] = [];
+  if (spec.mass != null) {
+    mobRows.push({ label: '质量', value: `${(spec.mass / 1000).toFixed(1)} t` });
+  }
+
+  if (spec.enginePower != null) {
+    mobRows.push({
+      label: '发动机功率',
+      value: `${spec.enginePower.hp} hp @ ${spec.enginePower.rpm} rpm`,
+    });
+  }
+
   if (spec.maxSpeed != null) {
-    mobRows.push({ label: '最大速度', value: `${spec.maxSpeed} km/h` });
+    const speedVal =
+      spec.reverseSpeed != null
+        ? `${spec.maxSpeed} / ${spec.reverseSpeed} km/h`
+        : `${spec.maxSpeed} km/h`;
+    mobRows.push({ label: '最大速度', value: speedVal });
   }
 
   if (spec.hull) {

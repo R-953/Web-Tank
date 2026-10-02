@@ -1,7 +1,7 @@
 # 047-vehicle-thumbnails:载具缩略图(用真实模型渲染)
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待审查(主程已审,等负责人合并)
+- 状态:已合并(第十轮)
 - 分支:`task/047-vehicle-thumbnails`
 - 规模:M
 - 和 048、049、050、051、052 并行;改的文件不重叠(`styles.ts` 的约定见下)

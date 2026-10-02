@@ -48,7 +48,7 @@ npm run build    # 生产构建,输出到 dist/
 
 ## 操作
 
-打开页面是主界面(机库):底部是编组栏(按国家选车组、分车、打开科技树),顶部选地图。鼠标放在车上会出现信息卡(双击关闭)。点「进入战斗」先进地图界面:在这里调携弹、选出战的车组,点「出战」才开局;Esc 回机库。战斗中按 M 随时打开大地图(对局继续跑),再按 M / Esc / 点「返回战斗」回去。左上角 ☰ 菜单里是设置(游戏 / 图像 / 声音 / 操作),符号体系(北约 / 华约)也在这里或地图界面右侧选。
+打开页面是主界面(机库):底部是编组栏(按国家选车组、分车、打开科技树),顶部选地图。鼠标放在车上会出现信息卡(双击关闭)。右键(或点卡片上的 ▾)是车组菜单:换车、改装(机动 / 防护 / 火力三栏、每栏 I–IV 级,免费、立即生效;目前只有方向机、高低机、转向、加速和极速几项真的改数值,其余标「效果暂未接入」)、涂装(每辆车 2–4 个历史上用过的涂装方案,机库里实时预览)、试驾(在选好的地图上自由开,靶车不还击、打光也不结束)、乘员(车组等级、技能表、车内乘员站位)。点「进入战斗」先进地图界面:在这里调携弹、选出战的车组,点「出战」才开局;Esc 回机库。战斗中按 M 随时打开大地图(对局继续跑),再按 M / Esc / 点「返回战斗」回去。左上角 ☰ 菜单里是设置(游戏 / 图像 / 声音 / 操作),符号体系(北约 / 华约)也在这里或地图界面右侧选。
 
 默认键位如下。**全部可以在「设置 → 操作」里改**(键盘、鼠标五个键、滚轮上 / 下都能绑,每个操作两个键位),也可以直接导入 War Thunder 的操作设置文件(`.blk`,只导入单键的坦克操作)。
 
@@ -59,8 +59,9 @@ npm run build    # 生产构建,输出到 dist/
 | 主炮开火 | 鼠标左键 |
 | 同轴机枪 | 空格(按住连发) |
 | 切换弹种 | 1 – 4;Caps Lock 切到下一种 |
+| 显示 / 关闭车内结构(模块、乘员、岗位,实时) | O |
 | 开镜 / 关镜 | Shift |
-| 瞄准镜倍率 | Z 循环;PgUp / PgDn 放大 / 缩小 |
+| 瞄准镜倍率 / 第三人称放大 | Z 循环(视场平滑过渡);PgUp / PgDn 放大 / 缩小 |
 | 表尺 | 滚轮:往下滚加远,往上滚减近 |
 | 维修 / 取消维修 | F |
 | 灭火 | 6 |
@@ -89,6 +90,7 @@ npm run build    # 生产构建,输出到 dist/
 /docs          物理校验报告(physics-validation.md)与截图
   /tasks       任务看板(README.md)与任务卡,一个任务一张
   /research    数据调研(带出处)与工具评估
+  /internals   各国车辆内构(乘员站位、模块)的设计说明与出处
   /perf        性能测量记录
 /changelog.d   每个任务一条开发日志,每轮汇总进 Changelog.md
 /.worktrees    并行任务的 worktree(不进 git)
@@ -105,6 +107,8 @@ Changelog.md   开发日志:每轮的改动、决策与待确认事项
 - **载具** `VehicleSpec`:`{ id, name, armor, turretArmor, maxSpeed, turretRotationSpeed, weapons, hull, turret, sight, internals, color }`
   - `armor` / `turretArmor` 为 `{ front, side, rear }`,填水平来弹的视线厚度(倾斜装甲按 t / cos 倾角换算)
   - `hull` 车体尺寸与机动,`turret` 炮塔尺寸、炮管长、俯仰范围、高低机速度,`sight` 瞄准镜倍率与分划样式
+  - 可选的展示字段 `mass`(战斗全重 kg)、`enginePower`(`{ hp, rpm }`)、`reverseSpeed`(km/h):只显示在信息卡上,不参与物理
+  - 改装和涂装不改 `VEHICLES` 里的原始数据:进战斗时由 `applyModifications` / `applyPaint` 套出一份新的 `VehicleSpec`,经 `GameConfig.playerSpec` 只交给玩家那一辆(同型号的靶车 / 敌车不受影响)
 - **武器与弹药**:`weapons[i] = { id, name, reloadTime, ammo: ShellSpec[], kind? }`,`weapons[0]` 是主炮,`ammo` 第一项是默认弹
   - 同轴机枪 `kind: 'mg'`,另有 `rateOfFire`(发 / 分)、`beltSize`(每条弹链)、`rounds`(总发数)、`mount`(火炮坐标系里的枪口位置);`reloadTime` 是换弹链时间,机枪弹不占弹药架
   - 口径 < 20 mm 的弹按枪弹处理:打不坏坦克(只判跳弹 / 未击穿),能削灌木,被树干挡下
@@ -119,7 +123,7 @@ Changelog.md   开发日志:每轮的改动、决策与待确认事项
 - **地图** `MapSpec = { id, name, size, terrain, surface?, waterLevel?, obstacles, spawns }`
   - `terrain = { cellSize, base, heightmap?, features }`:地形由「要素列表」描述(hill / mountain / ridge / plateau / dunes / valley),加载时按顺序叠加成高度网格;小地图也可以用手写字符高度网格。手写、确定性,**不做随机生成**
   - `vegetation = { zones, grass?, clearRadius? }`:植被区(圆或多边形)+ 密度(株 / 公顷)+ **固定种子**撒点,每次加载位置完全一样(确定性,不是每局随机);水面、陡坡、障碍物、出生点和巡逻路线附近自动跳过。画质里的「植被密度」只做确定性抽稀。草丛按地表自动铺,只在镜头附近生成
-  - `surface`:手写字符网格标地表类型(草地 / 土地 / 沙地 / 岩地 / 泥滩 / 浅水),决定颜色和滚动阻力(`src/data/surfaces.ts`)
+  - `surface`:手写字符网格标地表类型(草地 / 土地 / 沙地 / 岩地 / 泥滩 / 浅水 / 积雪),决定颜色和滚动阻力(`src/data/surfaces.ts`)
   - `spawns`:玩家与敌方出生点,敌方可选巡逻路线、是否还击、携弹比例
 - **伤害模型**:没有整车血量。
   - 命中面装甲 → 等效装甲(按弹种的入射角规则)→ 跳弹判定 → 击穿判定

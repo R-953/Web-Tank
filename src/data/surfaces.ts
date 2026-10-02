@@ -20,6 +20,9 @@ export const SURFACES: Readonly<Record<SurfaceType, SurfaceSpec>> = {
   rock: { name: '岩地', color: 0x857d70, rollingResistance: 0.045, grip: 1 },
   mud: { name: '泥滩', color: 0x5d523a, rollingResistance: 0.12, grip: 0.7 },
   water: { name: '浅水', color: 0x4b6d63, rollingResistance: 0.15, grip: 0.7 },
+  // 积雪(20–30 cm 的压实雪原):估算。阻力取草地 0.05 与沙地 0.10 之间的 0.08(履带车在这个厚度的雪里比硬地费力、
+  // 但不像沙地那样陷),抓地取 0.75(雪面比泥滩 0.7 略好、比草地差)。颜色是微带蓝的雪白。
+  snow: { name: '雪地', color: 0xe4eaee, rollingResistance: 0.08, grip: 0.75 },
 };
 
 /** 基准滚动阻力(载具功率按它和 maxSpeed 反推) */

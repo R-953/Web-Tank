@@ -218,6 +218,12 @@ export interface VehicleSpec {
   /** 车族 id:同车族的车在科技树里叠成一组,车组换车保留熟练度 */
   family?: string;
   crewAce?: CrewAceSpec;
+  /** 战斗全重,kg(只用于信息卡显示,不参与物理计算) */
+  mass?: number;
+  /** 发动机功率(公制马力 PS)和对应转速 rpm(只用于信息卡显示;物理里的功率由 maxSpeed 反推) */
+  enginePower?: { hp: number; rpm: number };
+  /** 最大倒车速度,km/h(只用于信息卡显示) */
+  reverseSpeed?: number;
   /** 车体装甲 */
   armor: ArmorSpec;
   /** 炮塔装甲(炮塔碰撞盒按自身朝向判定受击面) */
@@ -247,9 +253,9 @@ export interface HeightmapSpec {
 
 /**
  * 地表类型:决定地面颜色和滚动阻力(见 data/surfaces.ts)。
- * grass 草地 / 平原,dirt 土地 / 丘陵,sand 沙地 / 荒漠,rock 岩地 / 山地,mud 泥滩,water 浅水(涉水)
+ * grass 草地 / 平原,dirt 土地 / 丘陵,sand 沙地 / 荒漠,rock 岩地 / 山地,mud 泥滩,water 浅水(涉水),snow 积雪
  */
-export type SurfaceType = 'grass' | 'dirt' | 'sand' | 'rock' | 'mud' | 'water';
+export type SurfaceType = 'grass' | 'dirt' | 'sand' | 'rock' | 'mud' | 'water' | 'snow';
 
 /**
  * 地形要素:按列表顺序叠加到基准高度上,手写、确定性(不是随机生成)。

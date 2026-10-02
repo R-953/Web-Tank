@@ -222,7 +222,17 @@ export function thumbnailFraming(
  * 返回 PNG data URL(透明背景),同一辆车只渲染一次(按 spec.id 缓存);
  * 没有 WebGL(jsdom、无 GPU)或渲染失败时返回 null,不抛错,也不重复尝试。
  */
-export function vehicleThumbnail(spec: VehicleSpec): string | null {
+export function vehicleThumbnail(spec: VehicleSpec, opts: { raw?: boolean } = {}): string | null {
+  return renderThumbnail(opts.raw ? spec : appearance(spec));
+}
+
+/** 缩略图展示用的车辆外观(涂装):main.ts 设置;默认原样。涂装界面自己套了涂装的预览传 raw: true,不再叠加 */
+let appearance: (spec: VehicleSpec) => VehicleSpec = (spec) => spec;
+export function setThumbnailAppearance(fn: ((spec: VehicleSpec) => VehicleSpec) | null): void {
+  appearance = fn ?? ((spec) => spec);
+}
+
+function renderThumbnail(spec: VehicleSpec): string | null {
   if (thumbnailCache.has(thumbnailKey(spec))) {
     return thumbnailCache.get(thumbnailKey(spec))!;
   }
