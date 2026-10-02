@@ -1,0 +1,11 @@
+{
+  "name": "round12c",
+  "base": "origin/integration/round12",
+  "permissions": "scoped",
+  "timeoutMin": 90,
+  "maxPerAgent": 2,
+  "jobs": [
+    { "id": "076", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/076-world-xray-wiring.md", "branch": "task/076-world-xray-wiring", "commit": "feat: 世界内 X 光(O 键)和死亡回放接进游戏" },
+    { "id": "075", "agent": "copilot", "model": "auto", "card": "docs/tasks/075-official-wording.md", "branch": "task/075-official-wording", "commit": "docs: 回放文字和出处按官方本地化文件更正" }
+  ]
+}
