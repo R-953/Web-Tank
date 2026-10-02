@@ -68,7 +68,7 @@ const PUSH_SPEED = 1.0;
 const FALL_TIME = 1.6;
 const GRASS_CHUNK = 32;
 /** 各地表上草丛的相对密度 */
-const GRASS_BY_SURFACE: Record<SurfaceType, number> = { grass: 1, dirt: 0.45, sand: 0.06, rock: 0.12, mud: 0.25, water: 0 };
+const GRASS_BY_SURFACE: Record<SurfaceType, number> = { grass: 1, dirt: 0.45, sand: 0.06, rock: 0.12, mud: 0.25, water: 0, snow: 0.04 };
 const GRASS_FLATTEN_HOLD = 1.5;
 const GRASS_RECOVER_TIME = 4;
 

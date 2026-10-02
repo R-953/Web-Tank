@@ -253,9 +253,9 @@ export interface HeightmapSpec {
 
 /**
  * 地表类型:决定地面颜色和滚动阻力(见 data/surfaces.ts)。
- * grass 草地 / 平原,dirt 土地 / 丘陵,sand 沙地 / 荒漠,rock 岩地 / 山地,mud 泥滩,water 浅水(涉水)
+ * grass 草地 / 平原,dirt 土地 / 丘陵,sand 沙地 / 荒漠,rock 岩地 / 山地,mud 泥滩,water 浅水(涉水),snow 积雪
  */
-export type SurfaceType = 'grass' | 'dirt' | 'sand' | 'rock' | 'mud' | 'water';
+export type SurfaceType = 'grass' | 'dirt' | 'sand' | 'rock' | 'mud' | 'water' | 'snow';
 
 /**
  * 地形要素:按列表顺序叠加到基准高度上,手写、确定性(不是随机生成)。

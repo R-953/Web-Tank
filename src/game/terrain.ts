@@ -6,7 +6,7 @@ import type { MapSpec, SurfaceType, TerrainFeature, Vec2 } from '../data/types';
  */
 
 /** 地表类型在 surfaces 数组里的编码顺序 */
-export const SURFACE_ORDER: readonly SurfaceType[] = ['grass', 'dirt', 'sand', 'rock', 'mud', 'water'];
+export const SURFACE_ORDER: readonly SurfaceType[] = ['grass', 'dirt', 'sand', 'rock', 'mud', 'water', 'snow'];
 
 export interface TerrainGrid {
   /** 每边采样点数 */

@@ -497,7 +497,7 @@ export class CustomizationScreen {
     const previewSpec = applyPaint(this.currentSpec, activeScheme.id);
 
     this.previewBoxEl.innerHTML = '';
-    const thumbUrl = vehicleThumbnail(previewSpec);
+    const thumbUrl = vehicleThumbnail(previewSpec, { raw: true });
     const hex = activeScheme.color.toString(16).padStart(6, '0');
 
     if (thumbUrl) {

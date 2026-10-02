@@ -60,33 +60,33 @@ describe('CrewScreen UI Component', () => {
     expect(screen.isOpen).toBe(true);
 
     // 1. 标题
-    const title = screen.root.querySelector('.cs-title');
+    const title = screen.root.querySelector('.crw-title');
     expect(title?.textContent).toBe('乘员 · 车组 1');
 
     // 2. 车组概况
-    const overviewSec = screen.root.querySelector('.cs-overview-sec');
+    const overviewSec = screen.root.querySelector('.crw-overview-sec');
     expect(overviewSec).not.toBeNull();
     expect(overviewSec?.textContent).toContain('Lv 0');
     expect(overviewSec?.textContent).toContain('离线挂机成长: 开');
-    const progressBar = overviewSec?.querySelector('.cs-progress-bar-fill') as HTMLElement;
+    const progressBar = overviewSec?.querySelector('.crw-progress-bar-fill') as HTMLElement;
     expect(progressBar).not.toBeNull();
 
     // 3. 当前车辆
-    const vehSec = screen.root.querySelector('.cs-veh-sec');
+    const vehSec = screen.root.querySelector('.crw-veh-sec');
     expect(vehSec).not.toBeNull();
     expect(vehSec?.textContent).toContain('虎式 Ausf. E');
     expect(vehSec?.textContent).toContain('已训练');
     expect(vehSec?.textContent).toContain('综合技能');
 
     // 4. 技能表
-    const skillSec = screen.root.querySelector('.cs-skills-sec');
+    const skillSec = screen.root.querySelector('.crw-skills-sec');
     expect(skillSec).not.toBeNull();
     expect(skillSec?.textContent).toContain('装填时间');
     expect(skillSec?.textContent).toContain('方向机');
     expect(skillSec?.textContent).toContain('高低机');
 
     // 5. 车内乘员
-    const crewSec = screen.root.querySelector('.cs-crew-sec');
+    const crewSec = screen.root.querySelector('.crw-crew-sec');
     expect(crewSec).not.toBeNull();
     expect(crewSec?.textContent).toContain('驾驶员');
     expect(crewSec?.textContent).toContain('车体');
@@ -94,7 +94,7 @@ describe('CrewScreen UI Component', () => {
     expect(crewSec?.textContent).toContain('炮塔');
 
     // 6. 训练过的车族
-    const trainedSec = screen.root.querySelector('.cs-trained-sec');
+    const trainedSec = screen.root.querySelector('.crw-trained-sec');
     expect(trainedSec).not.toBeNull();
     expect(trainedSec?.textContent).toContain('训练过的车族');
     expect(trainedSec?.textContent).toContain('虎式 Ausf. E');
@@ -121,7 +121,7 @@ describe('CrewScreen UI Component', () => {
     const { screen } = createCrewScreen();
     screen.open('germany', 0);
 
-    const skillTable = screen.root.querySelector('.cs-skill-table');
+    const skillTable = screen.root.querySelector('.crw-skill-table');
     expect(skillTable).not.toBeNull();
 
     const headers = skillTable?.querySelectorAll('th');
@@ -136,9 +136,9 @@ describe('CrewScreen UI Component', () => {
     // 每一行都应该有新手值、当前值、王牌值和 "→" 箭头
     rows?.forEach((row) => {
       expect(row.textContent).toContain('→');
-      const noviceVal = row.querySelector('.cs-skill-novice');
-      const currVal = row.querySelector('.cs-skill-curr');
-      const aceVal = row.querySelector('.cs-skill-ace');
+      const noviceVal = row.querySelector('.crw-skill-novice');
+      const currVal = row.querySelector('.crw-skill-curr');
+      const aceVal = row.querySelector('.crw-skill-ace');
       expect(noviceVal).not.toBeNull();
       expect(currVal).not.toBeNull();
       expect(aceVal).not.toBeNull();
@@ -165,7 +165,7 @@ describe('CrewScreen UI Component', () => {
     const { screen } = createCrewScreen({ vehicles: [noAceVehicle] });
     screen.open('germany', 0);
 
-    const skillTable = screen.root.querySelector('.cs-skill-table');
+    const skillTable = screen.root.querySelector('.crw-skill-table');
     expect(skillTable).not.toBeNull();
 
     const headers = skillTable?.querySelectorAll('th');
@@ -177,10 +177,10 @@ describe('CrewScreen UI Component', () => {
     const rows = skillTable?.querySelectorAll('tbody tr');
     rows?.forEach((row) => {
       expect(row.textContent).not.toContain('→');
-      const currVal = row.querySelector('.cs-skill-curr');
+      const currVal = row.querySelector('.crw-skill-curr');
       expect(currVal).not.toBeNull();
-      const noviceVal = row.querySelector('.cs-skill-novice');
-      const aceVal = row.querySelector('.cs-skill-ace');
+      const noviceVal = row.querySelector('.crw-skill-novice');
+      const aceVal = row.querySelector('.crw-skill-ace');
       expect(noviceVal).toBeNull();
       expect(aceVal).toBeNull();
     });
@@ -225,18 +225,18 @@ describe('CrewScreen UI Component', () => {
     const tigerSpec = VEHICLES.tiger_i;
     const expectedCrewCount = tigerSpec.internals.crew.length; // 5人
 
-    const svg = screen.root.querySelector('.cs-schematic-svg');
+    const svg = screen.root.querySelector('.crw-schematic-svg');
     expect(svg).not.toBeNull();
 
     // 检查乘员小圆点
-    const dots = svg?.querySelectorAll('.cs-crew-dot');
+    const dots = svg?.querySelectorAll('.crw-crew-dot');
     expect(dots?.length).toBe(expectedCrewCount);
 
-    const dotGroups = svg?.querySelectorAll('.cs-crew-dot-group');
+    const dotGroups = svg?.querySelectorAll('.crw-crew-dot-group');
     expect(dotGroups?.length).toBe(expectedCrewCount);
 
     // 检查岗位缩写是否正确显示
-    const texts = svg?.querySelectorAll('.cs-crew-dot-text');
+    const texts = svg?.querySelectorAll('.crw-crew-dot-text');
     expect(texts?.length).toBe(expectedCrewCount);
     const textChars = Array.from(texts ?? []).map((t) => t.textContent);
     // 虎式有车长、炮手、装填手、驾驶员、机电员 -> '长', '炮', '装', '驾', '电'
@@ -268,7 +268,7 @@ describe('CrewScreen UI Component', () => {
     const { screen, onClose } = createCrewScreen();
     screen.open('germany', 0);
 
-    const closeBtn = screen.root.querySelector('.cs-close-btn') as HTMLButtonElement;
+    const closeBtn = screen.root.querySelector('.crw-close-btn') as HTMLButtonElement;
     expect(closeBtn).not.toBeNull();
 
     closeBtn.click();
@@ -284,7 +284,7 @@ describe('CrewScreen UI Component', () => {
     const { screen, onClose } = createCrewScreen();
     screen.open('germany', 0);
 
-    const modalWindow = screen.root.querySelector('.cs-window') as HTMLElement;
+    const modalWindow = screen.root.querySelector('.crw-window') as HTMLElement;
     modalWindow.click();
     expect(screen.isOpen).toBe(true);
     expect(onClose).not.toHaveBeenCalled();
@@ -304,7 +304,7 @@ describe('CrewScreen UI Component', () => {
     currentProfile.nations.germany.crews[0].trained = [];
 
     screen.open('germany', 0);
-    const vehSec = screen.root.querySelector('.cs-veh-sec');
+    const vehSec = screen.root.querySelector('.crw-veh-sec');
     expect(vehSec?.textContent).toContain('未训练');
 
     screen.dispose();

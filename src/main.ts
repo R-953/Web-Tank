@@ -34,6 +34,7 @@ import { internalsSnapshot } from './game/internalsSnapshot';
 import { MapScreen } from './ui/MapScreen';
 import { currentSymbology, setSymbology } from './ui/symbols';
 import { HangarScene } from './ui/menu/Hangar';
+import { setThumbnailAppearance } from './ui/menu/thumbnails';
 import { MainMenu, type MenuSelection } from './ui/menu/MainMenu';
 import { PauseMenu } from './ui/menu/PauseMenu';
 import { SettingsPanel } from './ui/menu/SettingsPanel';
@@ -237,6 +238,8 @@ async function start(): Promise<void> {
   /** 机库里看到的样子:只套涂装 */
   const showcaseOf = (spec: VehicleSpec): VehicleSpec => applyPaint(spec, paintStore.get(spec.id));
   /** 进战斗时玩家那辆车的数据:改装(性能)+ 涂装(颜色) */
+  // 编组栏 / 科技树 / 各界面里的缩略图也按已选涂装显示
+  setThumbnailAppearance(showcaseOf);
   const playerSpecOf = (spec: VehicleSpec): VehicleSpec => applyPaint(applyModifications(spec, modStore.get(spec.id)), paintStore.get(spec.id));
 
   const modificationsScreen = new ModificationsScreen({
