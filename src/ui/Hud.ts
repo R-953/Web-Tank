@@ -5,7 +5,19 @@ import { CREW } from '../data/modules';
 import { KILLCAM } from './KillCam';
 import { MINIMAP } from './Minimap';
 import { VehicleStatus, STATUS_SIZE } from './hud/VehicleStatus';
-import { statusMessages, transientFromHit, MessageQueue, type StatusMsg } from './hud/hudStatus';
+import {
+  statusMessages,
+  transientFromHit,
+  MessageQueue,
+  repairLabel,
+  hintLine,
+  formatActionHintHtml,
+  killFeedName,
+  createKillFeedFromHit,
+  createKillFeedFromDestroyed,
+  KillFeedTracker,
+  type StatusMsg,
+} from './hud/hudStatus';
 import { ProgressRing, type RingIcon } from './hud/ProgressRing';
 
 /** 一种弹在快捷栏里的显示 */
@@ -98,11 +110,13 @@ const CSS = `
 .hud-rpm.bad > div { background: #f08a1e; }
 .hud-drive .dim { opacity: .75; }
 .hud-bottom { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.hud-action-hint { display: flex; align-items: center; gap: 6px; min-height: 24px; font-size: 15px; font-weight: 600; color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,.9); pointer-events: none; }
+.hud-action-hint .hud-hint-key { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 5px; background: rgba(14,17,20,.7); border: 1px solid rgba(255,255,255,.6); border-radius: 3px; font-size: 13px; font-weight: 700; color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.8); }
 .hud-msgs { display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 18px; font-size: 14px; font-weight: 600; }
 .hud-msgs .red { color: #ff5a4a; }
 .hud-msgs .amber { color: #ffcf5a; }
 .hud-msgs .white { color: #f2f2f2; font-weight: 500; }
-.hud-rings { display: flex; gap: 16px; align-items: flex-end; justify-content: center; }
+.hud-rings { display: flex; gap: 16px; align-items: flex-start; justify-content: center; }
 .hud-progress-ring { display: flex; flex-direction: column; align-items: center; gap: 4px; pointer-events: none; }
 .hud-progress-ring .progress-ring-label { font-size: 12px; font-weight: 600; color: #ffd166; text-shadow: 0 1px 2px rgba(0,0,0,.9); white-space: nowrap; }
 .hud-bar { position: relative; display: flex; gap: 4px; align-items: stretch; padding: 4px; }
@@ -128,6 +142,8 @@ const CSS = `
 .hud-feed .kill { border-color: #ff4d4d; font-weight: 600; }
 .hud-feed .self { border-color: #ffd166; }
 .hud-feed .incoming { border-color: #e04040; background: rgba(70,12,12,.66); }
+.hud-feed .feed-friendly, .hud-feed .feed-blue { color: #7cc4ff; }
+.hud-feed .feed-enemy, .hud-feed .feed-red { color: #ff5a4a; }
 .hud-cursor { position: fixed; left: 0; top: 0; width: 16px; height: 22px; display: none; filter: drop-shadow(0 1px 1px rgba(0,0,0,.8)); pointer-events: none; z-index: 7; }
 .hud-marker { position: absolute; left: 0; top: 0; display: none; transform: translate(-50%, -100%); text-align: center; font-size: 12px; font-weight: 600; color: #ffd166; white-space: nowrap; }
 .hud.scoped .hud-top { display: none; }
@@ -171,6 +187,7 @@ export class Hud {
   private readonly rpmFill: HTMLDivElement;
   private readonly surfaceEl: HTMLDivElement;
   private readonly crewEl: HTMLDivElement;
+  private readonly actionHint: HTMLDivElement;
   private readonly msgs: HTMLDivElement;
   private readonly ringsContainer: HTMLDivElement;
   private readonly bar: HTMLDivElement;
@@ -182,9 +199,11 @@ export class Hud {
   private slots: { ammo: Slot[]; mg: Slot | null; repair: Slot; fire: Slot; sight: Slot } | null = null;
   private barSignature = '';
   private lastMsgs = '';
+  private lastActionHint = '';
   private lastHint = '';
   private compassDpr = 0;
   private readonly transientQueue = new MessageQueue(3.5);
+  private readonly killTracker = new KillFeedTracker(0.5);
   private swapRings: ProgressRing[] = [];
   private repairRing: ProgressRing | null = null;
   private resupplyRing: ProgressRing | null = null;
@@ -222,9 +241,11 @@ export class Hud {
     this.crewEl = el('div', 'dim', this.drive);
 
     const bottom = el('div', 'hud-bottom', this.root);
-    this.msgs = el('div', 'hud-msgs', bottom);
+    this.actionHint = el('div', 'hud-action-hint', bottom);
+    this.actionHint.style.display = 'none';
     this.ringsContainer = el('div', 'hud-rings', bottom);
     this.ringsContainer.style.display = 'none';
+    this.msgs = el('div', 'hud-msgs', bottom);
     this.bar = el('div', 'hud-box hud-bar', bottom);
 
     this.feed = el('div', 'hud-feed', this.root);
@@ -282,6 +303,7 @@ export class Hud {
 
     this.status.draw({ spec: s.spec, damage: d, turretYaw: s.turretYaw, viewYaw: s.viewYaw, time: now });
     this.updateDrive(s);
+    this.updateActionHint(s);
     this.updateMessages(s, now);
     this.updateRings(s);
     this.updateBar(s);
@@ -300,31 +322,43 @@ export class Hud {
   }
 
   onEvent(e: GameEvent, now: number): void {
-    if (e.type === 'hit' && e.targetId === 'player') {
-      const transients = transientFromHit(e.replay);
-      for (const t of transients) {
-        this.transientQueue.push(t, now);
+    if (e.type === 'hit') {
+      if (e.targetId === 'player') {
+        const transients = transientFromHit(e.replay);
+        for (const t of transients) {
+          this.transientQueue.push(t, now);
+        }
+      }
+      if (e.replay.destroyed) {
+        if (this.killTracker.recordKill(e.targetId, now)) {
+          this.pushFeed(createKillFeedFromHit(e), 'kill', now);
+        }
       }
     } else if (e.type === 'misfire' && e.vehicleId === 'player') {
       const text = e.part === 'breech' ? '炮闩受损,击发失败' : '炮管受损,击发失败';
       this.transientQueue.push({ text, cls: 'red' }, now);
     } else if (e.type === 'ammo-lost' && e.vehicleId === 'player') {
       this.transientQueue.push({ text: `弹药架受损,损失 ${e.rounds} 发`, cls: 'amber' }, now);
-    } else if (e.type === 'destroyed' && e.vehicleId !== 'player') {
-      const cause = { ammo: '弹药殉爆', crew: '乘员不足', fire: '烧毁' }[e.cause];
-      this.pushFeed(`${e.name} 已摧毁(${cause})`, 'kill', now);
+    } else if (e.type === 'destroyed') {
+      if (this.killTracker.recordKill(e.vehicleId, now)) {
+        this.pushFeed(createKillFeedFromDestroyed(e), 'kill', now);
+      }
     } else if (e.type === 'fire' && e.state === 'start' && e.vehicleId !== 'player') {
-      this.pushFeed(`${e.name} 起火`, 'pen', now);
+      this.pushFeed(`${killFeedName(e.name)} 起火`, 'pen', now);
     } else if (e.type === 'cook-off' && e.vehicleId !== 'player') {
-      this.pushFeed(`${e.name} 弹药被引燃殉爆`, 'kill', now);
+      this.pushFeed(`${killFeedName(e.name)} 弹药被引燃殉爆`, 'kill', now);
     }
   }
 
   reset(): void {
     this.feedItems.forEach((i) => i.el.remove());
     this.feedItems = [];
+    this.killTracker.clear();
     this.lastMsgs = '';
     this.msgs.innerHTML = '';
+    this.lastActionHint = '';
+    this.actionHint.innerHTML = '';
+    this.actionHint.style.display = 'none';
     this.barSignature = '';
     this.transientQueue.clear();
     this.swapRings.forEach((r) => r.hide());
@@ -412,23 +446,53 @@ export class Hud {
     this.crewEl.textContent = `乘员 ${s.damage.aliveCount} / ${s.damage.crew.length}`;
   }
 
-  // ------------------------------------------------------------------ 正下方:状态提示
+  // ------------------------------------------------------------------ 正下方:操作提示与状态提示
+
+  private updateActionHint(s: HudState): void {
+    if (!s.alive) {
+      if (this.lastActionHint !== '') {
+        this.actionHint.innerHTML = '';
+        this.actionHint.style.display = 'none';
+        this.lastActionHint = '';
+      }
+      return;
+    }
+    const d = s.damage;
+    const hint = hintLine(
+      {
+        fire: d.fire,
+        extinguishers: d.extinguishers,
+        isRepairing: d.repair !== null,
+        hasRepairable: d.brokenRepairable().length > 0,
+      },
+      s.keys
+    );
+    const html = hint ? formatActionHintHtml(hint) : '';
+    if (html !== this.lastActionHint) {
+      this.lastActionHint = html;
+      this.actionHint.innerHTML = html;
+      this.actionHint.style.display = hint ? 'flex' : 'none';
+    }
+  }
 
   private updateMessages(s: HudState, now: number): void {
     const d = s.damage;
     const out: StatusMsg[] = [];
     if (!s.alive) out.push({ text: '已被击毁', cls: 'red' });
     else {
-      // 1. 状态型提示
+      // 1. 维修倒计时作为第一行(琥珀色,居中在圆环行正下方)
+      if (d.repair) {
+        const remainingSec = Math.ceil(d.repair.remaining / Math.max(d.repairRate, 1e-6));
+        out.push({ text: repairLabel(remainingSec), cls: 'amber' });
+      }
+
+      // 2. 状态型提示
       out.push(...statusMessages(d));
 
-      // 2. 瞬时提示
+      // 3. 瞬时提示
       out.push(...this.transientQueue.get(now));
 
-      // 3. 保留的操作提示
-      if (!d.repair && d.brokenRepairable().length && !d.fire) {
-        out.push({ text: `有模块被打坏 — 按 ${s.keys.repair} 维修`, cls: 'amber' });
-      }
+      // 4. 装填与弹药提示
       const selected = s.ammo.find((a) => a.selected);
       if (d.canFire && !s.loaded) {
         if (selected && selected.count === 0) {
@@ -439,7 +503,7 @@ export class Hud {
       }
     }
     const html = out
-      .slice(0, 3)
+      .slice(0, 4)
       .map((m) => `<div class="${m.cls}">${m.text}</div>`)
       .join('');
     if (html !== this.lastMsgs) {
@@ -476,11 +540,9 @@ export class Hud {
       }
       const r = s.damage.repair;
       const progress = Math.max(0, Math.min(1, 1 - r.remaining / Math.max(r.total, 1e-6)));
-      const remainingSec = Math.ceil(r.remaining / Math.max(s.damage.repairRate, 1e-6));
       this.repairRing.set({
         progress,
         icon: 'repair',
-        label: `正在修理,剩余:${remainingSec}秒`,
       });
     } else {
       this.repairRing?.hide();

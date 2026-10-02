@@ -110,4 +110,21 @@ describe('ProgressRing 进度圆环组件', () => {
     ring.set({ progress: 0.5, icon: 'repair', tone: 'blue' });
     expect(ring.fgCircle.getAttribute('stroke')).toBe('#7cc4ff');
   });
+
+  it('多个无 label 圆环并排时高度与结构一致(顶替与维修圆环同高)', () => {
+    const swapRing = new ProgressRing(container);
+    const repairRing = new ProgressRing(container);
+
+    swapRing.set({ progress: 0.3, icon: 'driver' });
+    repairRing.set({ progress: 0.7, icon: 'repair' });
+
+    expect(swapRing.labelEl.style.display).toBe('none');
+    expect(repairRing.labelEl.style.display).toBe('none');
+
+    // 两者 SVG 尺寸相同
+    expect(swapRing.svg.getAttribute('width')).toBe('44');
+    expect(swapRing.svg.getAttribute('height')).toBe('44');
+    expect(repairRing.svg.getAttribute('width')).toBe('44');
+    expect(repairRing.svg.getAttribute('height')).toBe('44');
+  });
 });

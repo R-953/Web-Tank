@@ -64,6 +64,7 @@ export type GameEvent =
       /** 主炮级(口径 ≥ 20 mm)炮弹命中载具:带完整回放数据 */
       type: 'hit';
       shooterId: string;
+      shooterName?: string;
       targetId: string;
       targetName: string;
       part: VehiclePart;
@@ -657,7 +658,7 @@ export class Game {
     };
     const impactKind: ImpactType = !armor ? 'nonpen' : armor.penetrated ? 'penetration' : armor.ricochet ? 'ricochet' : 'nonpen';
     this.events.push({ type: 'impact', shooterId: p.ownerId, point: hit.point.clone(), kind: impactKind, caliber: shell.caliber, targetId: vehicle.id });
-    this.events.push({ type: 'hit', shooterId: p.ownerId, targetId: vehicle.id, targetName: vehicle.spec.name, part, replay });
+    this.events.push({ type: 'hit', shooterId: p.ownerId, shooterName: this.vehicles.find((v) => v.id === p.ownerId)?.spec.name, targetId: vehicle.id, targetName: vehicle.spec.name, part, replay });
     // 被摧毁的事件和爆炸特效统一由 checkDeaths 在这一步末尾发出
   }
 

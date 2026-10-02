@@ -239,3 +239,162 @@ export class MessageQueue {
     this.items = [];
   }
 }
+
+/** 维修倒计时文案 */
+export function repairLabel(remainingSec: number): string {
+  return `正在修理,剩余:${Math.ceil(remainingSec)}秒`;
+}
+
+export interface ActionHint {
+  key: string;
+  text: string;
+}
+
+export interface HintConditions {
+  /** 是否着火,以及灭火状态(extinguishing !== null 为正在灭火中) */
+  fire: { extinguishing: number | null } | null;
+  /** 灭火器剩余数量 */
+  extinguishers: number;
+  /** 是否正在维修中 */
+  isRepairing: boolean;
+  /** 是否有损坏的可维修模块 */
+  hasRepairable: boolean;
+}
+
+export interface HintKeys {
+  repair: string;
+  extinguish: string;
+}
+
+/**
+ * 操作提示行纯函数:
+ * - 优先级 1: 灭火提示。着火且有灭火器且未在灭火中 -> `[keys.extinguish] 灭火`
+ * - 优先级 2: 维修提示。没在维修、没着火、有可修模块 -> `[keys.repair] 按住开始维修`
+ * - 其余情况返回 null
+ */
+export function hintLine(cond: HintConditions, keys: HintKeys): ActionHint | null {
+  if (cond.fire && cond.fire.extinguishing === null && cond.extinguishers > 0) {
+    return { key: keys.extinguish, text: '灭火' };
+  }
+  if (!cond.isRepairing && !cond.fire && cond.hasRepairable) {
+    return { key: keys.repair, text: '按住开始维修' };
+  }
+  return null;
+}
+
+export function formatActionHintHtml(hint: ActionHint): string {
+  return `<span class="hud-hint-key">${hint.key}</span><span>${hint.text}</span>`;
+}
+
+export function formatActionHintText(hint: ActionHint): string {
+  return `[${hint.key}] ${hint.text}`;
+}
+
+/** 车型太长时使用短名: 去掉中英文括号及其中内容(如「虎式 Ausf. E(1944 后期型)」→「虎式 Ausf. E」) */
+export function killFeedName(name: string): string {
+  if (!name || !name.trim()) return '未知';
+  return name.replace(/\s*(\([^)]*\)|（[^）]*）)/g, '').trim();
+}
+
+export type Affiliation = 'friendly' | 'enemy';
+
+export interface KillFeedShooterInput {
+  shooterName: string;
+  shooterAffiliation: Affiliation;
+  shellName: string;
+  targetName: string;
+  targetAffiliation: Affiliation;
+}
+
+export interface KillFeedNoShooterInput {
+  targetName: string;
+  targetAffiliation: Affiliation;
+  cause: 'crew' | 'ammo' | 'fire';
+}
+
+export const KILL_CAUSE_TEXT: Record<'crew' | 'ammo' | 'fire', string> = {
+  ammo: '弹药殉爆',
+  crew: '乘员不足',
+  fire: '烧毁',
+};
+
+export function isFriendly(vehicleId: string): boolean {
+  return vehicleId === 'player' || vehicleId.startsWith('friendly');
+}
+
+export function formatKillFeedShooter(input: KillFeedShooterInput): string {
+  const shooterCls = input.shooterAffiliation === 'friendly' ? 'feed-friendly' : 'feed-enemy';
+  const targetCls = input.targetAffiliation === 'friendly' ? 'feed-friendly' : 'feed-enemy';
+  const shooter = killFeedName(input.shooterName);
+  const target = killFeedName(input.targetName);
+  return `<span class="${shooterCls}">${shooter}</span> ➡${input.shellName} <span class="${targetCls}">${target}</span>`;
+}
+
+export function formatKillFeedNoShooter(input: KillFeedNoShooterInput): string {
+  const targetCls = input.targetAffiliation === 'friendly' ? 'feed-friendly' : 'feed-enemy';
+  const target = killFeedName(input.targetName);
+  const causeText = KILL_CAUSE_TEXT[input.cause] ?? '已摧毁';
+  return `<span class="${targetCls}">${target}</span> ${causeText}`;
+}
+
+export function createKillFeedFromHit(e: {
+  shooterId: string;
+  shooterName?: string;
+  targetId: string;
+  targetName: string;
+  replay: HitReplay;
+}): string {
+  return formatKillFeedShooter({
+    shooterName: e.shooterName || '未知',
+    shooterAffiliation: isFriendly(e.shooterId) ? 'friendly' : 'enemy',
+    shellName: e.replay.shell.name,
+    targetName: e.targetName || '未知',
+    targetAffiliation: isFriendly(e.targetId) ? 'friendly' : 'enemy',
+  });
+}
+
+export function createKillFeedFromDestroyed(e: {
+  vehicleId: string;
+  name: string;
+  cause: 'crew' | 'ammo' | 'fire';
+}): string {
+  return formatKillFeedNoShooter({
+    targetName: e.name || '未知',
+    targetAffiliation: isFriendly(e.vehicleId) ? 'friendly' : 'enemy',
+    cause: e.cause,
+  });
+}
+
+/**
+ * 击毁流同目标去重器:
+ * 0.5 秒内同一目标不能出现两行 (一发击毁时 hit 和 destroyed 事件都会来, 按目标 id 去重)
+ */
+export class KillFeedTracker {
+  private recentKills = new Map<string, number>();
+
+  constructor(readonly windowSeconds = 0.5) {}
+
+  /**
+   * 记录或检查某目标是否应该在击毁流中输出。
+   * 如果在 windowSeconds 内该目标已有击毁记录，则返回 false（去重）；
+   * 否则记录当前时间并返回 true。
+   */
+  recordKill(targetId: string, now: number): boolean {
+    const last = this.recentKills.get(targetId);
+    if (last !== undefined && now - last < this.windowSeconds) {
+      return false;
+    }
+    this.recentKills.set(targetId, now);
+    return true;
+  }
+
+  hasRecentKill(targetId: string, now: number): boolean {
+    const last = this.recentKills.get(targetId);
+    return last !== undefined && now - last < this.windowSeconds;
+  }
+
+  clear(): void {
+    this.recentKills.clear();
+  }
+}
+
