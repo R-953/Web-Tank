@@ -17,6 +17,7 @@ import { NATION_NAMES } from './techTreeLayout';
 import { classIcon } from './classIcons';
 import { h, injectLineupBarStyles } from './styles';
 import { nationFlag } from './flags';
+import { vehicleThumbnail } from './thumbnails';
 
 export interface LineupBarOptions {
   vehicles: readonly VehicleSpec[];
@@ -229,7 +230,14 @@ export class LineupBar {
         const midRow = h('div', 'mm-lineup-slot-mid', slot);
         const silWrap = h('div', 'mm-lineup-slot-sil', midRow);
         if (veh) {
-          silWrap.innerHTML = silhouette(veh, 100);
+          const thumb = vehicleThumbnail(veh);
+          if (thumb) {
+            const img = h('img', 'mm-lineup-slot-thumb', silWrap);
+            img.src = thumb;
+            img.alt = veh.name;
+          } else {
+            silWrap.innerHTML = silhouette(veh, 100);
+          }
         }
 
         const metaRow = h('div', 'mm-lineup-slot-meta', midRow);

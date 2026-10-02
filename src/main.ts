@@ -25,6 +25,8 @@ import { Hud, type HudState } from './ui/Hud';
 import { SightOverlay, azimuthFromYaw } from './ui/SightOverlay';
 import { KillCam, killcamRect } from './ui/KillCam';
 import { Minimap, type MapLike, type MinimapMarker } from './ui/Minimap';
+import { InternalsView } from './ui/InternalsView';
+import { internalsSnapshot } from './game/internalsSnapshot';
 import { MapScreen } from './ui/MapScreen';
 import { currentSymbology, setSymbology } from './ui/symbols';
 import { HangarScene } from './ui/menu/Hangar';
@@ -87,10 +89,11 @@ function loadLastSelection(): { vehicleId: string; mapId: string } {
 const ONLINE_HEARTBEAT_MS = 30_000;
 
 /**
- * 车组与编组存档。打开页面时补算上次关闭以来的离线成长;页面开着时定期把 lastSeen 记成当前时刻,
- * 这样下次打开只补算关掉以后的时间。第一次用新存档时,沿用旧版「上次选的车」决定当前国家和第一个车组的车。
+ * 车组与编组存档。设置里打开了「离线挂机成长」时,打开页面补算上次关闭以来的离线成长(默认关闭,只把 lastSeen 记成现在);
+ * 页面开着时定期把 lastSeen 记成当前时刻,这样下次打开只补算关掉以后的时间。
+ * 第一次用新存档时,沿用旧版「上次选的车」决定当前国家和第一个车组的车。
  */
-function openProfileStore(vehicles: readonly ProfileVehicle[], lastVehicleId: string): ProfileStore {
+function openProfileStore(vehicles: readonly ProfileVehicle[], lastVehicleId: string, offlineGrowth: boolean): ProfileStore {
   let fresh = true;
   try {
     fresh = localStorage.getItem('webtank.profile.v1') === null;
@@ -104,7 +107,7 @@ function openProfileStore(vehicles: readonly ProfileVehicle[], lastVehicleId: st
     p = setActiveNation(p, last.nation);
     p = assignVehicle(p, last.nation, p.nations[last.nation].activeLineup, 0, last.id, vehicles);
   }
-  store.set(advanceTime(p, Date.now(), progressAfter));
+  store.set(offlineGrowth ? advanceTime(p, Date.now(), progressAfter) : { ...p, lastSeen: Date.now() });
 
   const touch = () => store.set({ ...store.get(), lastSeen: Date.now() });
   window.setInterval(touch, ONLINE_HEARTBEAT_MS);
@@ -160,6 +163,9 @@ async function start(): Promise<void> {
   const sight = new SightOverlay(document.body);
   const hud = new Hud(document.body);
   const killcam = new KillCam(document.body);
+  const internalsView = new InternalsView(document.body);
+  /** 玩家按 O 想看内构(地图界面开着时临时藏起来) */
+  let internalsOn = false;
   const minimap = new Minimap(document.body);
   const settingsPanel = new SettingsPanel(document.body, settings, { onUiSound: uiClick });
 
@@ -209,7 +215,7 @@ async function start(): Promise<void> {
   const profileVehicles: ProfileVehicle[] = Object.values(VEHICLES)
     .filter((v) => v.nation)
     .map((v) => ({ id: v.id, nation: v.nation!, family: v.family ?? v.id }));
-  const profiles = openProfileStore(profileVehicles, lastSelection.vehicleId);
+  const profiles = openProfileStore(profileVehicles, lastSelection.vehicleId, cfg().game.offlineGrowth);
 
   const menu = new MainMenu({
     parent: document.body,
@@ -388,6 +394,8 @@ async function start(): Promise<void> {
     wasLoaded = true;
     Object.assign(stats, { shots: 0, hits: 0, kills: 0 });
     orbit.setThirdPerson();
+    orbit.snapFov();
+    internalsOn = false;
     hud.reset();
     killcam.stop();
     minimap.setMap(game.map);
@@ -408,6 +416,8 @@ async function start(): Promise<void> {
     pause.hide();
     mapScreen.close();
     killcam.stop();
+    internalsOn = false;
+    internalsView.setVisible(false);
     hud.setVisible(false);
     minimap.setVisible(false);
     sight.draw({ active: false, fovDeg: 70, magnification: 1, range: 0, reticle: 'german', cutout: null });
@@ -477,6 +487,7 @@ async function start(): Promise<void> {
         killcam,
         minimap,
         mapScreen,
+        internalsView,
         profiles,
         settings,
         input,
@@ -497,10 +508,11 @@ async function start(): Promise<void> {
   const aimPoint = new THREE.Vector3();
   const sightPos = new THREE.Vector3();
   const heightAt = (x: number, z: number) => game!.map.heightAt(x, z);
-  const updateCamera = () => {
+  /** dt 只在每帧第一次调用时传,让视场过渡每帧只推进一次;同一帧里再调用传 0 */
+  const updateCamera = (dt: number) => {
     const g = game!;
     g.player.root.visible = !scoped;
-    orbit.update(g.player.root.position, heightAt, scoped ? g.player.sightWorldPosition(sightPos) : undefined);
+    orbit.update(g.player.root.position, heightAt, scoped ? g.player.sightWorldPosition(sightPos) : undefined, dt);
   };
 
   window.addEventListener('resize', () => {
@@ -548,7 +560,7 @@ async function start(): Promise<void> {
   const key = (a: ActionId) => bindingShort(cfg().controls.bindings[a][0] ?? cfg().controls.bindings[a][1]);
   const hints = () => {
     const move = [key('forward'), key('left'), key('back'), key('right')].join('');
-    return `${move} 移动 · ${key('fireMain')} 主炮 · ${key('fireMg')} 机枪 · 1–4 弹种 · ${key('scope')} 开镜 · ${key('zoomCycle')} 放大 / 倍率 · 表尺 ${key('rangeUp')} / ${key('rangeDown')} · ${key('repair')} 维修 · ${key('extinguish')} 灭火 · 按住 ${key('freeLook')} 自由视角 · 按住 ${key('cursor')} 操作小地图 · ${key('mapScreen')} 地图 · Esc 暂停`;
+    return `${move} 移动 · ${key('fireMain')} 主炮 · ${key('fireMg')} 机枪 · 1–4 弹种 · ${key('scope')} 开镜 · ${key('zoomCycle')} 放大 / 倍率 · 表尺 ${key('rangeUp')} / ${key('rangeDown')} · ${key('repair')} 维修 · ${key('extinguish')} 灭火 · 按住 ${key('freeLook')} 自由视角 · 按住 ${key('cursor')} 操作小地图 · ${key('mapScreen')} 地图 · ${key('internals')} 内构 · Esc 暂停`;
   };
 
   let last = performance.now();
@@ -611,6 +623,7 @@ async function start(): Promise<void> {
       input.endFrame();
       return;
     }
+    if (locked && actions.pressed('internals')) internalsOn = !internalsOn;
     if (actions.pressed('mapScreen')) {
       if (mapScreen.isOpen) closeBattleMap();
       else if (locked) openBattleMap();
@@ -653,7 +666,7 @@ async function start(): Promise<void> {
     // 2. 鼠标转动视角(光标模式下不转)。自由视角:按住时瞄准点冻结,松开后视角复原(开镜时不可用)
     const looking = freeLook.update(locked && alive && !scoped && !cursorMode && actions.isDown('freeLook'), orbit);
     if (locked && !cursorMode) orbit.rotate(dx, dy);
-    updateCamera();
+    updateCamera(dt);
 
     // 3. 准星射线 → 世界瞄准点 → 玩家控制(自由视角期间沿用按下时的瞄准点)
     if (!looking) {
@@ -670,7 +683,7 @@ async function start(): Promise<void> {
     const simulate = locked || mapScreen.isOpen || g.state !== 'playing';
     if (simulate) stepper.advance(dt, (step) => g.fixedUpdate(step));
     g.syncVisuals(stepper.alpha);
-    updateCamera();
+    updateCamera(0);
     g.updateVisuals(dt, camera.position);
     const pp = player.root.position;
     sun.position.set(pp.x + 60, pp.y + 120, pp.z + 40);
@@ -784,7 +797,7 @@ async function start(): Promise<void> {
     );
     sight.draw({
       active: scoped,
-      fovDeg: orbit.fov,
+      fovDeg: orbit.displayFov,
       magnification: magnifications[zoomIndex],
       range: sightRange,
       azimuth: azimuthFromYaw(orbit.yaw),
@@ -800,11 +813,16 @@ async function start(): Promise<void> {
       return { x: p.x, z: p.z, team: 'enemy', dead: t.isDead, heading: Math.atan2(-f.x, -f.z), vehicleClass: t.spec.vehicleClass };
     });
     minimap.draw({ x: pos.x, z: pos.z, heading, view: orbit.yaw }, markers);
-    if (mapScreen.isOpen) mapScreen.draw({ player: { x: pos.x, z: pos.z, heading }, markers });
+    if (mapScreen.isOpen) {
+      mapScreen.draw({ player: { x: pos.x, z: pos.z, heading }, markers, objective: `摧毁全部靶车 ${g.targetsDestroyed} / ${g.targets.length}` });
+    }
+    internalsView.setVisible(internalsOn && !mapScreen.isOpen);
+    if (internalsView.visible) internalsView.update(internalsSnapshot(player));
 
     renderer.render(scene, camera);
     killcam.update(now);
     killcam.render(renderer);
+    internalsView.render(renderer);
     input.endFrame();
   };
   requestAnimationFrame(frame);

@@ -52,6 +52,18 @@ const CSS = `
 .mm-ammo .total { margin-top: 6px; }
 .mm-ammo .bar { height: 5px; background: rgba(255,255,255,.12); border-radius: 3px; overflow: hidden; margin-top: 3px; }
 .mm-ammo .bar > div { height: 100%; background: #e0b44c; }
+.mm-ammo-list { display: flex; flex-direction: column; gap: 8px; margin: 8px 0; }
+.mm-ammo-card { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 4px; padding: 8px 10px; }
+.mm-ammo-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.mm-ammo-card-title { flex: 1; min-width: 0; }
+.mm-ammo-name { font-weight: 600; font-size: 13px; color: #e6e8ea; }
+.mm-ammo-num { width: 48px; text-align: center; font-variant-numeric: tabular-nums; background: #1a2026; color: #f3d27f; border: 1px solid rgba(255,255,255,.18); border-radius: 3px; padding: 2px 4px; font: inherit; font-size: 12px; font-weight: 600; }
+.mm-ammo-num:focus { border-color: #e0b44c; outline: none; background: #222a33; }
+.mm-ammo-slider-row { display: flex; align-items: center; gap: 8px; }
+.mm-ammo-slider-row .mm-btn.small { width: 24px; height: 22px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; line-height: 1; flex-shrink: 0; }
+.mm-ammo-range { flex: 1; height: 6px; -webkit-appearance: none; appearance: none; border-radius: 3px; background: rgba(255,255,255,.15); outline: none; cursor: pointer; accent-color: #e0b44c; }
+.mm-ammo-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #f3d27f; cursor: pointer; border: 1px solid rgba(0,0,0,.4); box-shadow: 0 1px 3px rgba(0,0,0,.5); }
+.mm-ammo-range::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #f3d27f; cursor: pointer; border: 1px solid rgba(0,0,0,.4); }
 
 /* 底部载具栏 */
 .mm-slots { position: absolute; left: 50%; bottom: 30px; transform: translateX(-50%); display: flex; gap: 6px; padding: 6px; }
@@ -167,6 +179,9 @@ const TECH_TREE_CSS = `
 .tt-vehicle-name { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tt-vehicle-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 3px; gap: 4px; }
 .tt-vehicle-year { font-size: 11px; opacity: .65; white-space: nowrap; }
+.tt-vehicle-thumb-wrap { display: flex; align-items: center; justify-content: center; width: 100%; height: 62px; margin-bottom: 6px; overflow: hidden; }
+.tt-vehicle-thumb { max-width: 115px; max-height: 62px; width: auto; height: auto; object-fit: contain; display: block; }
+.tt-vehicle-thumb-wrap svg { max-width: 115px; height: auto; display: block; }
 
 /* 标记:已编组 */
 .tt-badge-lineup { font-size: 10px; padding: 1px 5px; border-radius: 2px; background: rgba(76, 175, 80, .2); border: 1px solid #4caf50; color: #a5d6a7; font-weight: 600; margin-left: auto; white-space: nowrap; line-height: 1.2; }
@@ -375,6 +390,14 @@ const LINEUP_BAR_CSS = `
 .mm-lineup-slot-sil svg {
   width: 100px;
   height: 23px;
+  display: block;
+}
+.mm-lineup-slot-sil img,
+.mm-lineup-slot-thumb {
+  width: 100px;
+  height: auto;
+  max-height: 48px;
+  object-fit: contain;
   display: block;
 }
 .mm-lineup-slot-meta {
@@ -599,63 +622,182 @@ const MAP_SCREEN_CSS = `
 .ms-root.hidden {
   display: none;
 }
-.ms-top {
-  padding: 8px 16px 6px;
+/* 顶部栏: 左上小字 + 顶部正中出战按钮 */
+.ms-header {
+  height: 46px;
   display: flex;
-  gap: 8px;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(10, 12, 14, 0.88);
-  overflow-x: auto;
+  justify-content: space-between;
+  padding: 0 16px;
+  background: rgba(10, 12, 14, 0.85);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   flex-shrink: 0;
   box-sizing: border-box;
 }
-.ms-card {
+.ms-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 220px;
+}
+.ms-header-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #e6e8ea;
+  letter-spacing: 0.5px;
+}
+.ms-header-mode {
+  font-size: 11px;
+  color: #cfd3d6;
+  opacity: 0.7;
+}
+.ms-header-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.ms-header-right {
+  min-width: 220px;
+}
+/* 顶部整条横带: 国旗 + 车组卡片横排 */
+.ms-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 16px;
+  background: rgba(16, 20, 24, 0.92);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+  box-sizing: border-box;
+  overflow-x: auto;
+}
+.ms-top-flag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 2px 4px;
+}
+.ms-cards-track {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 10px;
-  background: rgba(30, 36, 42, 0.85);
+  flex: 1;
+  overflow-x: auto;
+}
+/* 单张卡片 ≈ 165 px 宽: 上半缩略图/车名/类型, 下半细栏车组编号和等级 */
+.ms-card {
+  width: 165px;
+  min-width: 165px;
+  height: 62px;
+  background: rgba(28, 34, 40, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 3px;
-  font-size: 12px;
-  font-weight: 500;
-  min-width: 120px;
+  display: flex;
+  flex-direction: column;
   cursor: pointer;
-  white-space: nowrap;
+  box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  overflow: hidden;
+  position: relative;
 }
 .ms-card:hover {
-  border-color: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(36, 44, 52, 0.95);
 }
 .ms-card.sel, .ms-card.active {
   border-color: #e0b44c;
-  box-shadow: inset 0 0 0 1px #e0b44c;
-  background: rgba(60, 50, 25, 0.9);
+  box-shadow: inset 0 0 0 1px #e0b44c, 0 0 8px rgba(224, 180, 76, 0.3);
+  background: rgba(55, 45, 25, 0.92);
 }
-.ms-card-name {
-  font-weight: bold;
+.ms-card-main {
   flex: 1;
   display: flex;
   align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  min-width: 0;
 }
-.ms-card-level {
+.ms-card-thumb-wrap {
+  width: 44px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.ms-card-thumb {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.ms-card-thumb-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+}
+.ms-card-name {
+  font-weight: 600;
   font-size: 11px;
-  opacity: 0.75;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  color: #e6e8ea;
+}
+.ms-card-type-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+.ms-card-empty-plus {
+  font-size: 20px;
+  color: rgba(224, 180, 76, 0.6);
+  font-weight: 700;
+  margin: 0 auto;
+}
+.ms-card-footer {
+  height: 18px;
+  background: rgba(14, 18, 22, 0.75);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px;
+  font-size: 10px;
+  color: rgba(230, 232, 234, 0.7);
+  box-sizing: border-box;
+}
+.ms-card-crew-num {
   font-variant-numeric: tabular-nums;
 }
+.ms-card-level {
+  color: #e0b44c;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+/* 主体三大块: 左列 + 中间大地图 + 右列 */
 .ms-body {
   flex: 1;
   display: flex;
   min-height: 0;
   min-width: 0;
-  padding: 10px 16px;
+  padding: 8px 16px;
   gap: 16px;
   box-sizing: border-box;
   overflow: hidden;
 }
+/* 左列: 约 25% 宽 */
 .ms-left {
-  width: 440px;
-  max-width: 45vw;
+  width: 25%;
+  min-width: 260px;
+  max-width: 380px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -664,17 +806,45 @@ const MAP_SCREEN_CSS = `
   overflow-y: auto;
   box-sizing: border-box;
 }
+.ms-gun-title {
+  background: rgba(35, 42, 50, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #cfd3d6;
+  letter-spacing: 0.5px;
+}
+.ms-ammo-wrap {
+  width: 100%;
+}
 .ms-left .mm-ammo {
   position: static;
   width: 100%;
   max-height: none;
   box-sizing: border-box;
 }
-.ms-map-info {
-  font-size: 12px;
-  opacity: 0.75;
-  padding: 2px 4px;
+.ms-objective-wrap {
+  background: rgba(25, 30, 36, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  padding: 6px 10px;
 }
+.ms-objective-label {
+  font-size: 11px;
+  color: #e0b44c;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.ms-objective-text {
+  font-size: 12px;
+  color: #e6e8ea;
+}
+.ms-map-info {
+  display: none;
+}
+/* 中间大地图 */
 .ms-map-wrap {
   flex: 1;
   display: flex;
@@ -683,21 +853,28 @@ const MAP_SCREEN_CSS = `
   min-width: 0;
   min-height: 0;
   overflow: hidden;
+  position: relative;
 }
 .ms-canvas {
   display: block;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
   border-radius: 2px;
   flex-shrink: 0;
+  cursor: grab;
 }
+.ms-canvas:active {
+  cursor: grabbing;
+}
+/* 右列: 窄, 约 100 px */
 .ms-right {
-  width: 130px;
+  width: 100px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  align-items: flex-end;
-  padding: 2px 0;
+  justify-content: flex-end;
+  align-items: stretch;
+  gap: 12px;
+  padding: 4px 0;
   min-height: 0;
   box-sizing: border-box;
 }
@@ -710,23 +887,41 @@ const MAP_SCREEN_CSS = `
 .ms-symbology-select {
   width: 100%;
   font: inherit;
+  font-size: 11px;
   color: #e6e8ea;
   background: rgba(22, 27, 32, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 3px;
-  padding: 4px 8px;
+  padding: 3px 6px;
+  box-sizing: border-box;
+}
+.ms-icon-tools {
+  display: flex;
+  gap: 4px;
+  justify-content: space-between;
+  width: 100%;
+}
+.ms-tool-btn {
+  flex: 1;
+  padding: 4px 0;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(30, 36, 42, 0.85);
+  min-width: 0;
 }
 .ms-bottom-actions {
   width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
 }
 .ms-confirm-btn {
-  font-size: 16px;
-  padding: 10px 24px;
-  min-width: 120px;
+  font-size: 15px;
+  padding: 8px 16px;
+  min-width: 100px;
   font-weight: 700;
+  text-align: center;
 }
 `;
 
@@ -764,6 +959,14 @@ const VEHICLE_CARD_CSS = `
 }
 .vc-card.hidden {
   display: none;
+}
+.vc-image {
+  width: 100%;
+  height: auto;
+  max-height: 160px;
+  object-fit: contain;
+  display: block;
+  margin-bottom: 8px;
 }
 .vc-header {
   margin-bottom: 8px;

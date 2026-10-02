@@ -2,6 +2,7 @@ import type { VehicleSpec } from '../../data/types';
 import { applyCrewSkill } from '../../game/crew/progress';
 import { CLASS_NAMES, NATION_NAMES } from './techTreeLayout';
 import { h, injectVehicleCardStyles } from './styles';
+import { vehicleThumbnail } from './thumbnails';
 
 export interface CardRow {
   label: string;
@@ -248,7 +249,7 @@ export class VehicleCard {
   show(spec: VehicleSpec, skill: number, anchor: DOMRect): void {
     this.clearHideTimer();
     const data = vehicleCardData(spec, skill);
-    this.render(data);
+    this.render(data, spec);
 
     this.root.classList.remove('hidden');
 
@@ -314,8 +315,17 @@ export class VehicleCard {
     }
   }
 
-  private render(data: VehicleCardData): void {
+  private render(data: VehicleCardData, spec?: VehicleSpec): void {
     this.root.innerHTML = '';
+
+    if (spec) {
+      const thumb = vehicleThumbnail(spec);
+      if (thumb) {
+        const img = h('img', 'vc-image', this.root);
+        img.src = thumb;
+        img.alt = spec.name;
+      }
+    }
 
     const header = h('div', 'vc-header', this.root);
     h('div', 'vc-title', header, data.title);

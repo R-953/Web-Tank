@@ -16,6 +16,10 @@ import {
 } from './techTreeLayout';
 import { classIcon } from './classIcons';
 import { h, injectTechTreeStyles } from './styles';
+import type { VehicleSpec } from '../../data/types';
+import { VEHICLES } from '../../data/vehicles';
+import { silhouette } from './LineupBar';
+import { vehicleThumbnail } from './thumbnails';
 
 export interface TechTreeOptions {
   entries: readonly TechTreeEntry[];
@@ -160,6 +164,39 @@ export class TechTree {
     document.addEventListener('click', this.handleDocClick);
   }
 
+  private renderThumbOrSilhouette(parent: HTMLElement, entry: TechTreeEntry): void {
+    const spec =
+      VEHICLES[entry.id] ??
+      ({
+        id: entry.id,
+        name: entry.name,
+        nation: entry.nation,
+        vehicleClass: entry.vehicleClass,
+        serviceYear: entry.serviceYear,
+        family: entry.family,
+        armor: { front: 50, side: 30, rear: 20 },
+        turretArmor: { front: 50, side: 30, rear: 20 },
+        maxSpeed: 40,
+        turretRotationSpeed: 20,
+        weapons: [],
+        hull: { length: 6, width: 3, height: 1.5 },
+        turret: { length: 2.5, width: 2, height: 0.8, barrelLength: 2 },
+        sight: { magnifications: [4] },
+        internals: { modules: [], crew: [] },
+        color: 0x555555,
+      } as unknown as VehicleSpec);
+
+    const thumb = vehicleThumbnail(spec);
+    const wrap = h('div', 'tt-vehicle-thumb-wrap', parent);
+    if (thumb) {
+      const img = h('img', 'tt-vehicle-thumb', wrap);
+      img.src = thumb;
+      img.alt = entry.name;
+    } else if (spec.hull) {
+      wrap.innerHTML = silhouette(spec, 100);
+    }
+  }
+
   /**
    * 渲染单辆车卡片
    */
@@ -176,6 +213,8 @@ export class TechTree {
     if (isLineup) {
       card.classList.add('tt-in-lineup');
     }
+
+    this.renderThumbOrSilhouette(card, entry);
 
     const nameEl = h('div', 'tt-vehicle-name', card);
     nameEl.innerHTML = `${classIcon(entry.vehicleClass)}${entry.name}`;
@@ -242,6 +281,8 @@ export class TechTree {
       if (isLineup) {
         item.classList.add('tt-in-lineup');
       }
+
+      this.renderThumbOrSilhouette(item, member);
 
       const nameEl = h('div', 'tt-vehicle-name', item);
       nameEl.innerHTML = `${classIcon(member.vehicleClass)}${member.name}`;

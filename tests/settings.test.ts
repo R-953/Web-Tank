@@ -44,10 +44,26 @@ describe('设置:修正与保存', () => {
     expect(new SettingsStore(storage).value.game.minimapMarkers).toBe('arrow');
   });
 
+  it('离线挂机成长:缺省和旧存档(没有这个字段)为 false;非法值回到 false;能够保存与读回 true', () => {
+    expect(defaultSettings().game.offlineGrowth).toBe(false);
+    expect(sanitize({}).game.offlineGrowth).toBe(false);
+    expect(sanitize({ game: { minimapShape: 'circle' } }).game.offlineGrowth).toBe(false);
+    expect(sanitize({ game: { offlineGrowth: 'true' } }).game.offlineGrowth).toBe(false);
+    expect(sanitize({ game: { offlineGrowth: 1 } }).game.offlineGrowth).toBe(false);
+    expect(sanitize({ game: { offlineGrowth: null } }).game.offlineGrowth).toBe(false);
+    expect(sanitize({ game: { offlineGrowth: true } }).game.offlineGrowth).toBe(true);
+    expect(sanitize({ game: { offlineGrowth: false } }).game.offlineGrowth).toBe(false);
+
+    const storage = new MemoryStorage();
+    new SettingsStore(storage).update((d) => (d.game.offlineGrowth = true));
+    expect(new SettingsStore(storage).value.game.offlineGrowth).toBe(true);
+  });
+
   it('只存了部分键位的旧存档:其余操作用默认键位', () => {
     const s = sanitize({ controls: { bindings: { forward: ['KeyI', null], bogus: ['KeyQ', null] } } });
     expect(s.controls.bindings.forward).toEqual(['KeyI', null]);
     expect(s.controls.bindings.back).toEqual(defaultBindings().back);
+    expect(s.controls.bindings.internals).toEqual(defaultBindings().internals);
   });
 
   it('update 保存到存储并通知订阅者;重新读取得到同样的设置', () => {

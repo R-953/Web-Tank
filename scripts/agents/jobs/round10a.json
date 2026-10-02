@@ -1,0 +1,15 @@
+{
+  "name": "round10a",
+  "base": "origin/docs/round10-cards",
+  "permissions": "scoped",
+  "timeoutMin": 90,
+  "maxPerAgent": 2,
+  "jobs": [
+    { "id": "047", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/047-vehicle-thumbnails.md", "branch": "task/047-vehicle-thumbnails", "commit": "feat: 载具缩略图用真实模型渲染,接到编组栏、科技树、信息卡" },
+    { "id": "048", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/048-map-screen-wt-layout.md", "branch": "task/048-map-screen-wt-layout", "commit": "ui: 战斗准备界面和 M 键地图界面按 War Thunder 布局重排,地图可缩放拖动" },
+    { "id": "051", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/051-ammo-slider.md", "branch": "task/051-ammo-slider", "commit": "ui: 携弹面板用滑块自由设定数量" },
+    { "id": "049", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/049-smooth-zoom.md", "branch": "task/049-smooth-zoom", "commit": "fix: Z 键放大、开镜和切换倍率时视场平滑过渡" },
+    { "id": "050", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/050-offline-growth-opt-in.md", "branch": "task/050-offline-growth-opt-in", "commit": "feat: 离线挂机成长改成设置里手动开启" },
+    { "id": "052", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/052-internals-view.md", "branch": "task/052-internals-view", "commit": "feat: 战斗中按 O 显示当前车辆内构" }
+  ]
+}
