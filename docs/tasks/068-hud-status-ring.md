@@ -70,10 +70,10 @@
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] `hudStatus` 的纯函数测试:每一行状态文案的触发条件、优先级和 3 条上限、车长特例、顶替中不出「昏迷」、瞬时提示去重和 3.5 秒过期
-- [ ] `ProgressRing` 的 jsdom 测试:进度 → `stroke-dashoffset`,有 / 无 `label`,`hide()`
-- [ ] 用 `npm run dev` 打开 `?debug`,在浏览器里把己方打坏几个模块 / 乘员看一遍,回报里写看到了什么(截图更好)
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] `hudStatus` 的纯函数测试:每一行状态文案的触发条件、优先级和 3 条上限、车长特例、顶替中不出「昏迷」、瞬时提示去重和 3.5 秒过期
+- [x] `ProgressRing` 的 jsdom 测试:进度 → `stroke-dashoffset`,有 / 无 `label`,`hide()`
+- [x] 用 `npm run dev` 打开 `?debug`,在浏览器里把己方打坏几个模块 / 乘员看一遍,回报里写看到了什么(截图更好)
 
 ## 不做
 
@@ -82,5 +82,17 @@
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 修改: `src/ui/Hud.ts`
+  - 新增: `src/ui/hud/hudStatus.ts`
+  - 新增: `src/ui/hud/ProgressRing.ts`
+  - 新增: `tests/hud-status.test.ts`
+  - 新增: `tests/progress-ring.test.ts`
+  - 新增: `docs/design/hud-status.md`
+  - 新增: `changelog.d/2026-10-03-068-hud-status-ring.md`
+  - 修改: `docs/tasks/068-hud-status-ring.md`
 - 命令与结果:
+  - `npm run lint`: 通过 (0 错误, 0 告警)
+  - `npm test` / `npx vitest run`: 全部通过 (84 test files, 901 passed)
+  - `npm run build`: 全部通过 (vite 生产构建成功, 92 modules transformed)
 - 偏差 / 未完成 / 待决定:
+  - 无偏差。三种圆环 (顶替、维修、占点补给) 及底部状态提示已完整实现并通过纯函数与 DOM 单测覆盖。占点补给模式已保留组件接口与设计文档供后续玩法对接。
