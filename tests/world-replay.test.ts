@@ -6,6 +6,8 @@ import {
   worldReplayFade,
   worldReplayImpactMark,
   worldReplayTrajectoryPoints,
+  WRECK_BRIGHTEN_FACTOR_DARK,
+  wreckBrightenFactorFor,
 } from '../src/ui/WorldReplay';
 import { killcamDuration } from '../src/ui/KillCam';
 import type { HitReplay } from '../src/game/Game';
@@ -318,4 +320,56 @@ describe('WorldReplay 类冒烟测试', () => {
     }
     worldReplay.stop();
   });
+
+  it('根据 groundLuminance 参数控制接触前残骸材质是否提亮, 并在 stop 时还原原始材质', () => {
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, 16 / 9, 0.1, 100);
+    const vehicle = makeTestVehicle();
+    scene.add(vehicle.root);
+    const origMaterial = vehicle.hullMesh.material;
+    const initialHex = (origMaterial as THREE.MeshStandardMaterial).color.getHex();
+
+    const worldReplay = new WorldReplay(scene, camera, host);
+
+    // 1. 暗地面(草地亮度 0.495): 接触前残骸材质提亮 1.8 倍
+    worldReplay.play(vehicle, makeTestReplay(), 1000, { groundLuminance: 0.495 });
+    const currentMatDark = vehicle.hullMesh.material as THREE.MeshStandardMaterial;
+    expect(currentMatDark).not.toBe(origMaterial);
+    const expectedColorDark = new THREE.Color(initialHex).multiplyScalar(1.8);
+    expect(currentMatDark.color.r).toBeCloseTo(expectedColorDark.r, 3);
+    expect(currentMatDark.color.g).toBeCloseTo(expectedColorDark.g, 3);
+    expect(currentMatDark.color.b).toBeCloseTo(expectedColorDark.b, 3);
+
+    worldReplay.stop();
+    expect(vehicle.hullMesh.material).toBe(origMaterial);
+
+    // 2. 亮地面(雪地亮度 0.914): 接触前残骸维持原色(不提亮)
+    worldReplay.play(vehicle, makeTestReplay(), 1000, { groundLuminance: 0.914 });
+    const currentMatSnow = vehicle.hullMesh.material as THREE.MeshStandardMaterial;
+    expect(currentMatSnow).not.toBe(origMaterial);
+    expect(currentMatSnow.color.getHex()).toBe(initialHex);
+
+    worldReplay.stop();
+    expect(vehicle.hullMesh.material).toBe(origMaterial);
+  });
 });
+
+describe('wreckBrightenFactorFor 纯函数', () => {
+  it('暗地面 (<= 0.55) 提亮 1.8 倍 (原色 0.25 -> 0.45)', () => {
+    expect(wreckBrightenFactorFor(0)).toBeCloseTo(WRECK_BRIGHTEN_FACTOR_DARK, 5);
+    expect(wreckBrightenFactorFor(0.3)).toBeCloseTo(1.8, 5);
+    expect(wreckBrightenFactorFor(0.55)).toBeCloseTo(1.8, 5);
+  });
+
+  it('亮地面 (>= 0.75, 如雪地) 维持 1.0 倍 (不提亮)', () => {
+    expect(wreckBrightenFactorFor(0.75)).toBeCloseTo(1.0, 5);
+    expect(wreckBrightenFactorFor(0.9)).toBeCloseTo(1.0, 5);
+    expect(wreckBrightenFactorFor(1.0)).toBeCloseTo(1.0, 5);
+  });
+
+  it('中间过渡段 (0.55..0.75) 平滑单调插值', () => {
+    expect(wreckBrightenFactorFor(0.65)).toBeCloseTo(1.4, 5);
+    expect(wreckBrightenFactorFor(0.6)).toBeGreaterThan(wreckBrightenFactorFor(0.7));
+  });
+});
+

@@ -191,6 +191,30 @@ export function worldReplayTrajectoryPoints(
   return { start, entry: entry.clone(), end, currentTip, points };
 }
 
+export interface WorldReplayOptions {
+  groundLuminance?: number;
+}
+
+/**
+ * 死亡回放接触前残骸材质在暗地面上的提亮比例。
+ * 载具被击毁时 Vehicle.becomeWreck 会将原色 × 0.25;
+ * 在草地、土地等暗地面(相对亮度 <= 0.55)上, 残骸原色 × 0.25 容易融进深色背景看不清,
+ * 故接触前按 0.45 / 0.25 = 1.8 倍提亮(即恢复到原色约 × 0.45)。
+ * 在雪地等高亮地面(相对亮度 >= 0.75)上则不提亮(保持 1.0 倍, 即维持原色 × 0.25), 形成天然反差。
+ */
+export const WRECK_BRIGHTEN_FACTOR_DARK = 1.8;
+
+/**
+ * 纯函数: 根据地面相对亮度计算残骸材质提亮倍率。
+ * - 亮度 <= 0.55: WRECK_BRIGHTEN_FACTOR_DARK (1.8)
+ * - 亮度 >= 0.75: 1.0 (雪地等亮背景不提亮)
+ * - 0.55..0.75: 平滑线性过渡
+ */
+export function wreckBrightenFactorFor(groundLuminance: number): number {
+  const u = THREE.MathUtils.clamp((groundLuminance - 0.55) / 0.2, 0, 1);
+  return THREE.MathUtils.lerp(WRECK_BRIGHTEN_FACTOR_DARK, 1.0, u);
+}
+
 interface HighlightBox {
   id: string;
   group: THREE.Group;
@@ -206,6 +230,8 @@ export class WorldReplay {
   private worldReplayData: HitReplay | null = null;
   private worldBounds = { center: new THREE.Vector3(), radius: 1 };
   private worldPenEnd = new THREE.Vector3();
+  private origWreckMaterials: Map<THREE.Mesh, THREE.Material | THREE.Material[]> = new Map();
+  private clonedWreckMaterials: THREE.Material[] = [];
 
   private startMs = 0;
   private tContact = APPROACH;
@@ -261,7 +287,7 @@ export class WorldReplay {
     return this._finished;
   }
 
-  play(vehicle: XrayVehicle, replay: HitReplay, nowMs: number): void {
+  play(vehicle: XrayVehicle, replay: HitReplay, nowMs: number, opts?: WorldReplayOptions): void {
     if (this._active) {
       this.stop();
     }
@@ -276,6 +302,33 @@ export class WorldReplay {
     this.tEffectEnd = timing.tEffectEnd;
     this.total = timing.total;
     this.penetrationDuration = replay.penetration?.duration ?? 0.3;
+
+    const groundLuminance = opts?.groundLuminance ?? 0;
+    const brightenFactor = wreckBrightenFactorFor(groundLuminance);
+
+    this.origWreckMaterials.clear();
+    this.clonedWreckMaterials = [];
+
+    // 若需要提亮残骸(且载具已损毁变黑), 给材质做一次提亮克隆; stop 时干净还原
+    if (brightenFactor > 1.001 && replay.destroyed) {
+      vehicle.root.traverse((o) => {
+        if (o instanceof THREE.Mesh) {
+          this.origWreckMaterials.set(o, o.material);
+          const origMat = o.material;
+          const isArray = Array.isArray(origMat);
+          const mats = isArray ? origMat : [origMat];
+          const newMats = mats.map((m) => {
+            const cloned = m.clone();
+            if ('color' in cloned && (cloned as THREE.MeshStandardMaterial).color) {
+              (cloned as THREE.MeshStandardMaterial).color.multiplyScalar(brightenFactor);
+            }
+            this.clonedWreckMaterials.push(cloned);
+            return cloned;
+          });
+          o.material = isArray ? newMats : newMats[0];
+        }
+      });
+    }
 
     vehicle.root.updateMatrixWorld(true);
 
@@ -308,7 +361,7 @@ export class WorldReplay {
     };
 
     // 1. 初始化 WorldXray
-    this.worldXray = new WorldXray(vehicle);
+    this.worldXray = new WorldXray(vehicle, groundLuminance);
     const initialSnapshot = this.buildSnapshot(0);
     this.worldXray.enable(initialSnapshot);
     this.worldXray.setFade(0); // 接触前为真实外壳
@@ -477,6 +530,18 @@ export class WorldReplay {
       this.worldXray.disable();
       this.worldXray = null;
     }
+
+    // 还原提亮前的残骸材质并释放克隆
+    if (this.origWreckMaterials.size > 0) {
+      for (const [mesh, origMat] of this.origWreckMaterials.entries()) {
+        mesh.material = origMat;
+      }
+      this.origWreckMaterials.clear();
+    }
+    for (const mat of this.clonedWreckMaterials) {
+      mat.dispose();
+    }
+    this.clonedWreckMaterials = [];
 
     // 清理弹道线
     if (this.trajectoryLine) {
