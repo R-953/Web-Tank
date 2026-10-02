@@ -1,0 +1,12 @@
+{
+  "name": "round12d",
+  "base": "origin/integration/round12",
+  "permissions": "scoped",
+  "timeoutMin": 90,
+  "maxPerAgent": 2,
+  "jobs": [
+    { "id": "077", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/077-hud-layout-killfeed.md", "branch": "task/077-hud-layout-killfeed", "commit": "ui: 底部提示按参考图重排(圆环同高),击毁提示带车型和弹种" },
+    { "id": "078", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/078-xray-ground-contrast.md", "branch": "task/078-xray-ground-contrast", "commit": "ui: X 光外壳和残骸颜色随脚下地面亮度调整" },
+    { "id": "079", "agent": "copilot", "model": "auto", "card": "docs/tasks/079-wording-and-notes.md", "branch": "task/079-wording-and-notes", "commit": "docs: 回放用语改回「重创」,更正击发失败和出处的措辞" }
+  ]
+}
