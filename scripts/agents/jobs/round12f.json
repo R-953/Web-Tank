@@ -1,0 +1,11 @@
+{
+  "name": "round12f",
+  "base": "origin/integration/round12",
+  "permissions": "scoped",
+  "timeoutMin": 60,
+  "maxPerAgent": 2,
+  "jobs": [
+    { "id": "080", "agent": "copilot", "model": "auto", "card": "docs/tasks/080-repair-countdown-line.md", "branch": "task/080-repair-countdown-line", "commit": "ui: 维修倒计时放最后一行,文案改「修复车辆还需 mm:ss」" },
+    { "id": "082", "agent": "copilot", "model": "auto", "card": "docs/tasks/082-slot-icons.md", "branch": "task/082-slot-icons", "commit": "ui: 底部按钮栏每个按钮加图标" }
+  ]
+}
