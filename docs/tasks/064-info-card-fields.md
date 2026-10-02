@@ -49,5 +49,10 @@
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 修改: `docs/tasks/064-info-card-fields.md`、`src/data/vehicles.ts`、`src/ui/menu/VehicleCard.ts`、`tests/vehicle-card.test.ts`
+  - 新增: `tests/vehicle-extra-fields.test.ts`、`changelog.d/2026-10-02-064-info-card-fields.md`
 - 命令与结果:
-- 偏差 / 未完成 / 待决定:
+  - `npm run lint`: 全部通过 (0 错误)
+  - `npm test`: 全部通过 (77 测试文件, 810 测试项全部通过)
+  - `npm run build`: 构建成功
+- 偏差 / 未完成 / 待决定: 无。所有 8 辆核心载具顶层均补充 mass、enginePower、reverseSpeed 字段及出处注释; 信息卡与测试均已实现并全部通过。

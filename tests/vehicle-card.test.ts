@@ -183,10 +183,65 @@ describe('vehicleCardData 纯数据生成', () => {
     expect(fireSec?.rows.find((r) => r.label === '主炮')?.value).toContain('76 mm M1A2');
     expect(fireSec?.rows.find((r) => r.label === 'M62')?.value).toContain('127 mm');
     expect(fireSec?.rows.find((r) => r.label === '同轴机枪')?.value).toContain('M1919A4');
+    expect(fireSec?.rows.find((r) => r.label === '同轴机枪弹药')?.value).toBe('3000 发');
     expect(fireSec?.rows.find((r) => r.label === '弹药架容量')?.value).toBe('71 发');
 
     const crewSec = data.sections.find((s) => s.title === '乘员');
     expect(crewSec?.rows.find((r) => r.label === '乘员人数')?.value).toBe('5 人');
+  });
+
+  it('机动一节显示质量(xx.x t)、发动机功率(hp @ rpm)与前进/倒车速度', () => {
+    // 虎式 Ausf. E: mass = 57000 kg -> 57.0 t, enginePower = 700 hp @ 3000 rpm, maxSpeed = 38, reverseSpeed = 6
+    const tigerData = vehicleCardData(TIGER_I, 0);
+    const mobSec = tigerData.sections.find((s) => s.title === '机动');
+    expect(mobSec).toBeDefined();
+
+    const massRow = mobSec?.rows.find((r) => r.label === '质量');
+    expect(massRow?.value).toBe('57.0 t');
+
+    const powerRow = mobSec?.rows.find((r) => r.label === '发动机功率');
+    expect(powerRow?.value).toBe('700 hp @ 3000 rpm');
+
+    const speedRow = mobSec?.rows.find((r) => r.label === '最大速度');
+    expect(speedRow?.value).toBe('38 / 6 km/h');
+  });
+
+  it('字段缺失时不显示对应行,无 reverseSpeed 时最大速度仅显示前进', () => {
+    // mockSpec 在前面已有定义且缺 mass, enginePower, reverseSpeed, weapons 只有 cannon 没有 mg
+    const mockSpec: VehicleSpec = {
+      id: 'mock_no_extra',
+      name: '缺失字段测试车',
+      armor: { front: 50, side: 30, rear: 20 },
+      turretArmor: { front: 40, side: 30, rear: 20 },
+      maxSpeed: 40,
+      turretRotationSpeed: 10,
+      weapons: [
+        {
+          id: 'mock_gun',
+          name: '75 mm 炮',
+          reloadTime: 6,
+          ammo: [],
+        },
+      ],
+      hull: { length: 5, width: 2.5, height: 1.8, turnRate: 15, acceleration: 4 },
+      turret: { length: 2, width: 2, height: 0.8, barrelLength: 2, elevation: [-5, 20], elevationSpeed: 3 },
+      sight: { magnifications: [2.5], reticle: 'german' },
+      internals: { modules: [], crew: [] },
+      color: 0x333333,
+    };
+
+    const data = vehicleCardData(mockSpec, 0);
+    const mobSec = data.sections.find((s) => s.title === '机动');
+    expect(mobSec).toBeDefined();
+
+    expect(mobSec?.rows.find((r) => r.label === '质量')).toBeUndefined();
+    expect(mobSec?.rows.find((r) => r.label === '发动机功率')).toBeUndefined();
+    const speedRow = mobSec?.rows.find((r) => r.label === '最大速度');
+    expect(speedRow?.value).toBe('40 km/h');
+
+    const fireSec = data.sections.find((s) => s.title === '火力');
+    expect(fireSec?.rows.find((r) => r.label === '同轴机枪')).toBeUndefined();
+    expect(fireSec?.rows.find((r) => r.label === '同轴机枪弹药')).toBeUndefined();
   });
 });
 
