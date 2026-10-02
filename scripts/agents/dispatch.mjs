@@ -6,11 +6,17 @@
  * 用法(在仓库根目录):
  *   node scripts/agents/dispatch.mjs run   <作业文件.json> [--only id1,id2] [--dry-run]
  *   node scripts/agents/dispatch.mjs grade <作业文件.json> [--only id1,id2]   只评分,不启动 agent
+ *   node scripts/agents/dispatch.mjs quota [作业文件.json] [--note "App 里看到的额度"]   查各模型现在还能不能用,记进额度日志
+ *
+ * run 开工前会先「预检」用到的每个 agent / 模型(发一句极短的提示,看是不是已经 429 额度用尽),结束后再查一次,
+ * 两次结果和本次用量都追加到 Archive/agent-runs/quota-log.jsonl(本机,不进 git),并生成 Archive/agent-runs/quota.md 方便下次开工前复核。
+ * 命令行拿不到「剩余百分比」,只能知道可用 / 已用尽(和多久后重置)和我们自己跑掉的 token;百分比要看 Antigravity / Copilot 应用,
+ * 看到后用 quota --note 记一笔。--no-preflight 跳过预检;--skip-unavailable 预检不过的作业直接略过(默认整批不开工)。
  *
  * 作业文件格式、权限档位、评分项见 scripts/agents/README.md。只用 Node 自带模块,不加依赖。
  */
 import { spawn, spawnSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -164,6 +170,117 @@ function summarizeLog(text) {
 }
 
 // ---------------------------------------------------------------------------
+// 额度:预检 / 事后复核 / 日志
+// ---------------------------------------------------------------------------
+
+/**
+ * 从 agent 的输出里识别「额度用尽」:agy 的 RESOURCE_EXHAUSTED / 「quota reached ... Resets in 1h28m45s」,
+ * 通用的 429 / rate limit。没有额度问题返回 null。
+ */
+export function parseQuotaError(text) {
+  if (!/RESOURCE_EXHAUSTED|quota (?:reached|exceeded|exhausted)|rate.?limit|code 429|status 429/i.test(text)) return null;
+  const m = /Resets? in ((?:\d+h)?(?:\d+m)?(?:\d+s)?)/i.exec(text);
+  return { resetIn: m && m[1] ? m[1] : undefined };
+}
+
+/** Copilot:模型还没开通 */
+export function parseModelUnavailable(text) {
+  return /is not available|not available for your|unknown model/i.test(text);
+}
+
+const QUOTA_LOG = join(REPO, 'Archive', 'agent-runs', 'quota-log.jsonl');
+const QUOTA_MD = join(REPO, 'Archive', 'agent-runs', 'quota.md');
+
+/** 默认要查的 agent / 模型 */
+const DEFAULT_PROBES = [
+  { agent: 'antigravity', model: 'gemini-3.8-flash-high' },
+  { agent: 'antigravity', model: 'claude-opus-4-6-thinking' },
+  { agent: 'copilot', model: 'auto' },
+];
+
+function logQuota(entry) {
+  mkdirSync(dirname(QUOTA_LOG), { recursive: true });
+  const full = { time: new Date().toISOString(), ...entry };
+  appendFileSync(QUOTA_LOG, JSON.stringify(full) + '\n');
+  try {
+    writeFileSync(QUOTA_MD, quotaSummary(readFileSync(QUOTA_LOG, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l))));
+  } catch {
+    /* 日志坏了不影响派活 */
+  }
+}
+
+const STATE_TEXT = { ok: '可用', exhausted: '额度用尽', unavailable: '模型不可用', error: '出错' };
+const PHASE_TEXT = { before: '开工前', after: '收工后', manual: '手动' };
+
+/**
+ * 额度日志 → Markdown:每个 agent / 模型最近一次状态,今天累计用掉的 token,以及最近的人工备注(App 里看到的百分比)。
+ * entries 是 quota-log.jsonl 的各行,按时间顺序。
+ */
+export function quotaSummary(entries) {
+  const latest = new Map();
+  const today = new Map();
+  let note = null;
+  const day = (t) => new Date(t).toLocaleDateString('sv-SE');
+  const local = (t) => new Date(t).toLocaleString('sv-SE').slice(0, 16);
+  const nowDay = entries.length ? day(entries[entries.length - 1].time) : '';
+  for (const e of entries) {
+    if (e.phase === 'manual' && e.note) {
+      note = e;
+      continue;
+    }
+    const key = e.agent + ' / ' + (e.model ?? '默认');
+    if (e.phase === 'run') {
+      if (day(e.time) === nowDay) {
+        const t = today.get(key) ?? { input: 0, output: 0, premium: 0, jobs: 0 };
+        t.input += e.tokens?.input ?? 0;
+        t.output += e.tokens?.output ?? 0;
+        t.premium += e.premium ?? 0;
+        t.jobs += 1;
+        today.set(key, t);
+      }
+      continue;
+    }
+    latest.set(key, e);
+  }
+  const lines = ['# 额度日志(自动生成,本机,不进 git)', '', '命令行只能知道「可用 / 已用尽(及重置时间)」和我们自己跑掉的 token,剩余百分比要看应用。', ''];
+  lines.push('## 各模型最近一次检查', '', '| 模型 | 时间 | 阶段 | 状态 | 重置 |', '|---|---|---|---|---|');
+  for (const [key, e] of latest) {
+    const state = (STATE_TEXT[e.status] ?? e.status) + (e.error ? '(' + e.error + ')' : '');
+    lines.push('| ' + key + ' | ' + local(e.time) + ' | ' + (PHASE_TEXT[e.phase] ?? e.phase) + ' | ' + state + ' | ' + (e.resetIn ?? '—') + ' |');
+  }
+  lines.push('', '## 今天我们派活用掉的量', '', '| 模型 | 作业数 | 输入 token | 输出 token | 高级请求 |', '|---|---|---|---|---|');
+  for (const [key, t] of today) lines.push('| ' + key + ' | ' + t.jobs + ' | ' + t.input + ' | ' + t.output + ' | ' + (t.premium || '—') + ' |');
+  if (!today.size) lines.push('| (今天还没派活) | | | | |');
+  if (note) lines.push('', '## 最近一次人工备注', '', local(note.time) + ':' + note.note);
+  return lines.join('\n') + '\n';
+}
+
+/** 发一句极短的提示,看这个 agent / 模型现在能不能用;额度用尽时顺便拿到重置时间 */
+async function probe(agent, model) {
+  const job = { id: 'probe', agent, model };
+  const [cmd, args] = AGENTS[agent].command(job, '只回复两个字:好的', 'scoped', REPO);
+  const { code, log } = await runOnce(cmd, args, REPO, 150_000);
+  const quota = parseQuotaError(log);
+  if (quota) return { status: 'exhausted', resetIn: quota.resetIn };
+  if (parseModelUnavailable(log)) return { status: 'unavailable' };
+  if (code !== 0) return { status: 'error', error: '退出码 ' + code };
+  return { status: 'ok' };
+}
+
+/** 逐个预检 / 复核,记进日志并打印;返回 { 'agent|model' → 结果 } */
+async function checkPairs(pairs, phase) {
+  const out = new Map();
+  for (const { agent, model } of pairs) {
+    const r = await probe(agent, model);
+    logQuota({ phase, agent, model, ...r });
+    out.set(agent + '|' + (model ?? ''), r);
+    const tag = phase === 'before' ? '预检' : phase === 'after' ? '复核' : '额度';
+    console.log('[' + tag + '] ' + agent + ' / ' + (model ?? '默认') + ':' + STATE_TEXT[r.status] + (r.resetIn ? '(约 ' + r.resetIn + ' 后重置)' : '') + (r.error ? '(' + r.error + ')' : ''));
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
 // 派发
 // ---------------------------------------------------------------------------
 
@@ -246,7 +363,7 @@ async function launch(job, prompt, perm, logFile, timeoutMin, maxResume = 3) {
   const [cmd, args] = AGENTS[job.agent].command(job, prompt, perm, job.wt);
   let { code, log } = await runOnce(cmd, args, job.wt, deadline - Date.now());
   let resumes = 0;
-  for (let r = agyResult(log); job.agent === 'antigravity' && r?.denied_actions?.length && resumes < maxResume && Date.now() < deadline; r = agyResult(log)) {
+  for (let r = agyResult(log); job.agent === 'antigravity' && r?.denied_actions?.length && resumes < maxResume && Date.now() < deadline && !parseQuotaError(log); r = agyResult(log)) {
     resumes++;
     log += `\n[dispatch] 有命令被拒(${r.denied_actions.map((d) => d.display_name ?? d.action).join('、')}),第 ${resumes} 次续跑\n`;
     const [c2, a2] = AGENTS.antigravity.command(job, RESUME_PROMPT, perm, job.wt);
@@ -255,7 +372,7 @@ async function launch(job, prompt, perm, logFile, timeoutMin, maxResume = 3) {
     log += next.log;
   }
   writeFileSync(logFile, log);
-  return { code, minutes: (Date.now() - t0) / 60_000, log, resumes };
+  return { code, minutes: (Date.now() - t0) / 60_000, log, resumes, quota: parseQuotaError(log) };
 }
 
 // ---------------------------------------------------------------------------
@@ -355,8 +472,20 @@ function report(rows, file) {
 
 async function main() {
   const [cmd, jobFile, ...rest] = process.argv.slice(2);
+  if (cmd === 'quota') {
+    const args = jobFile?.startsWith('--') ? [jobFile, ...rest] : rest;
+    const file = jobFile && !jobFile.startsWith('--') ? jobFile : null;
+    const noteAt = args.indexOf('--note');
+    if (noteAt >= 0 && args[noteAt + 1]) logQuota({ phase: 'manual', agent: '—', note: args[noteAt + 1] });
+    const pairs = file
+      ? [...new Map(JSON.parse(readFileSync(resolve(file), 'utf8')).jobs.map((j) => [j.agent + '|' + (j.model ?? ''), { agent: j.agent, model: j.model }])).values()]
+      : DEFAULT_PROBES.filter((p) => AGENTS[p.agent].check());
+    await checkPairs(pairs, 'manual');
+    console.log('\n额度日志:' + QUOTA_MD);
+    return;
+  }
   if (!['run', 'grade'].includes(cmd ?? '') || !jobFile) {
-    console.log('用法:node scripts/agents/dispatch.mjs run|grade <作业文件.json> [--only id1,id2] [--dry-run]');
+    console.log('用法:node scripts/agents/dispatch.mjs run|grade <作业文件.json> [--only id1,id2] [--dry-run] [--no-preflight] [--skip-unavailable]\n      node scripts/agents/dispatch.mjs quota [作业文件.json] [--note "App 里看到的额度"]');
     process.exit(1);
   }
   const only = rest.includes('--only') ? rest[rest.indexOf('--only') + 1].split(',') : null;
@@ -369,12 +498,27 @@ async function main() {
   mkdirSync(outDir, { recursive: true });
   if (cmd === 'run' && !dry) git(REPO, 'fetch', '--quiet', 'origin');
 
-  const jobs = spec.jobs
+  let jobs = spec.jobs
     .filter((j) => !only || only.includes(j.id))
     .map((j) => ({ ...j, branch: j.branch ?? `agent/${j.id}`, wt: resolve(REPO, '.worktrees', j.worktree ?? j.id) }));
   for (const j of jobs) {
     if (!AGENTS[j.agent]) throw new Error(`${j.id}:未知 agent「${j.agent}」(可选 ${Object.keys(AGENTS).join(' / ')})`);
     if (cmd === 'run' && !AGENTS[j.agent].check()) throw new Error(`${j.id}:找不到 ${j.agent} 的命令行`);
+  }
+
+  // 开工前预检:用到的每个 agent / 模型各发一句极短的提示,额度用尽或模型不可用就别开工(写到一半被停最亏)
+  const pairs = [...new Map(jobs.map((j) => [j.agent + '|' + (j.model ?? ''), { agent: j.agent, model: j.model }])).values()];
+  if (cmd === 'run' && !dry && !rest.includes('--no-preflight')) {
+    const status = await checkPairs(pairs, 'before');
+    const bad = jobs.filter((j) => status.get(j.agent + '|' + (j.model ?? ''))?.status !== 'ok');
+    if (bad.length) {
+      if (!rest.includes('--skip-unavailable')) {
+        console.error('\n预检没过,这批作业不开工(' + bad.map((j) => j.id).join('、') + ')。额度恢复后重来,或改派别的模型,或加 --skip-unavailable 只跑能跑的、--no-preflight 强行开工。');
+        process.exit(2);
+      }
+      console.log('[预检] 略过:' + bad.map((j) => j.id).join('、'));
+      jobs = jobs.filter((j) => !bad.includes(j));
+    }
   }
 
   // 同一种 agent 同时最多跑 maxPerAgent 个,不同 agent 之间并行;建 worktree 一个一个来
@@ -404,6 +548,11 @@ async function main() {
           console.log(`[${job.id}] 启动 ${job.agent} / ${row.model}`);
           const r = await launch(job, prompt, perm, join(outDir, `${job.id}.log`), job.timeoutMin ?? spec.timeoutMin ?? 60);
           Object.assign(row, { code: r.code, minutes: r.minutes, resumes: r.resumes }, summarizeLog(r.log));
+          logQuota({ phase: 'run', agent: job.agent, model: job.model, job: job.id, tokens: row.tokens ?? undefined, premium: row.premium ?? undefined, minutes: Math.round(r.minutes * 10) / 10, quotaHit: r.quota ? (r.quota.resetIn ?? true) : undefined });
+          if (r.quota) {
+            row.last = '⚠ 跑到一半额度用尽(约 ' + (r.quota.resetIn ?? '?') + ' 后重置)。\n' + (row.last ?? '');
+            console.log('[' + job.id + '] ⚠ 额度用尽(约 ' + (r.quota.resetIn ?? '?') + ' 后重置),已完成的部分照常评分');
+          }
           console.log(`[${job.id}] 结束(退出码 ${r.code},${r.minutes.toFixed(1)} 分钟),${commitAll(job)},开始评分`);
         } catch (e) {
           row.grade = { error: e instanceof Error ? e.message : String(e) };
@@ -418,7 +567,13 @@ async function main() {
       rows.push(row);
     }),
   );
-  if (dry) return console.log(`\n提示词已写到 ${outDir}`);
+  if (dry) return console.log('\n提示词已写到 ' + outDir);
+  // 收工后再查一次,方便下次开工前对照
+  if (cmd === 'run' && !rest.includes('--no-preflight')) {
+    console.log('');
+    await checkPairs(pairs, 'after');
+    console.log('额度日志:' + QUOTA_MD);
+  }
   rows.sort((a, b) => a.id.localeCompare(b.id));
   const file = join(outDir, 'report.md');
   report(rows, file);

@@ -36,6 +36,7 @@
 - **派活方式:**
   - 默认 Antigravity + Gemini 3.8 Flash High,用 `scripts/agents/dispatch.mjs` 派发(说明见 [scripts/agents/README.md](../../scripts/agents/README.md))。
   - 小而边界清楚的卡派 Copilot。
+  - 开工前先读 `Archive/agent-runs/quota.md`(本机),再跑 `node scripts/agents/dispatch.mjs quota` 复核;`run` 自带预检和收工复核(见 [scripts/agents/README.md](../../scripts/agents/README.md) 的「额度」一节)。额度紧时大卡改派 Opus 4.6(`claude-opus-4-6-thinking`)。
   - Claude Code 当主程:写卡、审查(带出处的逐条核实,界面类在浏览器里看)、解决冲突。
   - 浏览器里审查 worktree 里的分支:在 `.claude/launch.json` 加一条 `node <worktree>/node_modules/vite/bin/vite.js <worktree> --port 518x --strictPort`;worktree 没有 node_modules 时先 `npm ci`。内置浏览器窗格隐藏时 `requestAnimationFrame` 不跑,游戏循环要靠截图驱动几帧。
 
