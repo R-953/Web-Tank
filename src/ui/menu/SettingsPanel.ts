@@ -157,6 +157,20 @@ export class SettingsPanel {
     }
   }
 
+  private select<T extends string>(label: string, value: T, options: readonly { id: T; name: string }[], onChange: (v: T) => void): void {
+    const input = h('select', 'mm-btn', this.row(label));
+    for (const o of options) {
+      const option = h('option', '', input, o.name);
+      option.value = o.id;
+    }
+    input.value = value;
+    input.addEventListener('change', () => {
+      this.click();
+      const option = options.find((item) => item.id === input.value);
+      if (option) onChange(option.id);
+    });
+  }
+
   // ------------------------------------------------------------------ 页签
 
   private renderGame(s: GameSettings): void {
@@ -177,6 +191,24 @@ export class SettingsPanel {
     }
     this.checkbox('命中回放', s.game.killCam, (v) => this.update((d) => (d.game.killCam = v)), '击中或被击中后在右上角回放这一发(自己被击毁时全屏回放)');
     this.checkbox('所有命中都回放', s.game.killCamAll, (v) => this.update((d) => (d.game.killCamAll = v)), '跳弹、未击穿、击穿没击毁也回放;关掉后只回放击毁');
+    this.select(
+      '内构显示方式',
+      s.game.internalsStyle,
+      [
+        { id: 'world', name: '在载具上显示 X 光' },
+        { id: 'panel', name: '左侧面板' },
+      ],
+      (v) => this.update((d) => (d.game.internalsStyle = v)),
+    );
+    this.select(
+      '死亡回放方式',
+      s.game.deathReplayStyle,
+      [
+        { id: 'world', name: '叠在游戏画面里' },
+        { id: 'window', name: '全屏窗口' },
+      ],
+      (v) => this.update((d) => (d.game.deathReplayStyle = v)),
+    );
     this.segmented(
       '小地图形状',
       s.game.minimapShape,

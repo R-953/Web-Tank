@@ -37,6 +37,6 @@
 
 ## 结果(完成后由执行者填写)
 
-- 改动文件:
-- 命令与结果:
-- 偏差 / 未完成 / 待决定:
+- 改动文件:修改 `src/settings/Settings.ts`、`src/ui/menu/SettingsPanel.ts`、本任务卡;新增 `tests/world-replay-setting.test.ts`、`changelog.d/2026-10-03-073-settings-world-replay.md`。
+- 命令与结果:`npm run lint` 通过;`npm test` 通过(83 个测试文件、880 个测试);`npm run build` 通过。
+- 偏差 / 未完成 / 待决定:无。

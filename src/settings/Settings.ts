@@ -18,6 +18,10 @@ export interface GameSettings {
     killCam: boolean;
     /** 所有命中都回放(跳弹、未击穿、击穿没击毁);关掉后只回放击毁 */
     killCamAll: boolean;
+    /** 内构显示方式:世界中的 X 光 / 左侧面板 */
+    internalsStyle: 'world' | 'panel';
+    /** 死亡回放方式:叠在游戏画面里 / 全屏窗口 */
+    deathReplayStyle: 'world' | 'window';
     minimapShape: 'square' | 'circle';
     /** 小地图上其他车辆的标记:圆点 / 箭头(尖端指向车头)/ 军标 */
     minimapMarkers: 'dot' | 'arrow' | 'symbol';
@@ -66,7 +70,7 @@ export const GRAPHICS_PRESETS: Readonly<Record<GraphicsPreset, Omit<GameSettings
 
 export function defaultSettings(): GameSettings {
   return {
-    game: { aiPreset: 'training', killCam: true, killCamAll: true, minimapShape: 'square', minimapMarkers: 'symbol', symbology: 'nato', showHints: true, showFps: false, offlineGrowth: false },
+    game: { aiPreset: 'training', killCam: true, killCamAll: true, internalsStyle: 'world', deathReplayStyle: 'world', minimapShape: 'square', minimapMarkers: 'symbol', symbology: 'nato', showHints: true, showFps: false, offlineGrowth: false },
     graphics: { preset: 'medium', ...GRAPHICS_PRESETS.medium, antialias: true },
     sound: { ...DEFAULT_SOUND_SETTINGS },
     controls: { mouseSensitivity: 1, sightSensitivity: 1, scaleWithZoom: true, invertY: false, bindings: defaultBindings() },
@@ -109,6 +113,8 @@ export function sanitize(raw: unknown): GameSettings {
       aiPreset: pick(g.aiPreset, ['training', 'guard'] as const, d.game.aiPreset),
       killCam: bool(g.killCam, d.game.killCam),
       killCamAll: bool(g.killCamAll, d.game.killCamAll),
+      internalsStyle: pick(g.internalsStyle, ['world', 'panel'] as const, d.game.internalsStyle),
+      deathReplayStyle: pick(g.deathReplayStyle, ['world', 'window'] as const, d.game.deathReplayStyle),
       minimapShape: pick(g.minimapShape, ['square', 'circle'] as const, d.game.minimapShape),
       minimapMarkers: pick(g.minimapMarkers, ['dot', 'arrow', 'symbol'] as const, d.game.minimapMarkers),
       symbology: pick(g.symbology, ['nato', 'warsaw'] as const, d.game.symbology),
