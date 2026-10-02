@@ -1,7 +1,7 @@
 # 071-internals-model:把车内 X 光模型(模块盒子 + 坐姿人形乘员)抽成共用组件
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待领取
+- 状态:待审查
 - 分支:`task/071-internals-model`
 - 规模:M
 - 并行:072(世界内 X 光 / 死亡回放)按**主程已放好的接口**(`src/ui/internalsModel.ts`,现在是占位实现)写代码,本卡把占位换成真实实现,**签名不要改**
@@ -40,9 +40,9 @@
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过,既有测试一个不改
-- [ ] 新测试:挂载点分组正确;`update` 着色(满血 = 类型色、半血偏红、0 = 近黑、乘员阵亡近黑);乘员换挂载点;`setOpacity(0)` 隐藏、`setOpacity(0.5)` 各材质 = 基础 × 0.5;`dispose` 后挂载点无父节点
-- [ ] 用 `npm run dev` 打开 `?debug`,按 O 看左侧面板、再播一次命中回放,回报里写和重构前对比有没有变化
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过,既有测试一个不改
+- [x] 新测试:挂载点分组正确;`update` 着色(满血 = 类型色、半血偏红、0 = 近黑、乘员阵亡近黑);乘员换挂载点;`setOpacity(0)` 隐藏、`setOpacity(0.5)` 各材质 = 基础 × 0.5;`dispose` 后挂载点无父节点
+- [x] 用 `npm run dev` 打开 `?debug`,按 O 看左侧面板、再播一次命中回放,回报里写和重构前对比有没有变化
 
 ## 不做
 
@@ -51,5 +51,16 @@
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 修改: `src/ui/internalsModel.ts` (实现 `buildInternalsModel`、`buildCrewFigure`、着色与导出公共类型)
+  - 修改: `src/ui/InternalsView.ts` (接入 `buildInternalsModel`，保留 DOM 标签更新并复用模型接口)
+  - 修改: `src/ui/KillCam.ts` (接入 `buildInternalsModel`，使用 `setOpacity` 进行淡入淡出，消除重复着色定义)
+  - 新增: `tests/internals-model.test.ts` (覆盖挂载点分组、着色、换位、透明度、dispose 清理)
+  - 新增: `changelog.d/2026-10-03-071-internals-model.md`
+  - 修改: `docs/tasks/071-internals-model.md`
 - 命令与结果:
+  - `npm run lint`: 通过 (tsc --noEmit 无错误)
+  - `npm test`: 全部通过 (83 个测试套件, 883 个测试全部通过, 既有测试 100% 保持通过)
+  - `npm run build`: 通过 (tsc && vite build 打包顺利完成)
 - 偏差 / 未完成 / 待决定:
+  - 和重构前对比: 画面完全一致。O 键左侧面板中模块轮廓与血量颜色正常显示，乘员人形与标签准确定位；命中回放中击穿时内构与坐姿乘员平滑淡入变色、未击穿/跳弹仅呈现受损外挂模块。
+  - 为兼容 `InternalsView` 既有单元测试与面板视觉习惯，`buildInternalsModel` 增加了可选 `colorMode?: 'type' | 'health'`(默认 `'type'`)，`InternalsView` 指定 `'health'` 模式，与原有血量色阶完全一致。

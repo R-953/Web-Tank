@@ -1,11 +1,17 @@
 import * as THREE from 'three';
-import type { CrewRole, ModuleType } from '../data/types';
+import type { CrewRole } from '../data/types';
 import { applyGunPose, buildVehicleModel } from '../game/models';
 import { turretRingOffset } from '../game/damage/geometry';
 import type { InternalsSnapshot } from '../game/internalsSnapshot';
-import { healthColor } from './KillCam';
+import {
+  buildInternalsModel,
+  MODULE_TYPE_COLORS,
+  healthColor,
+  type InternalsModel,
+  type InternalsModuleItem,
+} from './internalsModel';
 
-export { healthColor };
+export { healthColor, MODULE_TYPE_COLORS };
 
 /** 内构视窗尺寸与边距(左侧中部) */
 export const INTERNALS_VIEW = { width: 440, height: 270, margin: 16 } as const;
@@ -25,19 +31,6 @@ export function internalsViewRect(_viewW: number, viewH: number): { x: number; y
 const GHOST = new THREE.MeshBasicMaterial({ color: 0x8fa0ae, transparent: true, opacity: 0.08, depthWrite: false });
 const EDGE = new THREE.LineBasicMaterial({ color: 0xb7c4cf, transparent: true, opacity: 0.35 });
 
-/** 模块种类轮廓颜色 */
-export const MODULE_TYPE_COLORS: Record<ModuleType, number> = {
-  ammo: 0xffaa00, // 弹药架: 橙黄
-  engine: 0x33b5e5, // 发动机: 亮蓝
-  transmission: 0xab47bc, // 变速箱: 紫色
-  fuel: 0xff4081, // 油箱: 玫红
-  breech: 0xe0e0e0, // 炮闩: 银灰
-  traverse: 0x00e676, // 方向机: 翠绿
-  elevation: 0x00e5ff, // 高低机: 青色
-  barrel: 0x78909c, // 炮管: 蓝灰
-  track: 0x8d6e63, // 履带: 棕褐
-};
-
 /** 乘员岗位简称 */
 export const CREW_SHORT_NAMES: Record<CrewRole, string> = {
   commander: '车长',
@@ -47,19 +40,13 @@ export const CREW_SHORT_NAMES: Record<CrewRole, string> = {
   radio: '无线电员',
 };
 
-interface ModuleItem {
-  mesh: THREE.Mesh;
-  mat: THREE.MeshBasicMaterial;
-  edges: THREE.LineSegments;
-  edgeMat: THREE.LineBasicMaterial;
-}
+type ModuleItem = InternalsModuleItem;
 
 interface CrewItem {
   id: string;
   group: THREE.Group;
   mat: THREE.MeshBasicMaterial;
   torsoMesh: THREE.Mesh;
-  headMesh: THREE.Mesh;
   labelEl: HTMLDivElement;
 }
 
@@ -80,6 +67,7 @@ export class InternalsView {
   private root: THREE.Group | null = null;
   private turretPivot: THREE.Group | null = null;
   private gunPivot: THREE.Group | null = null;
+  private internalsModel: InternalsModel | null = null;
 
   private cachedSpecId: string | null = null;
   private lastSnapshot: InternalsSnapshot | null = null;
@@ -240,6 +228,10 @@ export class InternalsView {
   }
 
   private clearVehicle(): void {
+    if (this.internalsModel) {
+      this.internalsModel.dispose();
+      this.internalsModel = null;
+    }
     if (this.root) {
       this.scene.remove(this.root);
       this.root.traverse((o) => {
@@ -289,49 +281,23 @@ export class InternalsView {
       }
     });
 
-    const frameOf = (part: string) => (part === 'turret' ? turretPivot : part === 'gun' ? gunPivot : root);
+    this.internalsModel = buildInternalsModel(s, {
+      colorMode: 'health',
+      moduleOpacity: 0.8,
+      crewOpacity: 0.9,
+      edges: true,
+    });
+    root.add(this.internalsModel.hullMount);
+    turretPivot.add(this.internalsModel.turretMount);
+    gunPivot.add(this.internalsModel.gunMount);
 
-    // 模块盒子 + 种类轮廓
-    for (const m of s.modules) {
-      const mat = new THREE.MeshBasicMaterial({
-        transparent: true,
-        opacity: m.type === 'track' || m.type === 'barrel' ? 0.35 : 0.8,
-        color: healthColor(m.ratio),
-      });
-      const geom = new THREE.BoxGeometry(m.size[0], m.size[1], m.size[2]);
-      const mesh = new THREE.Mesh(geom, mat);
-      mesh.position.set(m.center[0], m.center[1], m.center[2]);
-
-      const edgeColor = MODULE_TYPE_COLORS[m.type] ?? 0xffffff;
-      const edgeMat = new THREE.LineBasicMaterial({ color: edgeColor, transparent: true, opacity: 0.85 });
-      const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geom), edgeMat);
-      mesh.add(edges);
-
-      frameOf(m.part).add(mesh);
-      this.modulesMap.set(m.id, { mesh, mat, edges, edgeMat });
+    for (const [id, item] of this.internalsModel.modulesMap) {
+      this.modulesMap.set(id, item);
     }
 
-    // 乘员小球 + 躯干盒
     for (const c of s.crew) {
-      const crewGroup = new THREE.Group();
-      crewGroup.position.set(c.center[0], c.center[1], c.center[2]);
-
-      const mat = new THREE.MeshBasicMaterial({
-        transparent: true,
-        opacity: 0.9,
-        color: healthColor(c.alive ? c.ratio : 0),
-      });
-
-      const torsoGeom = new THREE.BoxGeometry(0.35, 0.45, 0.3);
-      const torsoMesh = new THREE.Mesh(torsoGeom, mat);
-      crewGroup.add(torsoMesh);
-
-      const headGeom = new THREE.SphereGeometry(0.12, 12, 8);
-      const headMesh = new THREE.Mesh(headGeom, mat);
-      headMesh.position.set(0, 0.345, 0);
-      crewGroup.add(headMesh);
-
-      frameOf(c.part).add(crewGroup);
+      const crewItem = this.internalsModel.crewMap.get(c.id);
+      if (!crewItem) continue;
 
       const labelEl = document.createElement('div');
       labelEl.className = 'internals-crew-label';
@@ -349,10 +315,9 @@ export class InternalsView {
 
       this.crewMap.set(c.id, {
         id: c.id,
-        group: crewGroup,
-        mat,
-        torsoMesh,
-        headMesh,
+        group: crewItem.group,
+        mat: crewItem.mat,
+        torsoMesh: crewItem.torsoMesh,
         labelEl,
       });
     }
@@ -374,24 +339,7 @@ export class InternalsView {
   }
 
   private updateColorsAndPositions(s: InternalsSnapshot): void {
-    for (const m of s.modules) {
-      const item = this.modulesMap.get(m.id);
-      if (item) {
-        item.mat.color.setHex(healthColor(m.ratio));
-      }
-    }
-
-    const frameOf = (part: string) => (part === 'turret' ? this.turretPivot! : part === 'gun' ? this.gunPivot! : this.root!);
-
-    for (const c of s.crew) {
-      const item = this.crewMap.get(c.id);
-      if (!item) continue;
-      item.mat.color.setHex(healthColor(c.alive ? c.ratio : 0));
-      item.group.position.set(c.center[0], c.center[1], c.center[2]);
-      if (this.root && item.group.parent !== frameOf(c.part)) {
-        frameOf(c.part).add(item.group);
-      }
-    }
+    this.internalsModel?.update(s);
   }
 
   private updateLabels(s: InternalsSnapshot): void {
