@@ -1,0 +1,11 @@
+{
+  "name": "round11",
+  "base": "origin/integration/round11",
+  "permissions": "scoped",
+  "timeoutMin": 90,
+  "maxPerAgent": 2,
+  "jobs": [
+    { "id": "065", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/065-killcam-overlay.md", "branch": "task/065-killcam-overlay", "commit": "ui: 命中回放的文字、模块图标和乘员数层" },
+    { "id": "066", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/066-killcam-all-hits.md", "branch": "task/066-killcam-all-hits", "commit": "ui: 命中回放第二版——跳弹 / 未击穿 / 击穿都出回放" }
+  ]
+}

@@ -34,7 +34,6 @@ export interface MainMenuOptions {
   maps: readonly MapSpec[];
   initial: { vehicleId: string; mapId: string };
   loadLoadout(spec: VehicleSpec): Loadout;
-  saveLoadout(spec: VehicleSpec, loadout: Loadout): void;
   /** 选了别的载具(main.ts 更新机库里的模型) */
   onVehicleChange(spec: VehicleSpec): void;
   /** 点「进入战斗」:在点击事件里同步调用(main.ts 在这里申请锁定鼠标) */

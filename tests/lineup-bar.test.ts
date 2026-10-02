@@ -462,7 +462,6 @@ describe('MainMenu 与 LineupBar / TechTree 集成', () => {
       maps: dummyMaps,
       initial: { vehicleId: 'tiger_i', mapId: 'poland' },
       loadLoadout: () => ({ pzgr39: 20 }),
-      saveLoadout: vi.fn(),
       onVehicleChange,
       onStart: vi.fn(),
     });
@@ -493,7 +492,6 @@ describe('MainMenu 与 LineupBar / TechTree 集成', () => {
       maps: dummyMaps,
       initial: { vehicleId: 'tiger_i', mapId: 'poland' },
       loadLoadout: () => ({ pzgr39: 20 }),
-      saveLoadout: vi.fn(),
       onVehicleChange,
       onStart: vi.fn(),
       profile: {
@@ -556,7 +554,6 @@ describe('MainMenu 与 LineupBar / TechTree 集成', () => {
       maps: dummyMaps,
       initial: { vehicleId: 'tiger_i', mapId: 'poland' },
       loadLoadout: () => ({ pzgr39: 20 }),
-      saveLoadout: vi.fn(),
       onVehicleChange: vi.fn(),
       onStart: vi.fn(),
       profile: {
@@ -590,7 +587,6 @@ describe('MainMenu 与 LineupBar / TechTree 集成', () => {
       maps: dummyMaps,
       initial: { vehicleId: 'tiger_i', mapId: 'poland' },
       loadLoadout: () => ({ pzgr39: 20 }),
-      saveLoadout: vi.fn(),
       onVehicleChange: vi.fn(),
       onStart: vi.fn(),
       profile: {
@@ -644,7 +640,6 @@ describe('MainMenu 与 LineupBar / TechTree 集成', () => {
         maps: dummyMaps,
         initial: { vehicleId: 'tiger_i', mapId: 'poland' },
         loadLoadout: () => ({ pzgr39: 20 }),
-        saveLoadout: vi.fn(),
         onVehicleChange: vi.fn(),
         onStart: vi.fn(),
         profile: {
@@ -726,7 +721,6 @@ describe('MainMenu 与 LineupBar / TechTree 集成', () => {
         maps: dummyMaps,
         initial: { vehicleId: 'tiger_i', mapId: 'poland' },
         loadLoadout: () => ({ pzgr39: 20 }),
-        saveLoadout: vi.fn(),
         onVehicleChange: vi.fn(),
         onStart: vi.fn(),
         profile: {

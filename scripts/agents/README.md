@@ -5,13 +5,26 @@
 ```bash
 node scripts/agents/dispatch.mjs run   scripts/agents/jobs/<作业>.json [--only id1,id2] [--dry-run]
 node scripts/agents/dispatch.mjs grade scripts/agents/jobs/<作业>.json [--only id1,id2]
+node scripts/agents/dispatch.mjs quota [scripts/agents/jobs/<作业>.json] [--note "应用里看到的额度"]
 ```
 
 - `run`:每个任务建一个独立的 git worktree(已存在就复用),装依赖,启动 agent,结束后把改动提交成一个提交,然后评分。
 - `grade`:只评分,不启动 agent(审查时重跑检查用)。
+- `quota`:现在就查各模型还能不能用(不给作业文件就查默认的 Gemini 3.8 Flash High、Opus 4.6、Copilot auto),记进额度日志;`--note` 把你在应用里看到的剩余百分比记一笔。
 - `--dry-run`:只打印会建哪些 worktree、允许改哪些文件、会运行什么命令,提示词写到输出目录。
 
 输出在 `Archive/agent-runs/<作业名>-<run|grade>-<时间>/`:每个任务的提示词、agent 原始输出,以及 `report.md` / `report.json`。
+
+## 额度:开工前预检、收工后复核
+
+命令行拿不到「剩余百分比」(`agy` 没有 `usage` 命令,无头模式下 `/usage` 也不识别,模型自己也不知道),能做的是:
+
+- **开工前预检**(`run` 默认做):作业里用到的每个 agent / 模型各发一句极短的提示。已经 429 额度用尽或模型不可用,这一批**不开工**(退出码 2,并打印多久后重置),免得写到一半被停。`--skip-unavailable` 只跑能跑的,`--no-preflight` 强行开工。
+- **跑的过程中**:agent 输出里出现额度用尽就不再续跑,报告里标「⚠ 跑到一半额度用尽(约多久后重置)」,已完成的部分照常评分。
+- **收工后复核**:再查一次同样的模型。
+- **日志**:每次检查、每个作业的 token / 高级请求用量都追加到 `Archive/agent-runs/quota-log.jsonl`,并生成 `Archive/agent-runs/quota.md`(各模型最近一次状态、今天累计用量、最近一次人工备注)。**下次开工前先看一眼 `quota.md`**,再跑一次 `quota` 复核。
+
+预检和复核本身会花一点额度(Copilot 每次一个高级请求),额度已经用尽时是免费的。
 
 ## 作业文件
 

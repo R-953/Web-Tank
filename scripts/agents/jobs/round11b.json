@@ -1,0 +1,10 @@
+{
+  "name": "round11b",
+  "base": "origin/integration/round11",
+  "permissions": "scoped",
+  "timeoutMin": 60,
+  "maxPerAgent": 2,
+  "jobs": [
+    { "id": "067", "agent": "copilot", "model": "auto", "card": "docs/tasks/067-mainmenu-drop-saveloadout.md", "branch": "task/067-mainmenu-drop-saveloadout", "commit": "refactor: 删掉 MainMenu 里没人用的 saveLoadout 选项" }
+  ]
+}

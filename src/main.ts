@@ -287,7 +287,6 @@ async function start(): Promise<void> {
     initial: lastSelection,
     profile: { get: () => profiles.get(), set: (p) => profiles.set(p) },
     loadLoadout: loadSavedLoadout,
-    saveLoadout,
     onVehicleChange: (spec) => hangar.setVehicle(showcaseOf(spec)),
     onStart: (sel) => openSpawnMap(sel),
     onOpenModifications: (vehicleId, crewIndex) => {
@@ -789,14 +788,18 @@ async function start(): Promise<void> {
       playEventSound(e);
       if (e.type === 'fired' && e.shooterId === player.id && e.weapon === 'main') stats.shots++;
       if (e.type === 'hit') {
+        const replayAll = cfg().game.killCamAll;
         if (e.shooterId === player.id) {
           stats.hits++;
-          if (e.replay.destroyed && cfg().game.killCam) killcam.play(e.replay);
+          if (cfg().game.killCam && (e.replay.destroyed || replayAll)) {
+            killcam.play(e.replay, e.replay.destroyed ? undefined : { title: `命中回放 · ${e.targetName}` });
+          }
         }
-        if (e.targetId === player.id && e.replay.destroyed && cfg().game.killCam) {
+        if (e.targetId === player.id && cfg().game.killCam && (e.replay.destroyed || replayAll)) {
           const killer = g.vehicles.find((v) => v.id === e.shooterId);
-          const title = killer ? `被 ${killer.spec.name} 击毁` : '被击毁';
-          killcam.play(e.replay, { layout: 'full', title });
+          const by = killer ? `被 ${killer.spec.name} ` : '被';
+          if (e.replay.destroyed) killcam.play(e.replay, { layout: 'full', title: `${by}击毁` });
+          else killcam.play(e.replay, { title: `${by}命中` });
         }
       }
     }

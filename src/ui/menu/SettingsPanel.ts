@@ -175,7 +175,8 @@ export class SettingsPanel {
         this.update((d) => (d.game.aiPreset = id));
       });
     }
-    this.checkbox('击毁回放', s.game.killCam, (v) => this.update((d) => (d.game.killCam = v)), '击毁目标后在右上角回放这一发');
+    this.checkbox('命中回放', s.game.killCam, (v) => this.update((d) => (d.game.killCam = v)), '击中或被击中后在右上角回放这一发(自己被击毁时全屏回放)');
+    this.checkbox('所有命中都回放', s.game.killCamAll, (v) => this.update((d) => (d.game.killCamAll = v)), '跳弹、未击穿、击穿没击毁也回放;关掉后只回放击毁');
     this.segmented(
       '小地图形状',
       s.game.minimapShape,
