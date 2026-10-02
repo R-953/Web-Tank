@@ -1,7 +1,7 @@
 # 076-world-xray-wiring:把世界内 X 光(O 键)和叠在世界里的死亡回放接进游戏
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待领取
+- 状态:待审查
 - 分支:`task/076-world-xray-wiring`
 - 规模:M
 - 前置(都已合进 `integration/round12`):071 共用内构模型 `src/ui/internalsModel.ts`、072 `WorldXray` / `WorldReplay`(`src/ui/WorldXray.ts`、`src/ui/WorldReplay.ts`,接口和注意事项见 `docs/tasks/072-world-xray-replay.md` 的「结果」)、073 设置项 `game.internalsStyle` / `game.deathReplayStyle`、074 回放触发规则 `killcamPlan`(`src/ui/killcamPolicy.ts`)
@@ -39,9 +39,9 @@
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过,既有测试不改
-- [ ] 纯函数测试覆盖:样式 `world` / `panel`、`window` / `world` 的分流,开镜淡出,结算画面等待逻辑
-- [ ] 用 `npm run dev` + `?debug` 在浏览器里做一遍并在回报里写清结果:O 键在车上开 X 光、开镜淡出、关掉后材质还原;让敌车击毁自己(可以用 `__debug.game()` 降低玩家模块血量 / 让敌人开火)看世界内回放能播完、相机交还、之后弹出结算;切到 `panel` / `window` 后旧行为不变;控制台无报错
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过,既有测试不改
+- [x] 纯函数测试覆盖:样式 `world` / `panel`、`window` / `world` 的分流,开镜淡出,结算画面等待逻辑
+- [x] 用 `npm run dev` + `?debug` 在浏览器里做一遍并在回报里写清结果:O 键在车上开 X 光、开镜淡出、关掉后材质还原;让敌车击毁自己(可以用 `__debug.game()` 降低玩家模块血量 / 让敌人开火)看世界内回放能播完、相机交还、之后弹出结算;切到 `panel` / `window` 后旧行为不变;控制台无报错
 
 ## 不做
 
@@ -50,5 +50,14 @@
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 新增: `src/ui/worldReplayFlow.ts`, `tests/world-replay-flow.test.ts`, `changelog.d/2026-10-03-076-world-xray-wiring.md`
+  - 修改: `src/main.ts`, `src/ui/menu/SettingsPanel.ts`, `docs/tasks/076-world-xray-wiring.md`
 - 命令与结果:
+  - `npm run lint`: 通过 (tsc --noEmit 0 错误)
+  - `npm test`: 通过 (92 个测试文件、1001 项测试全部通过)
+  - `npm run build`: 通过 (tsc && vite build 成功打包生产物)
 - 偏差 / 未完成 / 待决定:
+  - 无偏差。
+  - `Vehicle.ts` 与 `WorldXray.ts` 现有实现已完全满足需要，无需做额外代码改动。
+  - 纯函数 `worldReplayFlow.ts` 对回放模式判定、开镜淡出、内构分流、相机更新判断及结算等待逻辑均已提供完整覆盖测试。
+
