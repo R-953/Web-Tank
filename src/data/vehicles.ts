@@ -552,41 +552,66 @@ function m1919a4Coax(): WeaponSpec {
 }
 
 /**
- * 三辆共用的内部布局(位置全部估算,见 docs/research/m4a3-76w.md 第 9 节):
- * 后置发动机、前置变速箱;弹药在车底传动轴两侧的湿式弹药箱里,炮塔地板上有待发弹架。
- * 谢尔曼从左侧装填:装填手在左,炮手、车长在右。
+ * 三辆共用的内部布局(出处与估算方法见 docs/internals/usa.md):
+ * 后置福特 GAA V8 发动机、前置变速箱与受控差速器;
+ * 弹药在车底传动轴两侧的湿式弹药箱里(ammo_floor_l 与 ammo_floor_r),炮塔装填手旁设待发弹架(ammo_ready);
+ * 谢尔曼火炮从左侧装填:装填手在炮塔左侧,炮手在炮塔右前,车长在炮塔右后指挥塔下方;
+ * 驾驶员在车体左前,机电员/副驾驶在车体右前。
  */
 function shermanInternals(o: {
   ready: number;
+  readyCenter?: [number, number, number];
+  readySize?: [number, number, number];
   floor: readonly [left: number, right: number];
-  floorLength: readonly [left: number, right: number];
+  floorLength?: readonly [left: number, right: number];
+  floorCenterZ?: readonly [left: number, right: number];
   track: { x: number; width: number };
   barrelLength: number;
   breech: { z: number; length: number };
+  traverse?: { center: [number, number, number]; size?: [number, number, number] };
+  elevation?: { center: [number, number, number]; size?: [number, number, number] };
+  turretCrew?: {
+    gunnerX?: number;
+    commanderX?: number;
+    loaderX?: number;
+  };
 }): VehicleSpec['internals'] {
   const bl = o.barrelLength;
+  const readyCenter = o.readyCenter ?? [-0.55, 0.22, 0.65];
+  const readySize = o.readySize ?? [0.35, 0.35, 0.45];
+  const floorLen = o.floorLength ?? [1.35, 1.20];
+  const floorZ = o.floorCenterZ ?? [-0.55, -0.55];
+  const travCenter = o.traverse?.center ?? [0.4, 0.18, -0.2];
+  const travSize = o.traverse?.size ?? [0.26, 0.26, 0.26];
+  const elevCenter = o.elevation?.center ?? [0.25, 0.36, -0.8];
+  const elevSize = o.elevation?.size ?? [0.24, 0.24, 0.24];
+  const gx = o.turretCrew?.gunnerX ?? 0.45;
+  const cx = o.turretCrew?.commanderX ?? 0.45;
+  const lx = o.turretCrew?.loaderX ?? -0.48;
+
   return {
     modules: [
-      { id: 'engine', type: 'engine', part: 'hull', center: [0, 0.05, 2.0], size: [1.2, 1.0, 1.5] },
-      { id: 'transmission', type: 'transmission', part: 'hull', center: [0, -0.2, -2.7], size: [1.6, 0.6, 0.7] },
-      ...pair('fuel', 'fuel', 'hull', [1.0, 0.4, 1.8], [0.35, 0.6, 1.4]),
-      // 炮塔里的待发弹架没有水套(湿式改进只针对车体底板的弹药箱),按干式算——估算,待核实
-      rack('ammo_ready', 'turret', [-0.6, 0.0, 0.5], [0.4, 0.4, 0.5], o.ready, 1),
-      rack('ammo_floor_l', 'hull', [-0.45, -0.2, -0.6], [0.6, 0.5, o.floorLength[0]], o.floor[0], 2, true),
-      rack('ammo_floor_r', 'hull', [0.45, -0.2, -0.6], [0.6, 0.5, o.floorLength[1]], o.floor[1], 3, true),
+      { id: 'engine', type: 'engine', part: 'hull', center: [0, 0.0, 2.05], size: [1.1, 0.95, 1.4] },
+      { id: 'transmission', type: 'transmission', part: 'hull', center: [0, -0.25, -2.65], size: [1.5, 0.6, 0.8] },
+      ...pair('fuel', 'fuel', 'hull', [0.95, 0.35, 1.85], [0.35, 0.55, 1.45]),
+      // 炮塔待发弹架没有水套,按干式算(drawOrder 1,最先取空)
+      rack('ammo_ready', 'turret', readyCenter, readySize, o.ready, 1),
+      // 车体底板两侧湿式弹药箱(TM 9-731B 规范:带水套,drawOrder 2/3)
+      rack('ammo_floor_l', 'hull', [-0.45, -0.45, floorZ[0]], [0.55, 0.45, floorLen[0]], o.floor[0], 2, true),
+      rack('ammo_floor_r', 'hull', [0.45, -0.45, floorZ[1]], [0.55, 0.45, floorLen[1]], o.floor[1], 3, true),
       // 履带盒底边贴地(车体盒高 1.93 → 地面 y = −0.965),从前主动轮到后诱导轮约 5.6 m
       ...pair('track', 'track', 'hull', [o.track.x, -0.59, 0], [o.track.width, 0.75, 5.6]),
-      { id: 'traverse', type: 'traverse', part: 'turret', center: [0.3, -0.2, -0.2], size: [0.3, 0.3, 0.3] },
-      { id: 'elevation', type: 'elevation', part: 'turret', center: [0.3, 0.3, -0.8], size: [0.25, 0.3, 0.25] },
+      { id: 'traverse', type: 'traverse', part: 'turret', center: travCenter, size: travSize },
+      { id: 'elevation', type: 'elevation', part: 'turret', center: elevCenter, size: elevSize },
       { id: 'breech', type: 'breech', part: 'gun', center: [0, 0, o.breech.z], size: [0.3, 0.3, o.breech.length] },
       { id: 'barrel', type: 'barrel', part: 'gun', center: [0, 0, -bl / 2], size: [0.16, 0.16, bl] },
     ],
     crew: [
-      crew('driver', 'hull', -0.55, 0.05, -2.3),
-      crew('radio', 'hull', 0.55, 0.05, -2.3),
-      crew('gunner', 'turret', 0.45, 0.05, -0.45),
-      crew('commander', 'turret', 0.5, 0.35, 0.45),
-      crew('loader', 'turret', -0.5, 0.0, 0.2),
+      crew('driver', 'hull', -0.55, -0.05, -2.15),
+      crew('radio', 'hull', 0.55, -0.05, -2.15),
+      crew('gunner', 'turret', gx, 0.2, -0.45),
+      crew('commander', 'turret', cx, 0.38, 0.45),
+      crew('loader', 'turret', lx, 0.22, 0.15),
     ],
   };
 }
@@ -626,7 +651,8 @@ export const M4A3_76W: VehicleSpec = {
   internals: shermanInternals({
     ready: 6,
     floor: [35, 30],
-    floorLength: [1.4, 1.2],
+    floorLength: [1.35, 1.2],
+    floorCenterZ: [-0.55, -0.55],
     track: { x: 1.055, width: 0.42 },
     barrelLength: 3.09,
     breech: { z: 0.9, length: 1.0 },
@@ -665,7 +691,8 @@ export const M4A3E8: VehicleSpec = {
   internals: shermanInternals({
     ready: 6,
     floor: [35, 30],
-    floorLength: [1.4, 1.2],
+    floorLength: [1.35, 1.2],
+    floorCenterZ: [-0.55, -0.55],
     track: { x: 1.13, width: 0.58 },
     barrelLength: 3.16,
     breech: { z: 0.9, length: 1.0 },
@@ -724,15 +751,25 @@ export const M4A3E2: VehicleSpec = {
   turret: { length: 2.5, width: 2.35, height: 0.72, barrelLength: 1.89, elevation: [-10, 25], elevationSpeed: 2.8 },
   // M71G 望远镜:倍率用 War Thunder 值 4.3–5×
   sight: { magnifications: [4.3, 5], reticle: 'us' },
-  // 共 104 发:炮塔待发弹架 4 发,车底 10 个湿式弹药箱 100 发(按同厂 M4A3(75)W 的布局,两侧各算 50 发)
+  // 共 104 发:炮塔待发弹架 4 发,车底 10 个湿式弹药箱 100 发(左右两侧对称各 50 发)
   // T48 履带加宽端联器(鸭嘴)后宽 0.51,履带中心距 2.11;鸭嘴装在外侧,履带盒中心外移 0.045
   internals: shermanInternals({
     ready: 4,
+    readyCenter: [-0.58, 0.22, 0.65],
+    readySize: [0.35, 0.35, 0.4],
     floor: [50, 50],
-    floorLength: [1.6, 1.6],
+    floorLength: [1.5, 1.5],
+    floorCenterZ: [-0.5, -0.5],
     track: { x: 1.1, width: 0.51 },
     barrelLength: 1.89,
     breech: { z: 0.7, length: 0.8 },
+    traverse: { center: [0.44, 0.18, -0.2], size: [0.26, 0.26, 0.26] },
+    elevation: { center: [0.25, 0.36, -0.75], size: [0.24, 0.24, 0.24] },
+    turretCrew: {
+      gunnerX: 0.48,
+      commanderX: 0.48,
+      loaderX: -0.52,
+    },
   }),
   color: 0x544f3d, // Olive Drab No. 9 / No. 319(FS 33070)
 };
