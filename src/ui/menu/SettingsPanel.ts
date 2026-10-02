@@ -207,6 +207,12 @@ export class SettingsPanel {
     );
     this.checkbox('显示操作提示', s.game.showHints, (v) => this.update((d) => (d.game.showHints = v)));
     this.checkbox('显示帧率', s.game.showFps, (v) => this.update((d) => (d.game.showFps = v)));
+    this.checkbox(
+      '离线挂机成长',
+      s.game.offlineGrowth,
+      (v) => this.update((d) => (d.game.offlineGrowth = v)),
+      '打开后,关闭页面期间车组也会按时间成长;关闭时只有在线游玩的时间不计入成长。默认关闭。',
+    );
   }
 
   private renderGraphics(s: GameSettings): void {

@@ -1,7 +1,7 @@
 # 050-offline-growth-opt-in:离线挂机成长改成手动开启
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待领取
+- 状态:待审查
 - 分支:`task/050-offline-growth-opt-in`
 - 规模:S
 - 和 047、048、049、051、052 并行;改的文件不重叠
@@ -37,8 +37,8 @@ interface GameSettings { game: { …; offlineGrowth: boolean } } // 缺省 false
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] 测试:缺省 `false`、老存档 `false`、非法值 `false`、往返、设置面板里的开关
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] 测试:缺省 `false`、老存档 `false`、非法值 `false`、往返、设置面板里的开关
 
 ## 不做
 
@@ -47,5 +47,14 @@ interface GameSettings { game: { …; offlineGrowth: boolean } } // 缺省 false
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - `src/settings/Settings.ts`: `GameSettings.game` 添加 `offlineGrowth: boolean` 字段, `defaultSettings` 缺省 `false`, `sanitize` 修正非布尔与老存档为 `false`
+  - `src/ui/menu/SettingsPanel.ts`: 在「游戏」设置页增加「离线挂机成长」复选框及说明文案
+  - `tests/settings.test.ts`: 增加 `offlineGrowth` 缺省值、老存档、非法值与存储往返测试
+  - `tests/offline-growth-setting.test.ts`: 新增设置项及 SettingsPanel 交互单元测试 (8 个测试)
+  - `changelog.d/2026-10-02-050-offline-growth-opt-in.md`: 新增开发日志
+  - `docs/tasks/050-offline-growth-opt-in.md`: 勾选验收标准并填写完成结果
 - 命令与结果:
-- 偏差 / 未完成 / 待决定:
+  - `npm run lint`: 通过 (`tsc --noEmit` 0 错误)
+  - `npm test`: 全部通过 (54 个测试套件, 547 个测试用例全部通过)
+  - `npm run build`: 通过 (`tsc && vite build` 成功构建)
+- 偏差 / 未完成 / 待决定: 无
