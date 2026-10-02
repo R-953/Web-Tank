@@ -101,28 +101,36 @@ export const TIGER_I: VehicleSpec = {
   sight: { magnifications: [2.5, 5], reticle: 'german' },
   internals: {
     modules: [
-      { id: 'engine', type: 'engine', part: 'hull', center: [0, -0.05, 2.1], size: [1.3, 1.0, 1.5] },
+      // 迈巴赫 HL 230 P45 发动机(车尾正中)
+      { id: 'engine', type: 'engine', part: 'hull', center: [0, -0.05, 2.05], size: [1.2, 0.9, 1.5] },
+      // 迈巴赫 Olvar 55 11 17 变速箱(车首正中)
       { id: 'transmission', type: 'transmission', part: 'hull', center: [0, -0.2, -2.45], size: [1.0, 0.8, 1.0] },
-      ...pair('fuel', 'fuel', 'hull', [1.1, 0.0, 2.2], [0.5, 0.9, 1.1]),
-      // 共 92 发:侧裙 4 个 16 发弹箱(最先取空)、驾驶员旁 6 发、车底 22 发
-      rack('ammo_sponson_lf', 'hull', [-1.35, 0.5, -0.9], [0.5, 0.6, 1.0], 16, 1),
-      rack('ammo_sponson_rf', 'hull', [1.35, 0.5, -0.9], [0.5, 0.6, 1.0], 16, 2),
-      rack('ammo_sponson_lr', 'hull', [-1.35, 0.5, 0.1], [0.5, 0.6, 1.0], 16, 3),
-      rack('ammo_sponson_rr', 'hull', [1.35, 0.5, 0.1], [0.5, 0.6, 1.0], 16, 4),
-      rack('ammo_front', 'hull', [1.0, -0.3, -1.5], [0.5, 0.5, 0.7], 6, 5),
-      rack('ammo_floor', 'hull', [0, -0.65, -0.3], [1.4, 0.3, 1.2], 22, 6),
+      // 油箱共 4 个(发动机舱两侧各前后两个油箱,容积 534 L)
+      { id: 'fuel_lf', type: 'fuel', part: 'hull', center: [-1.15, 0.0, 1.5], size: [0.45, 0.8, 0.7] },
+      { id: 'fuel_lr', type: 'fuel', part: 'hull', center: [-1.15, 0.0, 2.35], size: [0.45, 0.8, 0.7] },
+      { id: 'fuel_rf', type: 'fuel', part: 'hull', center: [1.15, 0.0, 1.5], size: [0.45, 0.8, 0.7] },
+      { id: 'fuel_rr', type: 'fuel', part: 'hull', center: [1.15, 0.0, 2.35], size: [0.45, 0.8, 0.7] },
+      // 共 92 发:两侧侧壁 4 个 16 发弹箱(最先取空)、机电员旁 6 发、车底左右各 11 发
+      rack('ammo_sponson_lf', 'hull', [-1.35, 0.45, -0.85], [0.48, 0.55, 0.95], 16, 1),
+      rack('ammo_sponson_rf', 'hull', [1.35, 0.45, -0.85], [0.48, 0.55, 0.95], 16, 2),
+      rack('ammo_sponson_lr', 'hull', [-1.35, 0.45, 0.25], [0.48, 0.55, 0.95], 16, 3),
+      rack('ammo_sponson_rr', 'hull', [1.35, 0.45, 0.25], [0.48, 0.55, 0.95], 16, 4),
+      rack('ammo_front', 'hull', [0.95, -0.3, -1.5], [0.4, 0.5, 0.65], 6, 5),
+      rack('ammo_floor', 'hull', [0, -0.65, -0.3], [1.3, 0.28, 1.1], 22, 6),
       ...pair('track', 'track', 'hull', [1.42, -0.51, -0.05], [0.72, 0.93, 6.2]),
-      { id: 'traverse', type: 'traverse', part: 'turret', center: [-0.3, -0.2, -0.2], size: [0.3, 0.3, 0.3] },
-      { id: 'elevation', type: 'elevation', part: 'turret', center: [-0.35, 0.3, -1.0], size: [0.25, 0.3, 0.25] },
-      { id: 'breech', type: 'breech', part: 'gun', center: [0, 0, 1.0], size: [0.35, 0.35, 1.2] },
+      // 液压方向机与齿圈(炮手脚边)
+      { id: 'traverse', type: 'traverse', part: 'turret', center: [-0.32, 0.2, -0.3], size: [0.3, 0.3, 0.35] },
+      // 火炮高低机(防盾左内侧)
+      { id: 'elevation', type: 'elevation', part: 'turret', center: [-0.32, 0.45, -0.95], size: [0.25, 0.3, 0.3] },
+      { id: 'breech', type: 'breech', part: 'gun', center: [0, 0, 0.95], size: [0.38, 0.38, 1.25] },
       { id: 'barrel', type: 'barrel', part: 'gun', center: [0, 0, -1.925], size: [0.2, 0.2, 3.85] },
     ],
     crew: [
-      crew('driver', 'hull', -0.6, -0.05, -2.3),
-      crew('radio', 'hull', 0.6, -0.05, -2.3),
-      crew('gunner', 'turret', -0.55, 0.05, -0.55),
-      crew('commander', 'turret', -0.65, 0.35, 0.6),
-      crew('loader', 'turret', 0.65, -0.05, 0.15),
+      crew('driver', 'hull', -0.65, -0.15, -2.1),
+      crew('radio', 'hull', 0.65, -0.15, -2.1),
+      crew('gunner', 'turret', -0.6, 0.35, -0.55),
+      crew('commander', 'turret', -0.65, 0.5, 0.55),
+      crew('loader', 'turret', 0.65, 0.35, 0.0),
     ],
   },
   color: 0xa89060,
@@ -274,26 +282,37 @@ export const TIGER_II: VehicleSpec = {
   sight: { magnifications: [2.5, 5], reticle: 'german' },
   internals: {
     modules: [
-      { id: 'engine', type: 'engine', part: 'hull', center: [0, 0.0, 2.3], size: [1.4, 1.1, 1.6] },
-      { id: 'transmission', type: 'transmission', part: 'hull', center: [0, -0.3, -2.9], size: [1.1, 0.8, 1.0] },
-      ...pair('fuel', 'fuel', 'hull', [1.15, 0.0, 2.4], [0.55, 0.9, 1.2]),
-      // 共 86 发:炮塔尾舱 22 发(最先取空)、两侧侧裙各 24 发、车底 16 发
-      rack('ammo_sponson_l', 'hull', [-1.5, 0.55, -0.5], [0.55, 0.6, 2.4], 24, 2),
-      rack('ammo_sponson_r', 'hull', [1.5, 0.55, -0.5], [0.55, 0.6, 2.4], 24, 3),
-      rack('ammo_floor', 'hull', [0, -0.7, -0.4], [1.2, 0.3, 1.0], 16, 4),
+      // 迈巴赫 HL 230 P30 发动机(车尾正中)
+      { id: 'engine', type: 'engine', part: 'hull', center: [0, 0.0, 2.35], size: [1.3, 1.05, 1.6] },
+      // 迈巴赫 Olvar EG 40 12 16 变速箱(车首正中)
+      { id: 'transmission', type: 'transmission', part: 'hull', center: [0, -0.3, -2.9], size: [1.1, 0.8, 1.05] },
+      // 油箱共 4 个(发动机舱两侧前后各一组主副油箱,容积 860 L)
+      { id: 'fuel_lf', type: 'fuel', part: 'hull', center: [-1.2, 0.0, 1.7], size: [0.5, 0.85, 0.85] },
+      { id: 'fuel_lr', type: 'fuel', part: 'hull', center: [-1.2, 0.0, 2.65], size: [0.5, 0.85, 0.85] },
+      { id: 'fuel_rf', type: 'fuel', part: 'hull', center: [1.2, 0.0, 1.7], size: [0.5, 0.85, 0.85] },
+      { id: 'fuel_rr', type: 'fuel', part: 'hull', center: [1.2, 0.0, 2.65], size: [0.5, 0.85, 0.85] },
+      // 共 86 发:炮塔尾舱 22 发(最先取空)、车体两侧侧壁 4 个 12 发弹箱、车底左右各 8 发
+      rack('ammo_bustle', 'turret', [0, 0.45, 1.25], [1.8, 0.5, 0.55], 22, 1),
+      rack('ammo_sponson_lf', 'hull', [-1.45, 0.55, -0.95], [0.52, 0.55, 1.1], 12, 2),
+      rack('ammo_sponson_rf', 'hull', [1.45, 0.55, -0.95], [0.52, 0.55, 1.1], 12, 3),
+      rack('ammo_sponson_lr', 'hull', [-1.45, 0.55, 0.35], [0.52, 0.55, 1.1], 12, 4),
+      rack('ammo_sponson_rr', 'hull', [1.45, 0.55, 0.35], [0.52, 0.55, 1.1], 12, 5),
+      rack('ammo_floor_l', 'hull', [-0.45, -0.7, -0.4], [0.55, 0.28, 1.0], 8, 6),
+      rack('ammo_floor_r', 'hull', [0.45, -0.7, -0.4], [0.55, 0.28, 1.0], 8, 7),
       ...pair('track', 'track', 'hull', [1.475, -0.575, -0.05], [0.8, 0.95, 7.1]),
-      rack('ammo_bustle', 'turret', [0, 0.45, 1.35], [2.0, 0.5, 0.6], 22, 1),
-      { id: 'traverse', type: 'traverse', part: 'turret', center: [-0.3, -0.2, -0.35], size: [0.3, 0.3, 0.3] },
-      { id: 'elevation', type: 'elevation', part: 'turret', center: [-0.35, 0.3, -1.2], size: [0.25, 0.3, 0.25] },
-      { id: 'breech', type: 'breech', part: 'gun', center: [0, 0, 1.1], size: [0.38, 0.38, 1.3] },
+      // Boehringer 液压方向机与旋转机构
+      { id: 'traverse', type: 'traverse', part: 'turret', center: [-0.32, 0.2, -0.35], size: [0.3, 0.3, 0.35] },
+      // 手摇齿弧高低机
+      { id: 'elevation', type: 'elevation', part: 'turret', center: [-0.35, 0.45, -1.15], size: [0.25, 0.3, 0.3] },
+      { id: 'breech', type: 'breech', part: 'gun', center: [0, 0, 1.1], size: [0.38, 0.38, 1.35] },
       { id: 'barrel', type: 'barrel', part: 'gun', center: [0, 0, -2.45], size: [0.22, 0.22, 4.9] },
     ],
     crew: [
-      crew('driver', 'hull', -0.6, -0.05, -2.75),
-      crew('radio', 'hull', 0.6, -0.05, -2.75),
-      crew('gunner', 'turret', -0.55, 0.05, -0.7),
-      crew('commander', 'turret', -0.6, 0.35, 0.45),
-      crew('loader', 'turret', 0.6, -0.05, -0.1),
+      crew('driver', 'hull', -0.65, -0.15, -2.65),
+      crew('radio', 'hull', 0.65, -0.15, -2.65),
+      crew('gunner', 'turret', -0.55, 0.35, -0.7),
+      crew('commander', 'turret', -0.6, 0.5, 0.45),
+      crew('loader', 'turret', 0.6, 0.35, -0.1),
     ],
   },
   color: 0x6b6e5e,

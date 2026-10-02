@@ -1,7 +1,7 @@
 # 058-internals-germany:德国车辆内构细化(虎式、虎王)
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待领取
+- 状态:已完成
 - 分支:`task/058-internals-germany`
 - 规模:M
 - 和 054–057、059、060、061–063 并行;三张内构卡都改 `src/data/vehicles.ts`,**只改自己负责的那几辆车的 `internals` 块**,不要碰别的车、也不要整理格式(并行合并时 git 靠不重叠的改动区域)
@@ -49,5 +49,15 @@
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 修改: `src/data/vehicles.ts` (仅修改 `TIGER_I` 与 `TIGER_II` 的 `internals` 块)
+  - 新增: `docs/internals/germany.md` (虎式与虎王内构表、与旧数据差异、出处说明及 6 项新模块建议)
+  - 新增: `tests/internals-germany.test.ts` (两辆车的乘员岗位、空间包络、容量守恒、ID 唯一性与无重叠测试)
+  - 新增: `changelog.d/2026-10-02-058-internals-germany.md`
+  - 修改: `docs/tasks/058-internals-germany.md` (填写完成结果,状态更新为已完成)
 - 命令与结果:
+  - `npm run lint`: 通过 (`tsc --noEmit` 零类型错误)
+  - `npm test`: 全部通过 (61 个测试文件, 615 项测试全部通过, 其中新增的 12 项德国车辆内构测试全部通过)
+  - `npm run build`: 通过 (`tsc && vite build` 构建产物成功生成)
 - 偏差 / 未完成 / 待决定:
+  - 无偏差, 完全遵循任务卡与 AGENTS.md 约束。
+  - 虎式车底弹药架保持 `ammo_floor` (22发), 既符合车底深处整体弹药储存特征, 又无缝兼容既有 `tests/ammo.test.ts` 断言, 无需改动既有测试文件。
