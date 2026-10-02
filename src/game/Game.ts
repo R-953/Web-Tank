@@ -51,6 +51,8 @@ export interface HitReplay {
   };
   destroyed: boolean;
   detonated: boolean;
+  /** 这一发把目标打起火了(命中前没着火、命中后着火);缺省 = 没有。命中回放的文字分级用 */
+  ignited?: boolean;
 }
 
 /** 弹着的种类(音效 / 特效用) */
@@ -69,6 +71,8 @@ export type GameEvent =
     }
   /** 任意弹着(包括机枪子弹):位置、种类、口径 */
   | { type: 'impact'; shooterId: string; point: THREE.Vector3; kind: ImpactType; caliber: number; targetId?: string }
+  /** 炮闩 / 炮管受损,这一发击发失败(没有打出炮弹) */
+  | { type: 'misfire'; vehicleId: string; part: 'breech' | 'barrel' }
   | { type: 'destroyed'; vehicleId: string; name: string; cause: 'crew' | 'ammo' | 'fire'; position: THREE.Vector3 }
   | { type: 'ammo-lost'; vehicleId: string; rack: string; rounds: number }
   | { type: 'defeat' }

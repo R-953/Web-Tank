@@ -1,0 +1,15 @@
+{
+  "name": "round12",
+  "base": "origin/integration/round12",
+  "permissions": "scoped",
+  "timeoutMin": 90,
+  "maxPerAgent": 2,
+  "jobs": [
+    { "id": "072", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/072-world-xray-replay.md", "branch": "task/072-world-xray-replay", "commit": "ui: 世界内 X 光(O 键)和叠在世界里的死亡回放" },
+    { "id": "071", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/071-internals-model.md", "branch": "task/071-internals-model", "commit": "refactor: 车内 X 光模型抽成共用组件" },
+    { "id": "070", "agent": "antigravity", "model": "claude-opus-4-6-thinking", "card": "docs/tasks/070-misfire.md", "branch": "task/070-misfire", "commit": "feat: 炮闩 / 炮管受损时概率击发失败" },
+    { "id": "068", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/068-hud-status-ring.md", "branch": "task/068-hud-status-ring", "commit": "ui: 底部状态提示改版,顶替 / 维修改圆环进度" },
+    { "id": "069", "agent": "antigravity", "model": "gemini-3.8-flash-high", "card": "docs/tasks/069-killcam-text-grades.md", "branch": "task/069-killcam-text-grades", "commit": "ui: 命中回放文字按损伤程度分级" },
+    { "id": "073", "agent": "copilot", "model": "auto", "card": "docs/tasks/073-settings-world-replay.md", "branch": "task/073-settings-world-replay", "commit": "feat: 设置里加内构显示方式和死亡回放方式" }
+  ]
+}
