@@ -185,7 +185,7 @@ describe('LineupBar UI Component', () => {
     bar.dispose();
   });
 
-  it('右键菜单三项: 更换载具、清空、载具信息', () => {
+  it('右键菜单六项: 换车 (+)、改装、涂装、试驾、乘员、清空', () => {
     const onPickVehicle = vi.fn();
     const onShowInfo = vi.fn();
     const { bar } = createBar({ onPickVehicle, onShowInfo });
@@ -198,20 +198,28 @@ describe('LineupBar UI Component', () => {
     let menu = container.querySelector<HTMLElement>('.mm-lineup-context-menu');
     expect(menu).not.toBeNull();
 
-    // 菜单包含三项
+    // 菜单包含各选项, 且不包含已移除的「载具信息」
     const changeItem = menu!.querySelector<HTMLElement>('.mm-lineup-menu-change')!;
+    const modsItem = menu!.querySelector<HTMLElement>('.mm-lineup-menu-mods')!;
+    const customItem = menu!.querySelector<HTMLElement>('.mm-lineup-menu-custom')!;
+    const testDriveItem = menu!.querySelector<HTMLElement>('.mm-lineup-menu-testdrive')!;
+    const crewItem = menu!.querySelector<HTMLElement>('.mm-lineup-menu-crew')!;
     const clearItem = menu!.querySelector<HTMLElement>('.mm-lineup-menu-clear')!;
-    const infoItem = menu!.querySelector<HTMLElement>('.mm-lineup-menu-info')!;
-    expect(changeItem.textContent).toContain('更换载具');
+    expect(changeItem.textContent).toContain('换车');
+    expect(changeItem.textContent).toContain('(+)');
+    expect(modsItem.textContent).toContain('改装');
+    expect(customItem.textContent).toContain('涂装');
+    expect(testDriveItem.textContent).toContain('试驾');
+    expect(crewItem.textContent).toContain('乘员');
     expect(clearItem.textContent).toContain('清空');
-    expect(infoItem.textContent).toContain('载具信息');
+    expect(menu!.querySelector('.mm-lineup-menu-info')).toBeNull();
 
-    // 2. 点击「载具信息」
-    infoItem.click();
-    expect(onShowInfo).toHaveBeenCalledWith('tiger_i', expect.any(Object));
+    // 2. 点击「换车 (+)」
+    changeItem.click();
+    expect(onPickVehicle).toHaveBeenCalledWith('germany', 0);
     expect(container.querySelector('.mm-lineup-context-menu')).toBeNull();
 
-    // 3. 点击右上角 ▾ 按钮触发菜单并测试「更换载具」
+    // 3. 点击右上角 ▾ 按钮触发菜单并测试「换车 (+)」
     const menuBtn = slot0.querySelector<HTMLElement>('.mm-lineup-slot-menu-btn')!;
     menuBtn.click();
 
@@ -614,12 +622,10 @@ describe('MainMenu 与 LineupBar / TechTree 集成', () => {
     cardEl.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
     expect(cardEl.classList.contains('hidden')).toBe(true);
 
-    // 5. 编组栏右键菜单「载具信息」触发显示
+    // 5. 编组栏右键菜单不包含已移除的「载具信息」; 再次移入卡片重新触发显示
     firstSlot.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
-    const infoMenuBtn = menuContainer.querySelector<HTMLButtonElement>('.mm-lineup-menu-info')!;
-    expect(infoMenuBtn).not.toBeNull();
-    infoMenuBtn.click();
-
+    expect(menuContainer.querySelector('.mm-lineup-menu-info')).toBeNull();
+    firstSlot.dispatchEvent(new MouseEvent('mouseenter'));
     expect(cardEl.classList.contains('hidden')).toBe(false);
 
     // 6. 销毁 MainMenu 时移除卡片
