@@ -1,0 +1,10 @@
+{
+  "name": "round12b",
+  "base": "origin/integration/round12",
+  "permissions": "scoped",
+  "timeoutMin": 60,
+  "maxPerAgent": 2,
+  "jobs": [
+    { "id": "074", "agent": "copilot", "model": "auto", "card": "docs/tasks/074-killcam-trigger-policy.md", "branch": "task/074-killcam-trigger-policy", "commit": "feat: 回放触发规则抽成纯函数,己方被击中不弹小窗" }
+  ]
+}

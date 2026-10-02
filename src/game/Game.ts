@@ -51,6 +51,8 @@ export interface HitReplay {
   };
   destroyed: boolean;
   detonated: boolean;
+  /** 这一发把目标打起火了(命中前没着火、命中后着火);缺省 = 没有。命中回放的文字分级用 */
+  ignited?: boolean;
 }
 
 /** 弹着的种类(音效 / 特效用) */
@@ -62,6 +64,7 @@ export type GameEvent =
       /** 主炮级(口径 ≥ 20 mm)炮弹命中载具:带完整回放数据 */
       type: 'hit';
       shooterId: string;
+      shooterName?: string;
       targetId: string;
       targetName: string;
       part: VehiclePart;
@@ -69,6 +72,8 @@ export type GameEvent =
     }
   /** 任意弹着(包括机枪子弹):位置、种类、口径 */
   | { type: 'impact'; shooterId: string; point: THREE.Vector3; kind: ImpactType; caliber: number; targetId?: string }
+  /** 炮闩 / 炮管受损,这一发击发失败(没有打出炮弹) */
+  | { type: 'misfire'; vehicleId: string; part: 'breech' | 'barrel' }
   | { type: 'destroyed'; vehicleId: string; name: string; cause: 'crew' | 'ammo' | 'fire'; position: THREE.Vector3 }
   | { type: 'ammo-lost'; vehicleId: string; rack: string; rounds: number }
   | { type: 'defeat' }
@@ -292,7 +297,11 @@ export class Game {
 
     // 3. 载具:驾驶、炮塔、装填、开火
     for (const v of this.vehicles) {
-      for (const req of v.fixedUpdate(dt, this.world)) this.fire(v, req);
+      for (const req of v.fixedUpdate(dt, this.world, this.rng)) this.fire(v, req);
+      // 哑火事件（炮闩 / 炮管受损时击发失败）
+      if (v.lastMisfire) {
+        this.events.push({ type: 'misfire', vehicleId: v.id, part: v.lastMisfire.part });
+      }
     }
 
     // 4. 车辆压灌木、撞树、压草;倒下的树在物理步之前去掉碰撞体
@@ -550,6 +559,7 @@ export class Game {
     const { vehicle, part } = owner;
     if (p.ownerId === this.player.id) this.gunners.get(vehicle)?.alert();
     const damage = vehicle.damage;
+    const wasFire = damage.fire !== null;
     const frames = vehicle.frames();
     const before = this.healthSnapshot(vehicle);
     const layout: HitReplay['layout'] = {
@@ -644,10 +654,11 @@ export class Game {
       layout,
       destroyed: damage.knockedOut,
       detonated: damage.detonated,
+      ignited: !wasFire && damage.fire !== null,
     };
     const impactKind: ImpactType = !armor ? 'nonpen' : armor.penetrated ? 'penetration' : armor.ricochet ? 'ricochet' : 'nonpen';
     this.events.push({ type: 'impact', shooterId: p.ownerId, point: hit.point.clone(), kind: impactKind, caliber: shell.caliber, targetId: vehicle.id });
-    this.events.push({ type: 'hit', shooterId: p.ownerId, targetId: vehicle.id, targetName: vehicle.spec.name, part, replay });
+    this.events.push({ type: 'hit', shooterId: p.ownerId, shooterName: this.vehicles.find((v) => v.id === p.ownerId)?.spec.name, targetId: vehicle.id, targetName: vehicle.spec.name, part, replay });
     // 被摧毁的事件和爆炸特效统一由 checkDeaths 在这一步末尾发出
   }
 

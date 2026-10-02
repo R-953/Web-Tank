@@ -5,8 +5,26 @@ import { buildShellModel } from '../game/models/shell';
 import type { Segment } from '../game/damage/penetration';
 import { turretRingOffset } from '../game/damage/geometry';
 import { isCasemate } from '../game/casemate';
-import type { VehicleSpec } from '../data/types';
+import type { VehicleSpec, ModuleType } from '../data/types';
+import type { InternalsSnapshot } from '../game/internalsSnapshot';
 import { KillCamOverlay } from './killcamOverlay';
+import {
+  buildInternalsModel,
+  buildCrewFigure,
+  killcamModuleColor,
+  killcamCrewColor,
+  healthColor,
+  MODULE_TYPE_COLORS,
+  type InternalsModel,
+} from './internalsModel';
+
+export {
+  MODULE_TYPE_COLORS,
+  healthColor,
+  killcamModuleColor,
+  killcamCrewColor,
+  buildCrewFigure,
+};
 
 /** 回放窗口尺寸与位置(右上角) */
 export const KILLCAM = { width: 440, height: 270, margin: 16 };
@@ -55,63 +73,19 @@ export const KILLCAM_ORBIT_DEGREES = 90;
 export const KILLCAM_ORBIT_DIRECTION: 1 | -1 = 1;
 
 /** 炮弹从画面外飞到击穿点的时长,秒 */
-const APPROACH = 0.8;
+export const APPROACH = 0.8;
 /** 内构淡入时长,秒 */
-const FADE_IN = 0.25;
+export const FADE_IN = 0.25;
 /** 后效结束后内构淡出时长,秒 */
-const FADE_OUT = 0.4;
+export const FADE_OUT = 0.4;
 /** 后效尾巴时长,秒 */
-const EFFECT_TAIL = 0.4;
+export const EFFECT_TAIL = 0.4;
 /** 回放收尾时长,秒 */
-const FINISH_DELAY = 0.5;
+export const FINISH_DELAY = 0.5;
 
 const SEGMENT_COLORS: Record<Segment['kind'], number> = { shell: 0xff3b30, spall: 0xffe066, fragment: 0xff9a2e };
 
-/** 模块种类轮廓颜色(参考 InternalsView.ts) */
-export const MODULE_TYPE_COLORS: Record<string, number> = {
-  ammo: 0xffaa00, // 弹药架: 橙黄
-  engine: 0x33b5e5, // 发动机: 亮蓝
-  transmission: 0xab47bc, // 变速箱: 紫色
-  fuel: 0xff4081, // 油箱: 玫红
-  breech: 0xe0e0e0, // 炮闩: 银灰
-  traverse: 0x00e676, // 方向机: 翠绿
-  elevation: 0x00e5ff, // 高低机: 青色
-  barrel: 0x78909c, // 炮管: 蓝灰
-  track: 0x8d6e63, // 履带: 棕褐
-};
 
-/** 血量比例 → 颜色(与 WT 的 X 光视图习惯一致:绿 → 黄 → 橙 → 黑,InternalsView 兼容导出) */
-export function healthColor(ratio: number): number {
-  if (ratio <= 0) return 0x1a1a1a;
-  if (ratio < 0.5) return 0xf07b1e;
-  if (ratio < 1) return 0xf0d23a;
-  return 0x3ecf5a;
-}
-
-/**
- * 模块颜色:完好 = 类型色,血量比例 < 1 时按 (1 - 比例) 向红色 0xff3b30 插值,<= 0 = 0x1a1a1a
- */
-export function killcamModuleColor(type: string, ratio: number): number {
-  if (ratio <= 0) return 0x1a1a1a;
-  const baseHex = MODULE_TYPE_COLORS[type] ?? 0xffffff;
-  if (ratio >= 1) return baseHex;
-  const c = new THREE.Color(baseHex);
-  const red = new THREE.Color(0xff3b30);
-  c.lerp(red, 1 - ratio);
-  return c.getHex();
-}
-
-/**
- * 乘员颜色:完好 0x9fb6c7,血量比例 < 1 时向红色 0xff3b30 插值,<= 0 = 0x1a1a1a
- */
-export function killcamCrewColor(ratio: number): number {
-  if (ratio <= 0) return 0x1a1a1a;
-  if (ratio >= 1) return 0x9fb6c7;
-  const c = new THREE.Color(0x9fb6c7);
-  const red = new THREE.Color(0xff3b30);
-  c.lerp(red, 1 - ratio);
-  return c.getHex();
-}
 
 /**
  * 使 dir 的水平分量转到 +X 所需的绕 y 轴角度(弧度)。
@@ -227,59 +201,7 @@ export function killcamBounceDir(dir: THREE.Vector3, normal: THREE.Vector3): THR
   return r.normalize();
 }
 
-/**
- * 坐姿人形乘员模型(纯几何,无 WebGL 依赖),总高约 1.0 m(坐姿):
- * 头 SphereGeometry(0.11)、躯干 BoxGeometry(0.34, 0.5, 0.22)、
- * 两条大腿 BoxGeometry(0.14, 0.14, 0.45) 向前(-Z)、两条小腿 BoxGeometry(0.12, 0.45, 0.12) 向下;
- * 每个部件一层半透明材质(共用一个材质方便改色) + EdgesGeometry 轮廓线;
- * 颜色:完好 0x9fb6c7(轮廓橙 0xff9a2e), ratio < 1 向红色插值, <= 0 近黑。
- */
-export function buildCrewFigure(): THREE.Group {
-  const group = new THREE.Group();
-  group.name = 'crew-figure';
 
-  const bodyMat = new THREE.MeshBasicMaterial({
-    color: 0x9fb6c7,
-    transparent: true,
-    opacity: 0.9,
-  });
-  const edgeMat = new THREE.LineBasicMaterial({
-    color: 0xff9a2e,
-    transparent: true,
-    opacity: 0.85,
-  });
-
-  function addPart(geom: THREE.BufferGeometry, pos: THREE.Vector3, name: string): THREE.Mesh {
-    const mesh = new THREE.Mesh(geom, bodyMat);
-    mesh.name = name;
-    mesh.position.copy(pos);
-    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geom), edgeMat);
-    mesh.add(edges);
-    group.add(mesh);
-    return mesh;
-  }
-
-  // 躯干 BoxGeometry(0.34, 0.5, 0.22)
-  const torsoGeom = new THREE.BoxGeometry(0.34, 0.5, 0.22);
-  addPart(torsoGeom, new THREE.Vector3(0, 0, 0), 'torso');
-
-  // 头 SphereGeometry(0.11)
-  const headGeom = new THREE.SphereGeometry(0.11, 12, 8);
-  addPart(headGeom, new THREE.Vector3(0, 0.36, 0), 'head');
-
-  // 两条大腿 BoxGeometry(0.14, 0.14, 0.45) 向前(-Z)
-  const thighGeom = new THREE.BoxGeometry(0.14, 0.14, 0.45);
-  addPart(thighGeom, new THREE.Vector3(-0.09, -0.18, -0.335), 'thigh_l');
-  addPart(thighGeom, new THREE.Vector3(0.09, -0.18, -0.335), 'thigh_r');
-
-  // 两条小腿 BoxGeometry(0.12, 0.45, 0.12) 向下
-  const calfGeom = new THREE.BoxGeometry(0.12, 0.45, 0.12);
-  addPart(calfGeom, new THREE.Vector3(-0.09, -0.305, -0.5), 'calf_l');
-  addPart(calfGeom, new THREE.Vector3(0.09, -0.305, -0.5), 'calf_r');
-
-  group.userData = { bodyMat, edgeMat };
-  return group;
-}
 
 /**
  * 命中结果优先级(1..5):
@@ -344,7 +266,7 @@ export function enqueueByPriority<T extends { replay: HitReplay }>(
 }
 
 /** 计算载具包围盒几何中心(车体 + 炮塔 + 炮管)与包围球半径(车体本地坐标系内) */
-function computeVehicleBounds(
+export function computeVehicleBounds(
   spec: VehicleSpec,
   turretYaw: number,
   gunPitch: number,
@@ -449,6 +371,7 @@ export class KillCam {
   readonly scene = new THREE.Scene();
   readonly camera = new THREE.PerspectiveCamera(38, KILLCAM.width / KILLCAM.height, 0.05, 100);
   private root: THREE.Group | null = null;
+  private internals: InternalsModel | null = null;
   private replay: HitReplay | null = null;
   private currentOpts?: KillCamOptions;
   private startMs = 0;
@@ -646,6 +569,10 @@ export class KillCam {
       this.edgeMaterial.dispose();
       this.edgeMaterial = null;
     }
+    if (this.internals) {
+      this.internals.dispose();
+      this.internals = null;
+    }
     this.overlay?.hide();
     this.root = null;
     this.parts = [];
@@ -702,7 +629,6 @@ export class KillCam {
     this.worldCenter.copy(bounds.center).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
     this.worldEntry.copy(r.entry).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
 
-    const frameOf = (part: string) => (part === 'turret' ? turretPivot : part === 'gun' ? gunPivot : root);
     const timelineFor = (id: string): Array<[number, number]> => {
       const tl: Array<[number, number]> = [[-1, r.before[id] ?? 1]];
       for (const e of r.external) if (e.id === id) tl.push([APPROACH, e.hpAfter / e.maxHp]);
@@ -713,49 +639,72 @@ export class KillCam {
 
     const externalIds = new Set(r.external.map((e) => e.id));
 
-    // 内构模块盒子
-    for (const m of r.layout.modules) {
-      const baseOpacity = m.type === 'track' || m.type === 'barrel' ? 0.35 : 0.8;
-      const mat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
-      const mesh = new THREE.Mesh(new THREE.BoxGeometry(m.size[0], m.size[1], m.size[2]), mat);
-      mesh.position.set(m.center[0], m.center[1], m.center[2]);
-      frameOf(m.part).add(mesh);
-      this.parts.push({
-        kind: 'module',
+    const snap: InternalsSnapshot = {
+      spec: r.spec,
+      turretYaw: r.turretYaw,
+      gunPitch: r.gunPitch,
+      modules: r.layout.modules.map((m) => ({
         id: m.id,
-        type: m.type,
-        mesh,
-        mat,
-        timeline: timelineFor(m.id),
-        baseOpacity,
-        isExternal: externalIds.has(m.id),
-      });
+        type: m.type as ModuleType,
+        part: m.part,
+        center: m.center,
+        size: m.size,
+        ratio: r.before[m.id] ?? 1,
+      })),
+      crew: r.layout.crew.map((c) => {
+        const ratio = r.before[c.id] ?? 1;
+        return {
+          id: c.id,
+          role: c.role,
+          part: (c.part === 'turret' ? 'turret' : 'hull') as 'hull' | 'turret',
+          center: c.center,
+          ratio,
+          alive: ratio > 0,
+        };
+      }),
+    };
+
+    this.internals = buildInternalsModel(snap, {
+      moduleOpacity: 0.8,
+      crewOpacity: 0.9,
+      edges: true,
+    });
+    root.add(this.internals.hullMount);
+    turretPivot.add(this.internals.turretMount);
+    gunPivot.add(this.internals.gunMount);
+    this.internals.setOpacity(0);
+
+    for (const m of r.layout.modules) {
+      const item = this.internals.modulesMap.get(m.id);
+      if (item) {
+        this.parts.push({
+          kind: 'module',
+          id: m.id,
+          type: m.type,
+          mesh: item.mesh,
+          mat: item.mat,
+          edgeMat: item.edgeMat,
+          timeline: timelineFor(m.id),
+          baseOpacity: m.type === 'track' || m.type === 'barrel' ? 0.35 : 0.8,
+          isExternal: externalIds.has(m.id),
+        });
+      }
     }
 
-    // 乘员坐姿人形
     for (const c of r.layout.crew) {
-      const baseOpacity = 0.9;
-      const fig = buildCrewFigure();
-      fig.position.set(c.center[0], c.center[1], c.center[2]);
-      frameOf(c.part).add(fig);
-      const torsoMesh = (fig.getObjectByName('torso') as THREE.Mesh) ?? (fig.children[0] as THREE.Mesh);
-      const { bodyMat, edgeMat } = fig.userData as {
-        bodyMat: THREE.MeshBasicMaterial;
-        edgeMat: THREE.LineBasicMaterial;
-      };
-      bodyMat.opacity = 0;
-      edgeMat.opacity = 0;
-      fig.visible = false;
-      this.parts.push({
-        kind: 'crew',
-        id: c.id,
-        mesh: torsoMesh,
-        group: fig,
-        mat: bodyMat,
-        edgeMat,
-        timeline: timelineFor(c.id),
-        baseOpacity,
-      });
+      const item = this.internals.crewMap.get(c.id);
+      if (item) {
+        this.parts.push({
+          kind: 'crew',
+          id: c.id,
+          mesh: item.torsoMesh,
+          group: item.group,
+          mat: item.mat,
+          edgeMat: item.edgeMat,
+          timeline: timelineFor(c.id),
+          baseOpacity: 0.9,
+        });
+      }
     }
 
     // 车内轨迹(车体本地坐标)
@@ -1089,22 +1038,64 @@ export class KillCam {
     }
 
     // 8. 模块与乘员: 跳弹/未击穿只显示受损的外挂模块; 击穿显示全部内构与坐姿乘员
-    for (const p of this.parts) {
-      let ratio = p.timeline[0][1];
-      for (const [time, value] of p.timeline) if (t >= time) ratio = value;
+    if (this.internals) {
+      this.internals.update({
+        spec: r.spec,
+        turretYaw: r.turretYaw,
+        gunPitch: r.gunPitch,
+        modules: r.layout.modules.map((m) => {
+          const p = this.parts.find((part) => part.id === m.id);
+          let ratio = p ? p.timeline[0][1] : 1;
+          if (p) {
+            for (const [time, value] of p.timeline) if (t >= time) ratio = value;
+          }
+          return {
+            id: m.id,
+            type: m.type as ModuleType,
+            part: m.part,
+            center: m.center,
+            size: m.size,
+            ratio,
+          };
+        }),
+        crew: r.layout.crew.map((c) => {
+          const p = this.parts.find((part) => part.id === c.id);
+          let ratio = p ? p.timeline[0][1] : 1;
+          if (p) {
+            for (const [time, value] of p.timeline) if (t >= time) ratio = value;
+          }
+          return {
+            id: c.id,
+            role: c.role,
+            part: (c.part === 'turret' ? 'turret' : 'hull') as 'hull' | 'turret',
+            center: c.center,
+            ratio,
+            alive: ratio > 0,
+          };
+        }),
+      });
 
-      if (p.kind === 'crew') {
-        p.mat.color.setHex(killcamCrewColor(ratio));
-        const show = Boolean(isPenetrated && opacityEnv > 0);
-        p.mat.opacity = show ? p.baseOpacity * opacityEnv : 0;
-        if (p.edgeMat) p.edgeMat.opacity = show ? 0.85 * opacityEnv : 0;
-        if (p.group) p.group.visible = show;
-        p.mesh.visible = show;
-      } else {
-        p.mat.color.setHex(killcamModuleColor(p.type ?? '', ratio));
-        const show = Boolean((isPenetrated || p.isExternal) && opacityEnv > 0);
-        p.mat.opacity = show ? p.baseOpacity * opacityEnv : 0;
-        p.mesh.visible = show;
+      this.internals.setOpacity(opacityEnv);
+
+      for (const p of this.parts) {
+        if (p.kind === 'crew') {
+          const show = Boolean(isPenetrated && opacityEnv > 0);
+          if (p.group) p.group.visible = show;
+          p.mesh.visible = show;
+          if (!show) {
+            p.mat.opacity = 0;
+            if (p.edgeMat) p.edgeMat.opacity = 0;
+          }
+        } else {
+          const show = Boolean((isPenetrated || p.isExternal) && opacityEnv > 0);
+          p.mesh.visible = show;
+          if (!show) {
+            p.mat.opacity = 0;
+            if (p.edgeMat) p.edgeMat.opacity = 0;
+          } else if (p.baseOpacity !== 0.8) {
+            p.mat.opacity = p.baseOpacity * opacityEnv;
+          }
+        }
       }
     }
 

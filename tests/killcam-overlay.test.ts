@@ -129,8 +129,9 @@ describe('hitOutcome 纯函数', () => {
     expect(hitOutcome(replay)).toBe('penetrated');
   });
 
-  it('击穿且有乘员阵亡时返回 crew-out', () => {
+  it('击穿且乘员组失去战斗力(击毁)时返回 crew-out', () => {
     const replay = makeBaseReplay();
+    replay.destroyed = true;
     replay.before['crew:0'] = 1;
     replay.after['crew:0'] = 0;
     expect(hitOutcome(replay)).toBe('crew-out');
@@ -275,7 +276,7 @@ describe('killcamCaption 纯函数', () => {
     expect(killcamCaption(replay, tContact + 0.5, tContact)).toEqual({ text: '未击穿', tone: 'info' });
   });
 
-  it('击穿过程标题升级只升不降:「击穿」→「乘员失去战斗力」→「弹药殉爆」', () => {
+  it('击穿过程标题升级只升不降:「命中」→「乘员昏迷」→「弹药殉爆」', () => {
     const replay = makeBaseReplay();
     replay.detonated = true;
     replay.penetration = {
@@ -304,12 +305,12 @@ describe('killcamCaption 纯函数', () => {
     };
 
     // 1. 刚击穿时刻
-    expect(killcamCaption(replay, tContact, tContact)).toEqual({ text: '击穿', tone: 'hit' });
-    expect(killcamCaption(replay, tContact + 0.05, tContact)).toEqual({ text: '击穿', tone: 'hit' });
+    expect(killcamCaption(replay, tContact, tContact)).toEqual({ text: '命中', tone: 'hit' });
+    expect(killcamCaption(replay, tContact + 0.05, tContact)).toEqual({ text: '命中', tone: 'hit' });
 
-    // 2. 乘员阵亡时刻起升级为「乘员失去战斗力」
-    expect(killcamCaption(replay, tContact + 0.1, tContact)).toEqual({ text: '乘员失去战斗力', tone: 'severe' });
-    expect(killcamCaption(replay, tContact + 0.2, tContact)).toEqual({ text: '乘员失去战斗力', tone: 'severe' });
+    // 2. 乘员阵亡时刻起升级为「乘员昏迷」
+    expect(killcamCaption(replay, tContact + 0.1, tContact)).toEqual({ text: '乘员昏迷', tone: 'severe' });
+    expect(killcamCaption(replay, tContact + 0.2, tContact)).toEqual({ text: '乘员昏迷', tone: 'severe' });
 
     // 3. 弹药殉爆时刻起升级为「弹药殉爆」
     expect(killcamCaption(replay, tContact + 0.25, tContact)).toEqual({ text: '弹药殉爆', tone: 'severe' });
@@ -543,6 +544,7 @@ describe('KillCamOverlay DOM 组件集成', () => {
     };
     replay.after['engine'] = 0.4;
     replay.after['crew:0'] = 0;
+    replay.destroyed = true;
 
     overlay.show(replay);
     expect(overlay.root.style.display).toBe('block');
@@ -555,7 +557,7 @@ describe('KillCamOverlay DOM 组件集成', () => {
     const crewTextEl = overlay.root.querySelector('.kco-crew-text') as HTMLSpanElement;
     const engineIcon = overlay.root.querySelector('.kco-icon-engine') as HTMLDivElement;
 
-    expect(captionEl.textContent).toBe('击穿');
+    expect(captionEl.textContent).toBe('命中');
     expect(captionEl.className).toContain('kco-caption-hit');
     expect(crewTextEl.textContent).toBe('3 / 3');
     expect(crewEl.className).not.toContain('kco-crew-lost');
@@ -563,7 +565,7 @@ describe('KillCamOverlay DOM 组件集成', () => {
 
     // 0.15s 后乘员阵亡且发动机受损
     overlay.update(tContact + 0.15, tContact);
-    expect(captionEl.textContent).toBe('乘员失去战斗力');
+    expect(captionEl.textContent).toBe('乘员昏迷');
     expect(captionEl.className).toContain('kco-caption-severe');
     expect(crewTextEl.textContent).toBe('2 / 3');
     expect(crewEl.className).toContain('kco-crew-lost');

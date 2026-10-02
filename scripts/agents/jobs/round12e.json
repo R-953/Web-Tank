@@ -1,0 +1,10 @@
+{
+  "name": "round12e",
+  "base": "origin/integration/round12",
+  "permissions": "scoped",
+  "timeoutMin": 60,
+  "maxPerAgent": 2,
+  "jobs": [
+    { "id": "081", "agent": "copilot", "model": "auto", "card": "docs/tasks/081-stats-bar.md", "branch": "task/081-stats-bar", "commit": "feat: 左下角帧率 / 延迟 / 丢包 / 对局 ID 小字" }
+  ]
+}
