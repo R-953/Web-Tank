@@ -56,10 +56,10 @@
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] 纯函数测试覆盖上表每一行(含只升不降、点着火 + 击伤成员 = 致命攻击、点着火没伤人 = 引燃、击伤成员没起火 = 命中)
-- [ ] `Game` 里 `ignited` 的测试:打油箱 / 发动机把目标点着 → true;没点着 → false;命中前就着火 → false
-- [ ] `docs/design/killcam.md` 有「回放文字对照表」,每行有出处
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] 纯函数测试覆盖上表每一行(含只升不降、点着火 + 击伤成员 = 致命攻击、点着火没伤人 = 引燃、击伤成员没起火 = 命中)
+- [x] `Game` 里 `ignited` 的测试:打油箱 / 发动机把目标点着 → true;没点着 → false;命中前就着火 → false
+- [x] `docs/design/killcam.md` 有「回放文字对照表」,每行有出处
 
 ## 不做
 
@@ -68,5 +68,17 @@
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 修改: `src/game/Game.ts`(在 `handleHit` 中构造 `HitReplay` 时比对击中前后起火状态并填充 `ignited`)
+  - 修改: `src/ui/killcamOverlay.ts`(将 `HitOutcome` 扩展为 8 档，`CaptionTone` 增加 `'fire'` 并同步 `.kco-caption-fire` 样式，实现 `hitOutcome` 与 `killcamCaption` 的分级与单调递增升级)
+  - 修改: `tests/killcam-overlay.test.ts`(将旧测试中断言「乘员失去战斗力」更正为「乘员组失去战斗力」，同步维护测试用例的 `destroyed` 状态)
+  - 修改: `docs/design/killcam.md`(新增「回放文字对照表」及升级规则说明，对照 War Thunder 官方 wiki、实机录屏与本地化词条，标明未建模/非直接击毁)
+  - 新增: `tests/killcam-text-grades.test.ts`(覆盖 8 档纯函数映射、时间线只升不降、及 Game 里 `ignited` 构造的三种分支测试)
+  - 新增: `changelog.d/2026-10-03-069-killcam-text-grades.md`
+  - 修改: `docs/tasks/069-killcam-text-grades.md`
 - 命令与结果:
+  - `npm run lint`: 通过 (`tsc --noEmit` 0 错误)
+  - `npm test`: 通过 (83 test files passed, 899 tests passed, 0 failed)
+  - `npm run build`: 通过 (`tsc && vite build` 成功打包生成产物)
 - 偏差 / 未完成 / 待决定:
+  - 无偏差，全部验收项完成。旧测试断言「乘员失去战斗力」已按照 War Thunder 官方简体中文原文更新为「乘员组失去战斗力」。
+

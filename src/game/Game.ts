@@ -558,6 +558,7 @@ export class Game {
     const { vehicle, part } = owner;
     if (p.ownerId === this.player.id) this.gunners.get(vehicle)?.alert();
     const damage = vehicle.damage;
+    const wasFire = damage.fire !== null;
     const frames = vehicle.frames();
     const before = this.healthSnapshot(vehicle);
     const layout: HitReplay['layout'] = {
@@ -652,6 +653,7 @@ export class Game {
       layout,
       destroyed: damage.knockedOut,
       detonated: damage.detonated,
+      ignited: !wasFire && damage.fire !== null,
     };
     const impactKind: ImpactType = !armor ? 'nonpen' : armor.penetrated ? 'penetration' : armor.ricochet ? 'ricochet' : 'nonpen';
     this.events.push({ type: 'impact', shooterId: p.ownerId, point: hit.point.clone(), kind: impactKind, caliber: shell.caliber, targetId: vehicle.id });

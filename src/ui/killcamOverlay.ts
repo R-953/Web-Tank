@@ -8,11 +8,19 @@ import type { HitReplay } from '../game/Game';
  * 065 负责实现纯函数和 DOM 组件;066 在 KillCam 里使用它。
  */
 
-/** 这一发的结果。弱 → 强:跳弹 < 未击穿 < 击穿 < 乘员失去战斗力 < 弹药殉爆 */
-export type HitOutcome = 'ricochet' | 'nopen' | 'penetrated' | 'crew-out' | 'ammo-exploded';
+/** 这一发的结果。弱 → 强:跳弹 < 未击穿 < 击穿 < 命中 < 引燃 < 致命攻击 < 乘员组失去战斗力 < 弹药殉爆 */
+export type HitOutcome =
+  | 'ricochet'
+  | 'nopen'
+  | 'penetrated'
+  | 'hit'
+  | 'ignited'
+  | 'critical'
+  | 'crew-out'
+  | 'ammo-exploded';
 
-/** 顶部文字的语气:info = 白(跳弹 / 未击穿),hit = 黄(击穿),severe = 红(乘员 / 殉爆) */
-export type CaptionTone = 'info' | 'hit' | 'severe';
+/** 顶部文字的语气:info = 白(跳弹 / 未击穿),hit = 黄(击穿 / 命中),fire = 橙(引燃),severe = 红(致命攻击 / 乘员组 / 殉爆) */
+export type CaptionTone = 'info' | 'hit' | 'fire' | 'severe';
 
 export interface CaptionState {
   text: string;
@@ -101,6 +109,10 @@ function ensureStyles(): void {
 
 .kco-caption-hit {
   color: #ffd83a;
+}
+
+.kco-caption-fire {
+  color: #ff8a2a;
 }
 
 .kco-caption-severe {
@@ -209,19 +221,40 @@ export function hitOutcome(replay: HitReplay): HitOutcome {
     if (replay.detonated) {
       return 'ammo-exploded';
     }
-    const hasCrewKilled =
-      Object.entries(replay.after).some(([key, val]) => {
-        if (!key.startsWith('crew:')) return false;
-        const beforeVal = replay.before[key] ?? 1;
-        return val <= 0 && beforeVal > 0;
-      }) ||
+    const isCrewKnockedOut =
+      replay.destroyed ||
+      Boolean(replay.penetration?.knockedOut);
+    if (isCrewKnockedOut) {
+      return 'crew-out';
+    }
+
+    const crewDamaged =
+      (replay.penetration?.hits ?? []).some((h) => h.kind === 'crew' && h.hpAfter < h.hpBefore) ||
       replay.layout.crew.some((c) => {
         const afterVal = replay.after[c.id] ?? 1;
         const beforeVal = replay.before[c.id] ?? 1;
-        return afterVal <= 0 && beforeVal > 0;
+        return afterVal < beforeVal;
       });
-    if (hasCrewKilled) {
-      return 'crew-out';
+
+    const moduleDamaged =
+      (replay.penetration?.hits ?? []).some((h) => h.kind === 'module' && h.hpAfter < h.hpBefore) ||
+      (replay.external ?? []).some((e) => e.hpAfter < e.hpBefore) ||
+      replay.layout.modules.some((m) => {
+        const afterVal = replay.after[m.id] ?? 1;
+        const beforeVal = replay.before[m.id] ?? 1;
+        return afterVal < beforeVal;
+      });
+
+    const ignited = Boolean(replay.ignited);
+
+    if (ignited && crewDamaged) {
+      return 'critical';
+    }
+    if (ignited) {
+      return 'ignited';
+    }
+    if (crewDamaged || moduleDamaged) {
+      return 'hit';
     }
     return 'penetrated';
   }
@@ -260,8 +293,8 @@ export function ratioAt(replay: HitReplay, id: string, t: number, tContact: numb
 /**
  * t 秒时顶部要显示的文字。t = 回放开始后的秒数,tContact = 炮弹接触车体的时刻(之前返回 null)。
  * 接触后:跳弹 →「跳弹」,未击穿 →「未击穿」,击穿 →「击穿」;
- * 击穿后第一名乘员阵亡的时刻(tContact + 命中记录的 time)起升级为「乘员失去战斗力」;
- * 弹药殉爆(replay.detonated)的时刻(tContact + explosion.time)起升级为「弹药殉爆」。只升不降。
+ * 随时间升级(击穿 → 命中 → 引燃 → 致命攻击 → 乘员组失去战斗力 → 弹药殉爆),每一档在对应事件发生的时间点切换,只升不降。
+ * 引燃发生的时间点 = 这一发里第一个伤到发动机 / 油箱 / 弹药架的时间(没有就取接触时刻)。
  */
 export function killcamCaption(replay: HitReplay, t: number, tContact: number): CaptionState | null {
   if (t < tContact) return null;
@@ -273,27 +306,97 @@ export function killcamCaption(replay: HitReplay, t: number, tContact: number): 
     return { text: '跳弹', tone: 'info' };
   }
 
-  let crewKillTime = Infinity;
+  // 1. 命中:击伤乘员或损坏模块
+  let tHit = Infinity;
   for (const hit of replay.penetration?.hits ?? []) {
-    if (hit.kind === 'crew' && hit.destroyed) {
+    if ((hit.kind === 'crew' || hit.kind === 'module') && hit.hpAfter < hit.hpBefore) {
       const ht = tContact + hit.time;
-      if (ht < crewKillTime) {
-        crewKillTime = ht;
+      if (ht < tHit) {
+        tHit = ht;
       }
     }
   }
 
-  let ammoBoomTime = Infinity;
-  if (replay.detonated) {
-    const explosionTime = replay.penetration?.explosion?.time ?? replay.penetration?.duration ?? 0;
-    ammoBoomTime = tContact + explosionTime;
+  // 2. 引燃:这一发里第一个伤到发动机 / 油箱 / 弹药架的时间(没有就取接触时刻)
+  const FIRE_MODULE_TYPES = new Set(['engine', 'fuel', 'ammo']);
+  let tIgnited = Infinity;
+  if (replay.ignited) {
+    let firstFireModuleTime = Infinity;
+    for (const hit of replay.penetration?.hits ?? []) {
+      if (hit.kind === 'module' && hit.hpAfter < hit.hpBefore) {
+        const modType = replay.layout.modules.find((m) => m.id === hit.id)?.type ?? '';
+        if (
+          FIRE_MODULE_TYPES.has(modType) ||
+          FIRE_MODULE_TYPES.has(hit.id) ||
+          hit.id.startsWith('engine') ||
+          hit.id.startsWith('fuel') ||
+          hit.id.startsWith('ammo')
+        ) {
+          const ht = tContact + hit.time;
+          if (ht < firstFireModuleTime) {
+            firstFireModuleTime = ht;
+          }
+        }
+      }
+    }
+    tIgnited = firstFireModuleTime < Infinity ? firstFireModuleTime : tContact;
   }
 
-  if (t >= ammoBoomTime) {
+  // 3. 致命攻击:点着了火,并且击伤乘员
+  let tCrewWounded = Infinity;
+  for (const hit of replay.penetration?.hits ?? []) {
+    if (hit.kind === 'crew' && hit.hpAfter < hit.hpBefore) {
+      const ht = tContact + hit.time;
+      if (ht < tCrewWounded) {
+        tCrewWounded = ht;
+      }
+    }
+  }
+  let tCritical = Infinity;
+  if (replay.ignited && tCrewWounded < Infinity) {
+    tCritical = Math.max(tIgnited, tCrewWounded);
+  }
+
+  // 4. 击毁:乘员组失去战斗力
+  let tCrewKnockout = Infinity;
+  if (replay.destroyed || Boolean(replay.penetration?.knockedOut)) {
+    let fatalTime = Infinity;
+    for (const hit of replay.penetration?.hits ?? []) {
+      if (hit.kind === 'crew' && (hit.destroyed || hit.hpAfter <= 0)) {
+        const ht = tContact + hit.time;
+        if (ht < fatalTime) {
+          fatalTime = ht;
+        }
+      }
+    }
+    if (fatalTime < Infinity) {
+      tCrewKnockout = fatalTime;
+    } else {
+      tCrewKnockout = tContact + (replay.penetration?.duration ?? 0);
+    }
+  }
+
+  // 5. 击毁:弹药殉爆
+  let tAmmoExploded = Infinity;
+  if (replay.detonated) {
+    const explosionTime = replay.penetration?.explosion?.time ?? replay.penetration?.duration ?? 0;
+    tAmmoExploded = tContact + explosionTime;
+  }
+
+  if (t >= tAmmoExploded) {
     return { text: '弹药殉爆', tone: 'severe' };
   }
-  if (t >= crewKillTime) {
-    return { text: '乘员失去战斗力', tone: 'severe' };
+  if (t >= tCrewKnockout) {
+    return { text: '乘员组失去战斗力', tone: 'severe' };
+  }
+  if (t >= tCritical) {
+    return { text: '致命攻击', tone: 'severe' };
+  }
+  if (t >= tIgnited) {
+    return { text: '引燃', tone: 'fire' };
+  }
+  if (t >= tHit) {
+    return { text: '命中', tone: 'hit' };
   }
   return { text: '击穿', tone: 'hit' };
 }
