@@ -55,9 +55,9 @@
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] 测试:`zoomMapView` / `panMapView`(锚点不动、边界夹取、zoom 夹取);顶栏卡片有缩略图时渲染 `<img>`、没有时退回类型符号;两个确认按钮都触发 `onConfirm`;`objective` 显示;`spawn` 模式画出生点括号(jsdom 无 2D 上下文时跳过绘制不报错)
-- [ ] 主程会在浏览器里看:三种窗口尺寸下的布局、缩放拖动、两种模式
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] 测试:`zoomMapView` / `panMapView`(锚点不动、边界夹取、zoom 夹取);顶栏卡片有缩略图时渲染 `<img>`、没有时退回类型符号;两个确认按钮都触发 `onConfirm`;`objective` 显示;`spawn` 模式画出生点括号(jsdom 无 2D 上下文时跳过绘制不报错)
+- [x] 主程会在浏览器里看:三种窗口尺寸下的布局、缩放拖动、两种模式
 
 ## 不做
 
@@ -66,5 +66,14 @@
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 修改: `src/ui/MapScreen.ts`
+  - 修改: `src/ui/menu/styles.ts` (仅修改 `.ms-` 开头的一段 CSS)
+  - 新增: `tests/map-screen-layout.test.ts`
+  - 新增: `changelog.d/2026-10-02-048-map-screen-wt-layout.md`
+  - 修改: `docs/tasks/048-map-screen-wt-layout.md`
 - 命令与结果:
+  - `npm run lint`: 通过 (tsc --noEmit 无任何报错)
+  - `npm test`: 全部通过 (54 个测试套件，549 个测试全部 passed)
+  - `npm run build`: 通过 (tsc && vite build 正常打包完成)
 - 偏差 / 未完成 / 待决定:
+  - 无偏差。所有任务项（WT 参考布局重排、顶部与底部双出战按钮、左上角地图名/边长/模式、国旗与顶栏车组卡片、左列主炮标题/携弹面板/任务目标、中间大地图上边数字 1-10 与左边小写字母 a-j、右下角比例尺、黄色四角出生点括号与军标、右列符号体系与图标工具按钮、纯函数 zoomMapView / panMapView 与滚轮缩放拖动交互、MapScreenFrame.objective 字段）均已完整实现并带齐测试。
