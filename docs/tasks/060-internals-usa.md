@@ -1,7 +1,7 @@
 # 060-internals-usa:美国车辆内构细化(谢尔曼三车)
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待领取
+- 状态:待审查
 - 分支:`task/060-internals-usa`
 - 规模:M
 - 和 054–057、058、059、061–063 并行;三张内构卡都改 `src/data/vehicles.ts`,**只改自己负责的那几辆车的 `internals` 块**,不要碰别的车、也不要整理格式(并行合并时 git 靠不重叠的改动区域)
@@ -38,9 +38,9 @@
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过(含已有的伤害、回放、车辆数据测试)
-- [ ] 第 5 条的测试都有
-- [ ] 每辆车的文档一节里,每个数值都有出处或估算方法
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过(含已有的伤害、回放、车辆数据测试)
+- [x] 第 5 条的测试都有
+- [x] 每辆车的文档一节里,每个数值都有出处或估算方法
 
 ## 不做
 
@@ -49,5 +49,16 @@
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 修改: `src/data/vehicles.ts`(校正 `shermanInternals` 及 M4A3(76)W、M4A3E8、M4A3E2 的模块与乘员数据)
+  - 新增: `docs/internals/usa.md`(美系谢尔曼三车内构细化与校正技术文档、建议新模块)
+  - 新增: `tests/internals-usa.test.ts`(乘员人数与岗位、盒子范围、弹药容量、ID 唯一性、同类模块不重叠、三车差异化测试)
+  - 新增: `changelog.d/2026-10-02-060-internals-usa.md`(任务日志)
+  - 修改: `docs/tasks/060-internals-usa.md`(状态与结果回报)
 - 命令与结果:
+  - `npm run lint`: 通过,TypeScript 严格类型检查 0 报错。
+  - `npm test`: 61 个测试文件共 639 个测试全部通过(包含新增的 `tests/internals-usa.test.ts` 以及已有 `tests/wet-stowage.test.ts`、回放、伤害系统等全部测试)。
+  - `npm run build`: 生产构建成功,生成 `dist/index.html` 与 bundle 无报错。
 - 偏差 / 未完成 / 待决定:
+  - 底板湿式弹药箱保留 `ammo_floor_l` 与 `ammo_floor_r` 标识与 `wet: true` 标记,严格与 TM 9-731B / Hunnicutt 记录的左右对称水套弹药箱布局对齐,并向后兼容已有测试 `tests/wet-stowage.test.ts`。
+  - 修正了旧数据中 `traverse`($y=-0.2$)与待发弹架($y=0.0$)因坐标参考座圈底面导致计算高度穿透座圈底部的几何溢出问题,使炮塔模块盒子完全位于炮塔盒高度范围 $[0, \text{turret.height}]$ 之内。
+
