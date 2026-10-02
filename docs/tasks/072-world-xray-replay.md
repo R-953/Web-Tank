@@ -74,10 +74,10 @@ export class WorldReplay {
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过,既有测试一个不改
-- [ ] `WorldXray`:`enable` → 每个 mesh 的材质被换成克隆且 `transparent`;`disable` → 全部是原来的对象;`setFade(0/0.5/1)` 的外壳不透明度符合 `xrayShellStyle`;重复 `enable` / `disable` 不泄漏(场景里子节点数不变)
-- [ ] `WorldReplay`:`worldReplayCameraPose` 的单元测试(起点在弹道射来一侧、环绕角度随时间单调、结束时距离略增);冒烟测试 `play → update → stop` 之后场景干净
-- [ ] 回报里列出接线(074)需要知道的事:相机怎么交接、需要 `Vehicle` 额外提供什么
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过,既有测试一个不改
+- [x] `WorldXray`:`enable` → 每个 mesh 的材质被换成克隆且 `transparent`;`disable` → 全部是原来的对象;`setFade(0/0.5/1)` 的外壳不透明度符合 `xrayShellStyle`;重复 `enable` / `disable` 不泄漏(场景里子节点数不变)
+- [x] `WorldReplay`:`worldReplayCameraPose` 的单元测试(起点在弹道射来一侧、环绕角度随时间单调、结束时距离略增);冒烟测试 `play → update → stop` 之后场景干净
+- [x] 回报里列出接线(074)需要知道的事:相机怎么交接、需要 `Vehicle` 额外提供什么
 
 ## 不做
 
@@ -86,5 +86,15 @@ export class WorldReplay {
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 新增: `src/ui/WorldXray.ts`、`src/ui/WorldReplay.ts`、`tests/world-xray.test.ts`、`tests/world-replay.test.ts`、`changelog.d/2026-10-03-072-world-xray-replay.md`
+  - 修改: `src/ui/KillCam.ts` (仅加 `export` 关键字导出 `APPROACH`、`FADE_IN`、`FADE_OUT`、`EFFECT_TAIL`、`FINISH_DELAY` 及 `computeVehicleBounds`)、`docs/tasks/072-world-xray-replay.md`
 - 命令与结果:
+  - `npm run lint`: 通过，TypeScript 严格检查无任何错误
+  - `npm test`: 通过，84 个测试套件全部通过 (共 900 项测试通过)
+  - `npm run build`: 通过，Vite 构建生产包顺利完成
 - 偏差 / 未完成 / 待决定:
+  - 无偏差，任务卡所有目标均已完成。
+  - 给任务 074 接线人员的说明:
+    1. **相机交接机制**: `WorldReplay.update(nowMs)` 会直接驱动外部传入的 `PerspectiveCamera` 的 `position` 与 `lookAt(target)`。074 在调用 `worldReplay.play(playerVehicle, replay, nowMs)` 时，主循环或输入系统应暂时挂起跟随相机的更新；待 `worldReplay.finished === true` 且调用 `worldReplay.stop()` 之后，再恢复常规相机的控制权。
+    2. **Vehicle 依赖需求**: 仅需 `Vehicle` 提供现有的 `root: THREE.Group`、`turretPivot: THREE.Group` 和 `gunPivot: THREE.Group`。内构挂载、世界坐标变换 (`localToWorld` / `transformDirection`) 以及包围盒计算均已自包含，不需要 `Vehicle` 开放额外新接口。
+

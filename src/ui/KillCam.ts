@@ -73,15 +73,15 @@ export const KILLCAM_ORBIT_DEGREES = 90;
 export const KILLCAM_ORBIT_DIRECTION: 1 | -1 = 1;
 
 /** 炮弹从画面外飞到击穿点的时长,秒 */
-const APPROACH = 0.8;
+export const APPROACH = 0.8;
 /** 内构淡入时长,秒 */
-const FADE_IN = 0.25;
+export const FADE_IN = 0.25;
 /** 后效结束后内构淡出时长,秒 */
-const FADE_OUT = 0.4;
+export const FADE_OUT = 0.4;
 /** 后效尾巴时长,秒 */
-const EFFECT_TAIL = 0.4;
+export const EFFECT_TAIL = 0.4;
 /** 回放收尾时长,秒 */
-const FINISH_DELAY = 0.5;
+export const FINISH_DELAY = 0.5;
 
 const SEGMENT_COLORS: Record<Segment['kind'], number> = { shell: 0xff3b30, spall: 0xffe066, fragment: 0xff9a2e };
 
@@ -266,7 +266,7 @@ export function enqueueByPriority<T extends { replay: HitReplay }>(
 }
 
 /** 计算载具包围盒几何中心(车体 + 炮塔 + 炮管)与包围球半径(车体本地坐标系内) */
-function computeVehicleBounds(
+export function computeVehicleBounds(
   spec: VehicleSpec,
   turretYaw: number,
   gunPitch: number,
