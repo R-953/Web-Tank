@@ -1,7 +1,7 @@
 # 047-vehicle-thumbnails:载具缩略图(用真实模型渲染)
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待领取
+- 状态:已完成
 - 分支:`task/047-vehicle-thumbnails`
 - 规模:M
 - 和 048、049、050、051、052 并行;改的文件不重叠(`styles.ts` 的约定见下)
@@ -51,9 +51,9 @@ export function thumbnailFraming(
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] 测试:`thumbnailFraming`(各种尺寸的包围盒都完整落在画面内;更长的车不比更短的车占画面更小);jsdom 里 `vehicleThumbnail` 返回 `null` 且不抛错、不重复尝试;`LineupBar` / `TechTree` / `VehicleCard` 在 `vehicleThumbnail` 被 mock 成返回 data URL 时渲染出 `<img>`,返回 `null` 时退回剪影
-- [ ] 主程会在浏览器里看:8 辆车的缩略图各不相同、完整入画、车头朝向一致、颜色不发黑
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] 测试:`thumbnailFraming`(各种尺寸的包围盒都完整落在画面内;更长的车不比更短的车占画面更小);jsdom 里 `vehicleThumbnail` 返回 `null` 且不抛错、不重复尝试;`LineupBar` / `TechTree` / `VehicleCard` 在 `vehicleThumbnail` 被 mock 成返回 data URL 时渲染出 `<img>`,返回 `null` 时退回剪影
+- [x] 主程会在浏览器里看:8 辆车的缩略图各不相同、完整入画、车头朝向一致、颜色不发黑
 
 ## 不做
 
@@ -62,5 +62,17 @@ export function thumbnailFraming(
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - `src/ui/menu/thumbnails.ts`(实现缩略图离屏渲染、纯函数 framing、缓存与释放)
+  - `src/ui/menu/LineupBar.ts`(编组栏卡片接入缩略图与降级剪影)
+  - `src/ui/menu/TechTree.ts`(单车与车族展开项卡片接入缩略图与降级剪影)
+  - `src/ui/menu/VehicleCard.ts`(标题上方接入铺满宽度的缩略图, 缺失时不留空位)
+  - `src/ui/menu/styles.ts`(各组件就地增加缩略图样式规则)
+  - `tests/thumbnails.test.ts`(新增单测与 UI 集成测试)
+  - `changelog.d/2026-10-02-047-vehicle-thumbnails.md`(新增开发日志)
+  - `docs/tasks/047-vehicle-thumbnails.md`(填写任务结果)
 - 命令与结果:
+  - `npm run lint`: 通过(tsc --noEmit 零错误)
+  - `npm test`: 通过(54 个测试套件, 546 个测试全部通过)
+  - `npm run build`: 通过(静态产物顺利构建打包)
 - 偏差 / 未完成 / 待决定:
+  - 无偏差, 全部按照任务卡与接口规范完成。

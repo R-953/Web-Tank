@@ -167,6 +167,9 @@ const TECH_TREE_CSS = `
 .tt-vehicle-name { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tt-vehicle-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 3px; gap: 4px; }
 .tt-vehicle-year { font-size: 11px; opacity: .65; white-space: nowrap; }
+.tt-vehicle-thumb-wrap { display: flex; align-items: center; justify-content: center; width: 100%; height: 62px; margin-bottom: 6px; overflow: hidden; }
+.tt-vehicle-thumb { max-width: 115px; max-height: 62px; width: auto; height: auto; object-fit: contain; display: block; }
+.tt-vehicle-thumb-wrap svg { max-width: 115px; height: auto; display: block; }
 
 /* 标记:已编组 */
 .tt-badge-lineup { font-size: 10px; padding: 1px 5px; border-radius: 2px; background: rgba(76, 175, 80, .2); border: 1px solid #4caf50; color: #a5d6a7; font-weight: 600; margin-left: auto; white-space: nowrap; line-height: 1.2; }
@@ -375,6 +378,14 @@ const LINEUP_BAR_CSS = `
 .mm-lineup-slot-sil svg {
   width: 100px;
   height: 23px;
+  display: block;
+}
+.mm-lineup-slot-sil img,
+.mm-lineup-slot-thumb {
+  width: 100px;
+  height: auto;
+  max-height: 48px;
+  object-fit: contain;
   display: block;
 }
 .mm-lineup-slot-meta {
@@ -764,6 +775,14 @@ const VEHICLE_CARD_CSS = `
 }
 .vc-card.hidden {
   display: none;
+}
+.vc-image {
+  width: 100%;
+  height: auto;
+  max-height: 160px;
+  object-fit: contain;
+  display: block;
+  margin-bottom: 8px;
 }
 .vc-header {
   margin-bottom: 8px;
