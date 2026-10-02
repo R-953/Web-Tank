@@ -97,6 +97,17 @@
 | [050](050-offline-growth-opt-in.md) | 离线挂机成长改成设置里手动开启(默认关) | Antigravity(3.8 Flash High) | 小任务 | 待审查 |
 | [051](051-ammo-slider.md) | 携弹面板用滑块自由设定数量 | Antigravity(3.8 Flash High) | 界面 | 待审查 |
 | [052](052-internals-view.md) | 战斗中按 O 显示当前车辆内构 | Antigravity(3.8 Flash High) | 界面 | 待审查 |
+| [053](053-lineup-context-menu.md) | 右键菜单改成换车 / 改装 / 涂装 / 试驾 / 乘员,各接对应界面 | Antigravity(3.8 Flash High) | 界面 | 待领取(等 055–057) |
+| [054](054-modifications-data.md) | 改装的数据、套用逻辑和存档 | Antigravity(3.8 Flash High) | 内容 | 待领取 |
+| [055](055-modifications-screen.md) | 改装界面 | Antigravity(3.8 Flash High) | 界面 | 待领取 |
+| [056](056-customization-paints.md) | 涂装界面与历史涂装方案 | Antigravity(3.8 Flash High) | 内容 / 界面 | 待领取 |
+| [057](057-crew-screen.md) | 乘员界面 | Antigravity(3.8 Flash High) | 界面 | 待领取 |
+| [058](058-internals-germany.md) | 德国车辆内构细化(乘员站位和模块) | Antigravity(3.8 Flash High) | 内容 | 待领取 |
+| [059](059-internals-ussr.md) | 苏联车辆内构细化 | Antigravity(3.8 Flash High) | 内容 | 待领取 |
+| [060](060-internals-usa.md) | 美国车辆内构细化 | Antigravity(3.8 Flash High) | 内容 | 待领取 |
+| [061](061-killcam-redo.md) | 命中回放重做:方向规范化、环绕相机、内构淡入淡出 | Antigravity(3.8 Flash High) | 界面 | 待领取 |
+| [062](062-map-harbor-town.md) | 新地图:港口城镇 | Antigravity(3.8 Flash High) | 内容 | 待领取 |
+| [063](063-map-snow-forest.md) | 新地图:雪地森林 | Antigravity(3.8 Flash High) | 内容 | 待领取 |
 
 ### 候选车辆(负责人 2026-09-29 提出方向,型号待确认后再开卡)
 

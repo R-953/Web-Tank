@@ -1,0 +1,89 @@
+{
+  "name": "round10b",
+  "base": "origin/docs/round10b-cards",
+  "permissions": "scoped",
+  "timeoutMin": 90,
+  "maxPerAgent": 2,
+  "jobs": [
+    {
+      "id": "054",
+      "agent": "antigravity",
+      "model": "gemini-3.8-flash-high",
+      "card": "docs/tasks/054-modifications-data.md",
+      "branch": "task/054-modifications-data",
+      "commit": "feat: 改装的数据、套用逻辑和存档"
+    },
+    {
+      "id": "055",
+      "agent": "antigravity",
+      "model": "gemini-3.8-flash-high",
+      "card": "docs/tasks/055-modifications-screen.md",
+      "branch": "task/055-modifications-screen",
+      "commit": "ui: 改装界面"
+    },
+    {
+      "id": "056",
+      "agent": "antigravity",
+      "model": "gemini-3.8-flash-high",
+      "card": "docs/tasks/056-customization-paints.md",
+      "branch": "task/056-customization-paints",
+      "commit": "feat: 涂装界面与历史涂装方案"
+    },
+    {
+      "id": "057",
+      "agent": "antigravity",
+      "model": "gemini-3.8-flash-high",
+      "card": "docs/tasks/057-crew-screen.md",
+      "branch": "task/057-crew-screen",
+      "commit": "ui: 乘员界面"
+    },
+    {
+      "id": "058",
+      "agent": "antigravity",
+      "model": "gemini-3.8-flash-high",
+      "card": "docs/tasks/058-internals-germany.md",
+      "branch": "task/058-internals-germany",
+      "commit": "data: 德国车辆内构细化(乘员站位和模块)"
+    },
+    {
+      "id": "059",
+      "agent": "antigravity",
+      "model": "gemini-3.8-flash-high",
+      "card": "docs/tasks/059-internals-ussr.md",
+      "branch": "task/059-internals-ussr",
+      "commit": "data: 苏联车辆内构细化(乘员站位和模块)"
+    },
+    {
+      "id": "060",
+      "agent": "antigravity",
+      "model": "gemini-3.8-flash-high",
+      "card": "docs/tasks/060-internals-usa.md",
+      "branch": "task/060-internals-usa",
+      "commit": "data: 美国车辆内构细化(乘员站位和模块)"
+    },
+    {
+      "id": "061",
+      "agent": "antigravity",
+      "model": "gemini-3.8-flash-high",
+      "card": "docs/tasks/061-killcam-redo.md",
+      "branch": "task/061-killcam-redo",
+      "commit": "feat: 命中回放重做——方向规范化、环绕相机、内构淡入淡出"
+    },
+    {
+      "id": "062",
+      "agent": "antigravity",
+      "model": "gemini-3.8-flash-high",
+      "card": "docs/tasks/062-map-harbor-town.md",
+      "branch": "task/062-map-harbor-town",
+      "commit": "data: 新地图——港口城镇"
+    },
+    {
+      "id": "063",
+      "agent": "antigravity",
+      "model": "gemini-3.8-flash-high",
+      "card": "docs/tasks/063-map-snow-forest.md",
+      "branch": "task/063-map-snow-forest",
+      "commit": "data: 新地图——雪地森林"
+    }
+  ]
+}
