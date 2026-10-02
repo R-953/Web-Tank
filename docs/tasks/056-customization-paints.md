@@ -51,9 +51,9 @@
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] 第 4 条的测试都有
-- [ ] 主程会逐条核实每个色值的出处,并在浏览器里看预览
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] 第 4 条的测试都有
+- [x] 主程会逐条核实每个色值的出处,并在浏览器里看预览
 
 ## 不做
 
@@ -62,5 +62,18 @@
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - 新增:
+    - `src/data/paints.ts` (历史涂装数据及 `paintsFor`、`applyPaint`)
+    - `src/settings/PaintStore.ts` (涂装存储 `webtank.paints.v1`)
+    - `src/ui/menu/CustomizationScreen.ts` (涂装定制全屏弹层界面)
+    - `tests/paints.test.ts` (涂装数据与套用逻辑测试)
+    - `tests/paint-store.test.ts` (涂装存储与坏数据容错测试)
+    - `tests/customization-screen.test.ts` (涂装界面交互、预览联动与还原测试)
+    - `changelog.d/2026-10-02-056-customization-paints.md` (开发日志)
+  - 修改:
+    - `docs/tasks/056-customization-paints.md` (勾选验收项并补充完成结果)
 - 命令与结果:
-- 偏差 / 未完成 / 待决定:
+  - `npm run lint`: 通过 (`tsc --noEmit` 零错误)
+  - `npm test`: 通过 (63 个测试套件, 627 个测试全部通过)
+  - `npm run build`: 通过 (`tsc && vite build` 顺利完成生产构建打包)
+- 偏差 / 未完成 / 待决定: 无偏差, 严格按照任务卡要求实现。
