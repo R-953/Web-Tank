@@ -48,8 +48,8 @@
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] 上面第 3 条的测试都有
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] 上面第 3 条的测试都有
 - [ ] 主程会在 066 合入后在浏览器里看实际效果
 
 ## 不做
@@ -59,5 +59,12 @@
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - `src/ui/killcamOverlay.ts` (实现纯函数与 DOM 组件)
+  - `tests/killcam-overlay.test.ts` (新增单元测试)
+  - `changelog.d/2026-10-02-065-killcam-overlay.md` (新增日志)
+  - `docs/tasks/065-killcam-overlay.md` (填写完成结果)
 - 命令与结果:
-- 偏差 / 未完成 / 待决定:
+  - `npm run lint`: 通过 (0 errors)
+  - `npm test`: 80 个测试文件共 838 个测试全部通过
+  - `npm run build`: 生产构建成功
+- 偏差 / 未完成 / 待决定: 无。所有规格均与任务卡要求严格一致。
