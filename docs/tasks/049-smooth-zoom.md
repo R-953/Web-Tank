@@ -1,7 +1,7 @@
 # 049-smooth-zoom:Z 键放大、开镜和切换倍率时视场平滑过渡
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:已完成
+- 状态:待审查(主程已审,等负责人合并)
 - 分支:`task/049-smooth-zoom`
 - 规模:S
 - 和 047、048、050、051、052 并行;改的文件不重叠
@@ -66,3 +66,8 @@ class OrbitCamera {
   - `npm run build`: 通过 (TypeScript 与 Vite 构建均成功完成)。
 - 偏差 / 未完成 / 待决定:
   - 无偏差。遵照任务卡规定，未修改 `src/main.ts`。主程后续合并后可将真实 `dt` 传给 `orbit.update`，并按需将瞄准镜遮罩绘制视场由 `orbit.fov` 调整为 `orbit.displayFov`。
+
+### 主程审查(Claude Code)
+
+- `main.ts`(主程)接了 `dt`(每帧第一次传真实间隔、同一帧第二次传 0)、瞄准镜遮罩改用 `displayFov`、开局 `snapFov()`。
+- 浏览器里给 `orbit.update` 打记录补丁看了轨迹:按 Z 后显示视场从 35° 向 70° 平滑趋近,没有跳变。

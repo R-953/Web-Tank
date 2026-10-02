@@ -8,8 +8,10 @@ export const THUMB_SIZE: { readonly width: 320; readonly height: 180 } = {
   height: 180,
 } as const;
 
-/** 缩略图缓存(按 spec.id) */
+/** 缩略图缓存(按 spec.id 和车色:涂装换了颜色要重新渲染) */
 const thumbnailCache = new Map<string, string | null>();
+
+const thumbnailKey = (spec: VehicleSpec): string => `${spec.id}:${spec.color}`;
 
 let renderer: THREE.WebGLRenderer | null = null;
 let webglFailed = false;
@@ -221,13 +223,13 @@ export function thumbnailFraming(
  * 没有 WebGL(jsdom、无 GPU)或渲染失败时返回 null,不抛错,也不重复尝试。
  */
 export function vehicleThumbnail(spec: VehicleSpec): string | null {
-  if (thumbnailCache.has(spec.id)) {
-    return thumbnailCache.get(spec.id)!;
+  if (thumbnailCache.has(thumbnailKey(spec))) {
+    return thumbnailCache.get(thumbnailKey(spec))!;
   }
 
   const r = getRenderer();
   if (!r) {
-    thumbnailCache.set(spec.id, null);
+    thumbnailCache.set(thumbnailKey(spec), null);
     return null;
   }
 
@@ -284,10 +286,10 @@ export function vehicleThumbnail(spec: VehicleSpec): string | null {
     key.dispose();
     fill.dispose();
 
-    thumbnailCache.set(spec.id, dataUrl);
+    thumbnailCache.set(thumbnailKey(spec), dataUrl);
     return dataUrl;
   } catch {
-    thumbnailCache.set(spec.id, null);
+    thumbnailCache.set(thumbnailKey(spec), null);
     return null;
   }
 }

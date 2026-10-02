@@ -1,7 +1,7 @@
 # 050-offline-growth-opt-in:离线挂机成长改成手动开启
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待审查
+- 状态:待审查(主程已审,等负责人合并)
 - 分支:`task/050-offline-growth-opt-in`
 - 规模:S
 - 和 047、048、049、051、052 并行;改的文件不重叠
@@ -58,3 +58,7 @@ interface GameSettings { game: { …; offlineGrowth: boolean } } // 缺省 false
   - `npm test`: 全部通过 (54 个测试套件, 547 个测试用例全部通过)
   - `npm run build`: 通过 (`tsc && vite build` 成功构建)
 - 偏差 / 未完成 / 待决定: 无
+
+### 主程审查(Claude Code)
+
+- 设置「游戏」页里能看到「离线挂机成长」,默认未勾选;`main.ts`(主程)的 `openProfileStore` 按这个设置决定补不补算,关闭时只把 `lastSeen` 记成现在。

@@ -91,12 +91,12 @@
 | [044](044-mapscreen-key-and-symbols.md) | M 键操作、小地图和地图界面换成军标 | Antigravity(3.8 Flash High,主程小修) | 界面 | 已合并 |
 | [045](045-hangar-info-card-hooks.md) | 机库去掉携弹面板,信息卡挂到编组栏和科技树 | Antigravity(3.8 Flash High,主程小修) | 界面 | 已合并 |
 | [046](046-round9-wiring.md) | main.ts 接上地图界面、军标和符号体系 | Claude Code | 主程 | 已合并 |
-| [047](047-vehicle-thumbnails.md) | 载具缩略图:用真实模型渲染,接到编组栏、科技树、信息卡 | Antigravity(3.8 Flash High) | 界面 | 待领取 |
-| [048](048-map-screen-wt-layout.md) | 战斗准备界面和 M 键地图界面按 War Thunder 布局还原,地图可缩放拖动 | Antigravity(3.8 Flash High) | 界面 | 待领取 |
-| [049](049-smooth-zoom.md) | Z 键放大、开镜、切换倍率时视场平滑过渡 | Antigravity(3.8 Flash High) | 小任务 | 待领取 |
-| [050](050-offline-growth-opt-in.md) | 离线挂机成长改成设置里手动开启(默认关) | Antigravity(3.8 Flash High) | 小任务 | 待领取 |
-| [051](051-ammo-slider.md) | 携弹面板用滑块自由设定数量 | Antigravity(3.8 Flash High) | 界面 | 待领取 |
-| [052](052-internals-view.md) | 战斗中按 O 显示当前车辆内构 | Antigravity(3.8 Flash High) | 界面 | 待领取 |
+| [047](047-vehicle-thumbnails.md) | 载具缩略图:用真实模型渲染,接到编组栏、科技树、信息卡 | Antigravity(3.8 Flash High) | 界面 | 待审查 |
+| [048](048-map-screen-wt-layout.md) | 战斗准备界面和 M 键地图界面按 War Thunder 布局还原,地图可缩放拖动 | Antigravity(3.8 Flash High) | 界面 | 待审查 |
+| [049](049-smooth-zoom.md) | Z 键放大、开镜、切换倍率时视场平滑过渡 | Antigravity(3.8 Flash High) | 小任务 | 待审查 |
+| [050](050-offline-growth-opt-in.md) | 离线挂机成长改成设置里手动开启(默认关) | Antigravity(3.8 Flash High) | 小任务 | 待审查 |
+| [051](051-ammo-slider.md) | 携弹面板用滑块自由设定数量 | Antigravity(3.8 Flash High) | 界面 | 待审查 |
+| [052](052-internals-view.md) | 战斗中按 O 显示当前车辆内构 | Antigravity(3.8 Flash High) | 界面 | 待审查 |
 
 ### 候选车辆(负责人 2026-09-29 提出方向,型号待确认后再开卡)
 

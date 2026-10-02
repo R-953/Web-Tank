@@ -1,7 +1,7 @@
 # 052-internals-view:战斗中按 O 显示当前车辆的内构
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:已完成
+- 状态:待审查(主程已审,等负责人合并)
 - 分支:`task/052-internals-view`
 - 规模:M
 - 和 047、048、049、050、051 并行;改的文件不重叠
@@ -77,3 +77,7 @@
   - 乘员换位岗位采用 `c.seat ?? c.homeRole` 作为当前岗位(以 `damage.crew` 的 `seat` 字段为准),当乘员完成换位时使用新岗位 `c.seat`,阵亡或换位途中 `c.seat` 为 null 时退回初始岗位 `c.homeRole`。
   - 按任务卡要求,不修改 `main.ts` / `Game.ts` / `Vehicle.ts`,后续由主程在 `main.ts` 中接入 O 键控制 `internalsView.setVisible` 与每帧更新渲染。
 
+### 主程审查(Claude Code)
+
+- `main.ts`(主程)接了创建、O 键开关、每帧更新和渲染,地图界面开着时临时隐藏;提示条加了「O 内构」。
+- 浏览器里按 O 看过:左侧中部的 X 光窗口,乘员标签和模块图例齐全,与右上击毁回放、左下 HUD 示意图不重叠。
