@@ -1,7 +1,7 @@
 # 049-smooth-zoom:Z 键放大、开镜和切换倍率时视场平滑过渡
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待领取
+- 状态:已完成
 - 分支:`task/049-smooth-zoom`
 - 规模:S
 - 和 047、048、050、051、052 并行;改的文件不重叠
@@ -44,8 +44,8 @@ class OrbitCamera {
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] 测试:按 Z 后 `displayFov` 单调趋近 35°、不过冲;0.5 s 内到达目标的 99% 以内;帧率无关(dt = 1/30 与 dt = 1/120,在 t = 0.2 s 时的差小于 0.05°);开镜 70° → 瞄准镜视场同样平滑;`snapFov()` 立即到位;灵敏度缩放在过渡期间连续变化;目标不变时不再更新投影矩阵
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] 测试:按 Z 后 `displayFov` 单调趋近 35°、不过冲;0.5 s 内到达目标的 99% 以内;帧率无关(dt = 1/30 与 dt = 1/120,在 t = 0.2 s 时的差小于 0.05°);开镜 70° → 瞄准镜视场同样平滑;`snapFov()` 立即到位;灵敏度缩放在过渡期间连续变化;目标不变时不再更新投影矩阵
 - [ ] 主程会在浏览器里按 Z 看手感
 
 ## 不做
@@ -55,5 +55,14 @@ class OrbitCamera {
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - `src/engine/OrbitCamera.ts` (修改): 增加导出常量 `FOV_TAU = 0.06`、`displayFov` getter、`snapFov()` 方法、`update(..., dt = 1 / 60)` 指数趋近与吸附逻辑; 灵敏度计算过渡期跟随 `displayFov`; 移除 `setThirdPerson`/`setSight`/`setThirdZoom` 中的瞬变调用。
+  - `tests/third-person-zoom.test.ts` (修改): 未删除任何已有断言，仅在需要验证瞬时到位属性及转动前补充 `orbit.snapFov()`，适配平滑过渡新机制。
+  - `tests/orbit-smooth-fov.test.ts` (新增): 新增完整测试套件，全面覆盖单调趋近不过冲、0.5s 到达 99% 并吸附、帧率无关(dt=1/30 与 1/120 差异 <0.05°)、开镜/切换倍率/关镜平滑、`snapFov()` 即时性、灵敏度随 `displayFov` 连续变化、目标不变不更新投影矩阵、<0.01° 自动吸附。
+  - `changelog.d/2026-10-02-049-smooth-zoom.md` (新增): 记录 049 任务开发日志与决策。
+  - `docs/tasks/049-smooth-zoom.md` (修改): 填写验收状态与结果。
 - 命令与结果:
+  - `npm run lint`: 通过 (0 errors)。
+  - `npm test`: 全部通过 (54 test files, 547 tests passed)。
+  - `npm run build`: 通过 (TypeScript 与 Vite 构建均成功完成)。
 - 偏差 / 未完成 / 待决定:
+  - 无偏差。遵照任务卡规定，未修改 `src/main.ts`。主程后续合并后可将真实 `dt` 传给 `orbit.update`，并按需将瞄准镜遮罩绘制视场由 `orbit.fov` 调整为 `orbit.displayFov`。
