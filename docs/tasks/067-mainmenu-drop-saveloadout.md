@@ -1,7 +1,7 @@
 # 067-mainmenu-drop-saveloadout:删掉 MainMenu 里没人用的 saveLoadout 选项
 
 - 负责:Copilot CLI(auto)
-- 状态:待领取
+- 状态:已合并(第十一轮)
 - 分支:`task/067-mainmenu-drop-saveloadout`
 - 规模:S(机械清理)
 
@@ -42,3 +42,7 @@
 - 改动文件:`src/ui/menu/MainMenu.ts`、`src/main.ts`、`tests/class-icons.test.ts`、`tests/lineup-bar.test.ts`、`tests/round9-wiring.test.ts`、`changelog.d/2026-10-02-067-mainmenu-drop-saveloadout.md`、`docs/tasks/067-mainmenu-drop-saveloadout.md`。
 - 命令与结果:`npm run lint` 通过;`npm test` 通过(80 个测试文件、820 个测试);`npm run build` 通过。
 - 偏差 / 未完成 / 待决定:无。`MapScreen` 的 `saveLoadout` 保持不变。
+
+### 主程审查
+
+Copilot(auto,即 mai-code)1.7 分钟、1 次请求,diff 只删了 9 行,正好是卡里列的那些;评分时 `npm test` 有一个测试失败(819/820),主程在 worktree 里单独重跑是 820/820 全过,判断是同时跑 066 的负载导致的偶发超时(已知的出生点视线测试偶发超时一类)。
