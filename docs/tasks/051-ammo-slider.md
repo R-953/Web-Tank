@@ -1,7 +1,7 @@
 # 051-ammo-slider:携弹面板用滑块自由设定数量
 
 - 负责:Antigravity(3.8 Flash High)
-- 状态:待领取
+- 状态:待审查
 - 分支:`task/051-ammo-slider`
 - 规模:S–M
 - 和 047、048、049、050、052 并行;改的文件不重叠
@@ -36,8 +36,8 @@
 
 ## 验收标准
 
-- [ ] `npm run lint`、`npm test`、`npm run build` 全部通过
-- [ ] 测试:`maxForShell` / `setShellCount`(容量边界、取整、其他弹种不变);滑块 `input` 事件更新数量、合计和 `onChange`;数字框输入越界被夹住;「−」「+」步长 1,Shift 点击步长 5;多带一种弹后其他滑块的 `max` 变小;拖动中滑块节点没有被替换
+- [x] `npm run lint`、`npm test`、`npm run build` 全部通过
+- [x] 测试:`maxForShell` / `setShellCount`(容量边界、取整、其他弹种不变);滑块 `input` 事件更新数量、合计和 `onChange`;数字框输入越界被夹住;「−」「+」步长 1,Shift 点击步长 5;多带一种弹后其他滑块的 `max` 变小;拖动中滑块节点没有被替换
 - [ ] 主程会在浏览器里拖滑块
 
 ## 不做
@@ -47,5 +47,17 @@
 ## 结果(完成后由执行者填写)
 
 - 改动文件:
+  - `src/ui/menu/AmmoPanel.ts`: 每个弹种改为小卡片展示，引入金色滑块和数字输入框；支持拖动中仅局部更新 DOM、节流到每帧一次触发 `onChange`、松手强制提交；加减按钮默认 1 发、按住 Shift 点击 5 发；导出并实现 `maxForShell` 和 `setShellCount` 纯函数。
+  - `src/ui/menu/styles.ts`: 在 `.mm-ammo` 样式块紧后追加卡片、数字框、滑块与轨道样式（`.mm-ammo-list`、`.mm-ammo-card`、`.mm-ammo-card-header`、`.mm-ammo-card-title`、`.mm-ammo-name`、`.mm-ammo-num`、`.mm-ammo-slider-row`、`.mm-ammo-range` 等）。
+  - `tests/ammo-panel-slider.test.ts`: 新增针对 `maxForShell`、`setShellCount`（容量边界、取整、其他弹种不变）、滑块 input 实时更新、节点不重建、输入框越界夹住、步长与 Shift 步长、多弹种联动 max 的完整单元测试。
+  - `tests/map-screen.test.ts`:
+    - 第 92 行：单击加号按钮后的断言由 `pzgr39: 25` 改为 `pzgr39: 21`（单次步长由 5 改为 1），并增加按住 Shift 点击加号断言 `pzgr39: 26`（验证 Shift 步长为 5）。
+    - 第 206 行：`左侧携弹面板改数量后调用 saveLoadout` 用例中加号点击后的 `loadoutStore['tiger_i'].pzgr39` 由 25 改为 21。
+  - `changelog.d/2026-10-02-051-ammo-slider.md`: 补充本任务开发日志。
+  - `docs/tasks/051-ammo-slider.md`: 状态变更为待审查，更新验收项与填写结果。
 - 命令与结果:
+  - `npm run lint`: 通过，TypeScript 检查 0 错误。
+  - `npm test`: 通过，54 个测试套件、553 个测试用例全部通过。
+  - `npm run build`: 通过，打包成功。
 - 偏差 / 未完成 / 待决定:
+  - 无偏差，所有需求与验收项均已完成并验证通过。

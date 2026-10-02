@@ -88,8 +88,13 @@ describe('AmmoPanel 携弹组件', () => {
     const firstPlus = plusBtns[1];
     firstPlus.click();
 
-    expect(onUiSound).toHaveBeenCalled();
-    expect(onChange).toHaveBeenCalledWith(tiger, expect.objectContaining({ pzgr39: 25 }));
+    expect(onUiSound).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith(tiger, expect.objectContaining({ pzgr39: 21 }));
+
+    // 按住 Shift 点 +5 发
+    firstPlus.dispatchEvent(new MouseEvent('click', { bubbles: true, shiftKey: true }));
+    expect(onUiSound).toHaveBeenCalledTimes(2);
+    expect(onChange).toHaveBeenCalledWith(tiger, expect.objectContaining({ pzgr39: 26 }));
   });
 
   it('数量为 0 时减号禁用', () => {
@@ -198,7 +203,7 @@ describe('MapScreen 地图界面组件', () => {
     plusBtns[1].click();
 
     expect(saveLoadout).toHaveBeenCalled();
-    expect(loadoutStore['tiger_i'].pzgr39).toBe(25);
+    expect(loadoutStore['tiger_i'].pzgr39).toBe(21);
   });
 
   it('spawn / battle 两种模式按钮文字正确并触发 onConfirm', () => {
